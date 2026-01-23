@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>告别“顺行性遗忘”：Google 新架构如何打造“活着”的 AI？</title>
+    <title>Nested Learning: Google's New Architecture</title>
     <!-- 引入 MathJax 用于显示数学公式 -->
     <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -16,7 +16,42 @@
             margin: 0 auto;
             padding: 40px 20px;
             background-color: #fdfdfd;
+            position: relative; /* For absolute positioning of the selector */
         }
+        
+        /* 语言切换器样式 */
+        .lang-switch-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+        
+        select#lang-selector {
+            padding: 8px 12px;
+            font-size: 14px;
+            border: 1px solid #3498db;
+            border-radius: 4px;
+            background-color: white;
+            color: #2c3e50;
+            cursor: pointer;
+            outline: none;
+            font-weight: 600;
+        }
+
+        select#lang-selector:hover {
+            background-color: #f0f8ff;
+        }
+
+        /* 响应式调整：小屏幕时不要遮挡标题 */
+        @media (max-width: 600px) {
+            .lang-switch-container {
+                position: static;
+                text-align: right;
+                margin-bottom: 10px;
+            }
+        }
+
         h1 {
             color: #1a1a1a;
             font-size: 2.2em;
@@ -46,7 +81,7 @@
         strong {
             color: #000;
             font-weight: 700;
-            background-color: #fffbe6; /* 轻微的高亮背景，突出重点 */
+            background-color: #fffbe6;
             padding: 0 2px;
         }
         a {
@@ -90,7 +125,6 @@
             padding: 15px;
             margin-top: 10px;
         }
-        /* 底部下载区域样式 - 针对截图优化 */
         .download-section {
             text-align: center;
             margin-top: 50px;
@@ -103,7 +137,7 @@
             display: block;
             background-color: #ffffff;
             color: #2c3e50;
-            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace; /* 等宽字体，方便识别 */
+            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
             font-size: 1.1em;
             padding: 15px;
             margin: 15px 0;
@@ -118,152 +152,345 @@
             color: #555;
             font-weight: 500;
         }
+
+        /* 控制显示隐藏的类 */
+        .hidden {
+            display: none;
+        }
     </style>
 </head>
 <body>
 
-    <h1>告别“顺行性遗忘”：Google 新架构如何打造“活着”的 AI？</h1>
-
-    <p>你是否发现，现在的顶流 AI（如 ChatGPT、Claude）虽然博学，却像患上了<strong>“顺行性遗忘症”</strong>？</p>
-
-    <p>它们拥有海量的预训练知识（长期记忆），也能处理当前的对话窗口（短期记忆），但这两者之间存在一道无法跨越的鸿沟。一旦对话窗口关闭，刚才发生的一切交互、你教给它的新知识，都会瞬间烟消云散。它的“大脑”在出厂那一刻就被冻结了，无法在与人的互动中真正成长。</p>
-
-    <p>最近，Google Research 发布的论文 <strong>《Nested Learning: The Illusion of Deep Learning Architectures》</strong>（嵌套学习：深度学习架构的错觉），试图打破这一僵局。它提出了一种全新的范式，旨在创造一种在推理阶段也能像人脑一样不断自我更新、真正“活着”的 AI。</p>
-
-    <hr>
-
-    <h3>一、 诊断：AI 为什么记不住？</h3>
-
-    <p>目前的深度学习架构存在一种<strong>“割裂感”</strong>：</p>
-    <ul>
-        <li><strong>训练期（Training）</strong>：这是“上学”阶段，神经元疯狂连接、参数不断修改，AI 在吸收知识。</li>
-        <li><strong>推理期（Inference）</strong>：这是“工作”阶段。此时 AI 的大脑被<strong>“锁死”</strong>了，禁止修改任何参数。</li>
-    </ul>
-
-    <p>这种机制导致 AI 只能依赖有限的“上下文窗口”来暂存信息。就像电影《记忆碎片》的主角，它拥有过去，能应付现在，却唯独没有未来——它无法将当下的经历转化为新的长期记忆。</p>
-
-    <h3>二、 理论：从“堆积木”到“俄罗斯套娃”</h3>
-
-    <p>这篇论文提出了 <strong>Nested Learning（嵌套学习）</strong> 范式，颠覆了我们对 AI 结构的认知。</p>
-
-    <ol>
-        <li>
-            <strong>视角的转变</strong><br>
-            传统观点认为 AI 是一层层堆叠的神经网络（Deep Learning）。而 Nested Learning 认为，AI 本质上是一组<strong>嵌套的优化问题</strong>，就像“俄罗斯套娃”。
-        </li>
-        <li>
-            <strong>频率的奥秘</strong><br>
-            AI 的各个组件其实都在做同一件事——<strong>压缩信息</strong>，区别仅在于<strong>更新频率（速度）</strong>不同：
-            <ul>
-                <li><strong>慢速齿轮（预训练权重）</strong>：像地球公转，构建底层世界观，更新极慢但稳固。</li>
-                <li><strong>中速齿轮（优化器/动量）</strong>：像时针，记录近期的学习趋势。</li>
-                <li><strong>快速齿轮（注意力机制）</strong>：像秒针，飞快处理眼前的字句。</li>
-            </ul>
-        </li>
-        <li>
-            <strong>惊人的洞察</strong><br>
-            作者指出，我们常用的数学工具（如 Momentum 动量），本质上是一个简陋的“线性记忆模块”。既然如此，<strong>为什么不把这些简陋的数学公式，升级为更强大的神经网络呢？</strong>
-        </li>
-    </ol>
-
-    <h3>三、 实践：HOPE 架构与“连续记忆”</h3>
-
-    <p>基于上述理论，Google 团队设计了名为 <strong>HOPE</strong> 的新架构，其核心突破在于：</p>
-
-    <ol>
-        <li>
-            <strong>优化器“神经网络化”</strong><br>
-            HOPE 不再将模型与优化算法分开。它让学习方法本身变成一个微型的神经网络。这意味着 AI 内部有一个专门负责“如何学习”的子大脑，能捕捉数据间复杂的规律，而非死记硬背。
-        </li>
-        <li>
-            <strong>连续记忆系统（Continuum Memory）</strong><br>
-            模仿人脑的记忆巩固过程，HOPE 引入了<strong>“多倍速”记忆系统</strong>：
-            <ul>
-                <li>有的神经元随对话实时改变；</li>
-                <li>有的神经元几分钟更新一次；</li>
-                <li>有的神经元负责沉淀长期知识。</li>
-            </ul>
-        </li>
-    </ol>
-
-    <div class="highlight-box">
-        这种设计让 AI 在推理过程中，参数是<strong>实时在变、实时在学</strong>的。实验证明，HOPE 在同等体量下，在推理和记忆任务上全面优于 Transformer 和 Mamba 等现有架构。
+    <!-- 语言选择器 -->
+    <div class="lang-switch-container">
+        <select id="lang-selector" onchange="switchLanguage()">
+            <option value="en" selected>English</option>
+            <option value="zh">中文 (Chinese)</option>
+        </select>
     </div>
 
-    <hr>
+    <!-- ========================================== -->
+    <!-- 中文内容 (默认隐藏) -->
+    <!-- ========================================== -->
+    <div id="content-zh" class="hidden">
+        <h1>告别“顺行性遗忘”：Google 新架构如何打造“活着”的 AI？</h1>
 
-    <h3>四、 落地：MaaS 商业化的新范式</h3>
+        <p>你是否发现，现在的顶流 AI（如 ChatGPT、Claude）虽然博学，却像患上了<strong>“顺行性遗忘症”</strong>？</p>
 
-    <p>这种“会学习”的模型在商业化（MaaS）时，面临两大挑战：<strong>数据隐私</strong>与<strong>服务一致性</strong>。如果模型从张三的对话中学习了，会不会泄露给李四？</p>
+        <p>它们拥有海量的预训练知识（长期记忆），也能处理当前的对话窗口（短期记忆），但这两者之间存在一道无法跨越的鸿沟。一旦对话窗口关闭，刚才发生的一切交互、你教给它的新知识，都会瞬间烟消云散。它的“大脑”在出厂那一刻就被冻结了，无法在与人的互动中真正成长。</p>
 
-    <p>基于 Nested Learning 的特性，我们不需要为每个用户部署一个昂贵的独立模型，而是采用<strong>“计算与记忆分离”</strong>的策略。</p>
+        <p>最近，Google Research 发布的论文 <strong>《Nested Learning: The Illusion of Deep Learning Architectures》</strong>（嵌套学习：深度学习架构的错觉），试图打破这一僵局。它提出了一种全新的范式，旨在创造一种在推理阶段也能像人脑一样不断自我更新、真正“活着”的 AI。</p>
 
-    <h4>1. 技术原理：权重共享，状态私有</h4>
-    <p>Nested Learning 的模型公式可以理解为：</p>
-    
-    <div class="math-container">
-        $$ y = f(x; W_{static}, S_{dynamic}) $$
-    </div>
+        <hr>
 
-    <ul>
-        <li><strong>\( W_{static} \)（静态权重）</strong>：底层的通用知识（Level 1），几百 GB 大小，<strong>所有用户共享，绝对冻结</strong>。</li>
-        <li><strong>\( S_{dynamic} \)（动态状态）</strong>：连续记忆系统的状态或深度优化器的动量，几 MB 到几百 MB，<strong>每个用户私有，实时更新</strong>。</li>
-    </ul>
+        <h3>一、 诊断：AI 为什么记不住？</h3>
 
-    <h4>2. C 端策略：Stateful Session（有状态会话）</h4>
-    <ul>
-        <li><strong>模式</strong>：为每个用户维护一份专属的 \( S_{dynamic} \)（记忆文件），存储在 Redis 或显存中。</li>
-        <li><strong>体验</strong>：用户昨天说“我不吃香菜”，今天 AI 依然记得。</li>
-        <li><strong>价值</strong>：此时“同样的输入给出不同的回答”不再是 Bug，而是<strong>个性化 Feature</strong>。用户拥有了一个越用越顺手、真正懂自己的私人助理。</li>
-    </ul>
-
-    <h4>3. B 端策略：Adapter Isolation（多租户隔离）</h4>
-    <ul>
-        <li><strong>模式</strong>：采用类似 LoRA 的适配器模式。
-            <ul>
-                <li><strong>共享层</strong>：99% 的参数服务于所有企业。</li>
-                <li><strong>私有层</strong>：将允许“在线学习”的模块作为 <strong>Adapter（适配器）</strong> 独立存储。</li>
-            </ul>
-        </li>
-        <li><strong>流程</strong>：企业 A 请求进来 -> 挂载 A 的 Adapter -> 推理并更新 Adapter -> 卸载存库。</li>
-        <li><strong>安全</strong>：企业 A 的数据只会改变其私有的 Adapter，绝不会污染共享底座，从而完美解决数据泄露问题。</li>
-    </ul>
-
-    <hr>
-
-    <h3>五、 展望：从“暴力美学”到“无限上下文”</h3>
-
-    <p>如果说 Transformer 代表了 <strong>“Attention is All You Need”</strong> 的暴力美学，那么 Nested Learning 则开启了 <strong>“Compression is All You Need”</strong> 的新时代。</p>
-
-    <div class="comparison-box">
-        <h4>1. 路线之争：显存爆炸 vs. 恒定消耗</h4>
+        <p>目前的深度学习架构存在一种<strong>“割裂感”</strong>：</p>
         <ul>
-            <li><strong>Transformer</strong>：虽然强大，但推理时的 <strong>KV Cache 显存占用巨大</strong>，且计算量随着长度增加而剧烈增长。现在的 1M 上下文往往是靠物理显存硬撑出来的。</li>
-            <li><strong>HOPE (未来架构)</strong>：它不保留所有 Token 的历史，而是把历史不断地“压缩”进动态状态/记忆里。虽然本质上是“有损”的，但极度高效。推理时，无论上下文是 1k 还是 1M，它的<strong>显存占用（State Size）几乎是恒定的 \( O(1) \)</strong>。</li>
+            <li><strong>训练期（Training）</strong>：这是“上学”阶段，神经元疯狂连接、参数不断修改，AI 在吸收知识。</li>
+            <li><strong>推理期（Inference）</strong>：这是“工作”阶段。此时 AI 的大脑被<strong>“锁死”</strong>了，禁止修改任何参数。</li>
         </ul>
+
+        <p>这种机制导致 AI 只能依赖有限的“上下文窗口”来暂存信息。就像电影《记忆碎片》的主角，它拥有过去，能应付现在，却唯独没有未来——它无法将当下的经历转化为新的长期记忆。</p>
+
+        <h3>二、 理论：从“堆积木”到“俄罗斯套娃”</h3>
+
+        <p>这篇论文提出了 <strong>Nested Learning（嵌套学习）</strong> 范式，颠覆了我们对 AI 结构的认知。</p>
+
+        <ol>
+            <li>
+                <strong>视角的转变</strong><br>
+                传统观点认为 AI 是一层层堆叠的神经网络（Deep Learning）。而 Nested Learning 认为，AI 本质上是一组<strong>嵌套的优化问题</strong>，就像“俄罗斯套娃”。
+            </li>
+            <li>
+                <strong>频率的奥秘</strong><br>
+                AI 的各个组件其实都在做同一件事——<strong>压缩信息</strong>，区别仅在于<strong>更新频率（速度）</strong>不同：
+                <ul>
+                    <li><strong>慢速齿轮（预训练权重）</strong>：像地球公转，构建底层世界观，更新极慢但稳固。</li>
+                    <li><strong>中速齿轮（优化器/动量）</strong>：像时针，记录近期的学习趋势。</li>
+                    <li><strong>快速齿轮（注意力机制）</strong>：像秒针，飞快处理眼前的字句。</li>
+                </ul>
+            </li>
+            <li>
+                <strong>惊人的洞察</strong><br>
+                作者指出，我们常用的数学工具（如 Momentum 动量），本质上是一个简陋的“线性记忆模块”。既然如此，<strong>为什么不把这些简陋的数学公式，升级为更强大的神经网络呢？</strong>
+            </li>
+        </ol>
+
+        <h3>三、 实践：HOPE 架构与“连续记忆”</h3>
+
+        <p>基于上述理论，Google 团队设计了名为 <strong>HOPE</strong> 的新架构，其核心突破在于：</p>
+
+        <ol>
+            <li>
+                <strong>优化器“神经网络化”</strong><br>
+                HOPE 不再将模型与优化算法分开。它让学习方法本身变成一个微型的神经网络。这意味着 AI 内部有一个专门负责“如何学习”的子大脑，能捕捉数据间复杂的规律，而非死记硬背。
+            </li>
+            <li>
+                <strong>连续记忆系统（Continuum Memory）</strong><br>
+                模仿人脑的记忆巩固过程，HOPE 引入了<strong>“多倍速”记忆系统</strong>：
+                <ul>
+                    <li>有的神经元随对话实时改变；</li>
+                    <li>有的神经元几分钟更新一次；</li>
+                    <li>有的神经元负责沉淀长期知识。</li>
+                </ul>
+            </li>
+        </ol>
+
+        <div class="highlight-box">
+            这种设计让 AI 在推理过程中，参数是<strong>实时在变、实时在学</strong>的。实验证明，HOPE 在同等体量下，在推理和记忆任务上全面优于 Transformer 和 Mamba 等现有架构。
+        </div>
+
+        <hr>
+
+        <h3>四、 落地：MaaS 商业化的新范式</h3>
+
+        <p>这种“会学习”的模型在商业化（MaaS）时，面临两大挑战：<strong>数据隐私</strong>与<strong>服务一致性</strong>。如果模型从张三的对话中学习了，会不会泄露给李四？</p>
+
+        <p>基于 Nested Learning 的特性，我们不需要为每个用户部署一个昂贵的独立模型，而是采用<strong>“计算与记忆分离”</strong>的策略。</p>
+
+        <h4>1. 技术原理：权重共享，状态私有</h4>
+        <p>Nested Learning 的模型公式可以理解为：</p>
+        
+        <div class="math-container">
+            $$ y = f(x; W_{static}, S_{dynamic}) $$
+        </div>
+
+        <ul>
+            <li><strong>\( W_{static} \)（静态权重）</strong>：底层的通用知识（Level 1），几百 GB 大小，<strong>所有用户共享，绝对冻结</strong>。</li>
+            <li><strong>\( S_{dynamic} \)（动态状态）</strong>：连续记忆系统的状态或深度优化器的动量，几 MB 到几百 MB，<strong>每个用户私有，实时更新</strong>。</li>
+        </ul>
+
+        <h4>2. C 端策略：Stateful Session（有状态会话）</h4>
+        <ul>
+            <li><strong>模式</strong>：为每个用户维护一份专属的 \( S_{dynamic} \)（记忆文件），存储在 Redis 或显存中。</li>
+            <li><strong>体验</strong>：用户昨天说“我不吃香菜”，今天 AI 依然记得。</li>
+            <li><strong>价值</strong>：此时“同样的输入给出不同的回答”不再是 Bug，而是<strong>个性化 Feature</strong>。用户拥有了一个越用越顺手、真正懂自己的私人助理。</li>
+        </ul>
+
+        <h4>3. B 端策略：Adapter Isolation（多租户隔离）</h4>
+        <ul>
+            <li><strong>模式</strong>：采用类似 LoRA 的适配器模式。
+                <ul>
+                    <li><strong>共享层</strong>：99% 的参数服务于所有企业。</li>
+                    <li><strong>私有层</strong>：将允许“在线学习”的模块作为 <strong>Adapter（适配器）</strong> 独立存储。</li>
+                </ul>
+            </li>
+            <li><strong>流程</strong>：企业 A 请求进来 -> 挂载 A 的 Adapter -> 推理并更新 Adapter -> 卸载存库。</li>
+            <li><strong>安全</strong>：企业 A 的数据只会改变其私有的 Adapter，绝不会污染共享底座，从而完美解决数据泄露问题。</li>
+        </ul>
+
+        <hr>
+
+        <h3>五、 展望：从“暴力美学”到“无限上下文”</h3>
+
+        <p>如果说 Transformer 代表了 <strong>“Attention is All You Need”</strong> 的暴力美学，那么 Nested Learning 则开启了 <strong>“Compression is All You Need”</strong> 的新时代。</p>
+
+        <div class="comparison-box">
+            <h4>1. 路线之争：显存爆炸 vs. 恒定消耗</h4>
+            <ul>
+                <li><strong>Transformer</strong>：虽然强大，但推理时的 <strong>KV Cache 显存占用巨大</strong>，且计算量随着长度增加而剧烈增长。现在的 1M 上下文往往是靠物理显存硬撑出来的。</li>
+                <li><strong>HOPE (未来架构)</strong>：它不保留所有 Token 的历史，而是把历史不断地“压缩”进动态状态/记忆里。虽然本质上是“有损”的，但极度高效。推理时，无论上下文是 1k 还是 1M，它的<strong>显存占用（State Size）几乎是恒定的 \( O(1) \)</strong>。</li>
+            </ul>
+        </div>
+
+        <h4>2. 如果 Gemini 4 采用这项技术...</h4>
+        <p>这项技术若能应用在未来的模型（如 Gemini 4）上，将带来质变：</p>
+        <ul>
+            <li><strong>无限上下文（Infinite Context）</strong>：理论上上下文长度可以是无限的，因为旧信息都被压缩进 State 了，不占额外显存。</li>
+            <li><strong>推理成本暴跌</strong>：目前读一本 100 万字的书费用昂贵。如果用 HOPE，读第 100 万个字时的计算量和读第 1 个字是一样的，成本将大幅降低。</li>
+            <li><strong>解决“中间迷失”（Lost in the Middle）</strong>：Transformer 容易忽略超长文本中间的信息。论文实验表明，HOPE 这种基于“深度记忆”的架构，在长文本信息提取上更稳健。</li>
+        </ul>
+
+        <hr>
+
+        <h3>结语</h3>
+
+        <p>Google 的 Nested Learning 告诉我们，AI 的进化方向或许不是单纯地把模型做“大”，而是要把结构做“活”。</p>
+
+        <p>它打破了训练与使用的界限，通过<strong>“共享大脑 + 专属记忆”</strong>的架构，让 AI 从一本静态的百科全书，进化为一个在交互中不断重塑自我的智慧生命。对于行业而言，这不仅是架构的革新，更是商业模式从“出售算力”向“出售记忆与个性化”转型的开端。</p>
+
+        <div class="download-section">
+            <p><strong>论文原文下载地址：</strong></p>
+            <span class="url-display">https://abehrouz.github.io/files/NL.pdf</span>
+            <p class="download-note">论文标题：Nested Learning: The Illusion of Deep Learning Architectures</p>
+        </div>
     </div>
 
-    <h4>2. 如果 Gemini 4 采用这项技术...</h4>
-    <p>这项技术若能应用在未来的模型（如 Gemini 4）上，将带来质变：</p>
-    <ul>
-        <li><strong>无限上下文（Infinite Context）</strong>：理论上上下文长度可以是无限的，因为旧信息都被压缩进 State 了，不占额外显存。</li>
-        <li><strong>推理成本暴跌</strong>：目前读一本 100 万字的书费用昂贵。如果用 HOPE，读第 100 万个字时的计算量和读第 1 个字是一样的，成本将大幅降低。</li>
-        <li><strong>解决“中间迷失”（Lost in the Middle）</strong>：Transformer 容易忽略超长文本中间的信息。论文实验表明，HOPE 这种基于“深度记忆”的架构，在长文本信息提取上更稳健。</li>
-    </ul>
+    <!-- ========================================== -->
+    <!-- English Content (Default Visible) -->
+    <!-- ========================================== -->
+    <div id="content-en">
+        <h1>Goodbye "Anterograde Amnesia": How Google's New Architecture Builds "Living" AI</h1>
 
-    <hr>
+        <p>Have you noticed that today's top-tier AI models (like ChatGPT or Claude), despite their vast knowledge, seem to suffer from <strong>"Anterograde Amnesia"</strong>?</p>
 
-    <h3>结语</h3>
+        <p>They possess massive amounts of pre-trained knowledge (long-term memory) and can handle the current conversation window (short-term memory), but there is an unbridgeable gap between the two. Once the chat window closes, every interaction that just happened and every new piece of knowledge you taught it vanishes instantly. Their "brains" were frozen the moment they left the factory, unable to truly grow through interaction with humans.</p>
 
-    <p>Google 的 Nested Learning 告诉我们，AI 的进化方向或许不是单纯地把模型做“大”，而是要把结构做“活”。</p>
+        <p>Recently, a paper published by Google Research titled <strong>"Nested Learning: The Illusion of Deep Learning Architectures"</strong> attempts to break this deadlock. It proposes a completely new paradigm aimed at creating an AI that can self-update during the inference phase, acting like a truly "living" brain.</p>
 
-    <p>它打破了训练与使用的界限，通过<strong>“共享大脑 + 专属记忆”</strong>的架构，让 AI 从一本静态的百科全书，进化为一个在交互中不断重塑自我的智慧生命。对于行业而言，这不仅是架构的革新，更是商业模式从“出售算力”向“出售记忆与个性化”转型的开端。</p>
+        <hr>
 
-    <div class="download-section">
-        <p><strong>论文原文下载地址：</strong></p>
-        <span class="url-display">https://abehrouz.github.io/files/NL.pdf</span>
-        <p class="download-note">论文标题：Nested Learning: The Illusion of Deep Learning Architectures</p>
+        <h3>I. Diagnosis: Why Can't AI Remember?</h3>
+
+        <p>Current deep learning architectures suffer from a sense of <strong>"Fragmentation"</strong>:</p>
+        <ul>
+            <li><strong>Training Phase</strong>: This is the "schooling" phase where neurons connect wildly, parameters are constantly modified, and the AI absorbs knowledge.</li>
+            <li><strong>Inference Phase</strong>: This is the "working" phase. At this point, the AI's brain is <strong>"locked"</strong>, and modifying any parameters is prohibited.</li>
+        </ul>
+
+        <p>This mechanism forces AI to rely solely on a limited "context window" to temporarily store information. Like the protagonist in the movie <em>Memento</em>, it has a past and can cope with the present, but it lacks a future—it cannot convert current experiences into new long-term memories.</p>
+
+        <h3>II. Theory: From "Stacking Blocks" to "Matryoshka Dolls"</h3>
+
+        <p>The paper introduces the <strong>Nested Learning</strong> paradigm, overturning our perception of AI structure.</p>
+
+        <ol>
+            <li>
+                <strong>A Shift in Perspective</strong><br>
+                Traditional views see AI as layers of stacked neural networks (Deep Learning). Nested Learning, however, views AI as a set of <strong>nested optimization problems</strong>, much like "Russian Matryoshka dolls."
+            </li>
+            <li>
+                <strong>The Mystery of Frequency</strong><br>
+                All components of an AI are essentially doing the same thing—<strong>compressing information</strong>. The only difference lies in their <strong>update frequency (speed)</strong>:
+                <ul>
+                    <li><strong>Slow Gear (Pre-trained Weights)</strong>: Like the Earth's revolution, building the underlying worldview; updates are extremely slow but stable.</li>
+                    <li><strong>Medium Gear (Optimizer/Momentum)</strong>: Like the hour hand, recording recent learning trends.</li>
+                    <li><strong>Fast Gear (Attention Mechanism)</strong>: Like the second hand, rapidly processing the words right in front of it.</li>
+                </ul>
+            </li>
+            <li>
+                <strong>A Striking Insight</strong><br>
+                The authors point out that the mathematical tools we commonly use (like Momentum), are essentially rudimentary "linear memory modules." If so, <strong>why not upgrade these simple mathematical formulas into more powerful neural networks?</strong>
+            </li>
+        </ol>
+
+        <h3>III. Practice: The HOPE Architecture and "Continuum Memory"</h3>
+
+        <p>Based on the above theory, the Google team designed a new architecture called <strong>HOPE</strong>. Its core breakthroughs lie in:</p>
+
+        <ol>
+            <li>
+                <strong>"Neuralizing" the Optimizer</strong><br>
+                HOPE no longer separates the model from the optimization algorithm. It turns the learning method itself into a micro neural network. This means there is a sub-brain inside the AI dedicated to "how to learn," capable of capturing complex patterns in data rather than rote memorization.
+            </li>
+            <li>
+                <strong>Continuum Memory System</strong><br>
+                Mimicking the memory consolidation process of the human brain, HOPE introduces a <strong>"Multi-speed" memory system</strong>:
+                <ul>
+                    <li>Some neurons change in real-time with the conversation;</li>
+                    <li>Some neurons update every few minutes;</li>
+                    <li>Some neurons are responsible for precipitating long-term knowledge.</li>
+                </ul>
+            </li>
+        </ol>
+
+        <div class="highlight-box">
+            This design allows the AI's parameters to be <strong>changing and learning in real-time</strong> during the inference process. Experiments show that HOPE outperforms existing architectures like Transformer and Mamba in inference and memory tasks at the same scale.
+        </div>
+
+        <hr>
+
+        <h3>IV. Implementation: A New Paradigm for MaaS Commercialization</h3>
+
+        <p>When commercializing this "learning" model (MaaS), two major challenges arise: <strong>Data Privacy</strong> and <strong>Service Consistency</strong>. If the model learns from User A's conversation, will it leak that info to User B?</p>
+
+        <p>Based on the characteristics of Nested Learning, we don't need to deploy an expensive independent model for every user. Instead, we adopt a strategy of <strong>"Separation of Computation and Memory."</strong></p>
+
+        <h4>1. Technical Principle: Shared Weights, Private State</h4>
+        <p>The model formula for Nested Learning can be understood as:</p>
+        
+        <div class="math-container">
+            $$ y = f(x; W_{static}, S_{dynamic}) $$
+        </div>
+
+        <ul>
+            <li><strong>\( W_{static} \) (Static Weights)</strong>: Underlying general knowledge (Level 1), hundreds of GBs in size, <strong>shared by all users, absolutely frozen</strong>.</li>
+            <li><strong>\( S_{dynamic} \) (Dynamic State)</strong>: The state of the continuum memory system or the momentum of the deep optimizer, ranging from a few MBs to hundreds of MBs, <strong>private to each user, updated in real-time</strong>.</li>
+        </ul>
+
+        <h4>2. Consumer Strategy: Stateful Session</h4>
+        <ul>
+            <li><strong>Mode</strong>: Maintain an exclusive \( S_{dynamic} \) (memory file) for each user, stored in Redis or VRAM.</li>
+            <li><strong>Experience</strong>: If a user says "I don't eat cilantro" yesterday, the AI remembers it today.</li>
+            <li><strong>Value</strong>: In this context, "giving different answers to the same input" is no longer a bug, but a <strong>Personalized Feature</strong>. Users get a private assistant that gets better and understands them more the longer it's used.</li>
+        </ul>
+
+        <h4>3. Enterprise Strategy: Adapter Isolation (Multi-tenancy)</h4>
+        <ul>
+            <li><strong>Mode</strong>: Adopting an adapter pattern similar to LoRA.
+                <ul>
+                    <li><strong>Shared Layer</strong>: 99% of parameters serve all enterprises.</li>
+                    <li><strong>Private Layer</strong>: Modules that allow "online learning" are stored independently as <strong>Adapters</strong>.</li>
+                </ul>
+            </li>
+            <li><strong>Process</strong>: Enterprise A request comes in -> Mount A's Adapter -> Inference and update Adapter -> Unload and save to database.</li>
+            <li><strong>Security</strong>: Enterprise A's data will only change its private Adapter and will never pollute the shared base, perfectly solving the data leakage problem.</li>
+        </ul>
+
+        <hr>
+
+        <h3>V. Outlook: From "Brute Force Aesthetics" to "Infinite Context"</h3>
+
+        <p>If Transformer represents the brute force aesthetics of <strong>"Attention is All You Need,"</strong> then Nested Learning opens a new era of <strong>"Compression is All You Need."</strong></p>
+
+        <div class="comparison-box">
+            <h4>1. The Battle of Routes: VRAM Explosion vs. Constant Consumption</h4>
+            <ul>
+                <li><strong>Transformer</strong>: Although powerful, the <strong>KV Cache VRAM usage is huge</strong> during inference, and computational cost grows dramatically with length. The current 1M context is often propped up by sheer physical VRAM.</li>
+                <li><strong>HOPE (Future Architecture)</strong>: It does not keep the history of all tokens but constantly "compresses" history into dynamic state/memory. Although essentially "lossy," it is extremely efficient. During inference, whether the context is 1k or 1M, its <strong>VRAM usage (State Size) is almost constant \( O(1) \)</strong>.</li>
+            </ul>
+        </div>
+
+        <h4>2. If Gemini 4 Adopts This Technology...</h4>
+        <p>If this technology is applied to future models (like Gemini 4), it will bring qualitative changes:</p>
+        <ul>
+            <li><strong>Infinite Context</strong>: Theoretically, context length can be infinite because old information is compressed into the State, occupying no extra VRAM.</li>
+            <li><strong>Plummeting Inference Costs</strong>: Currently, reading a 1-million-word book is expensive. With HOPE, the computational cost of reading the 1,000,000th word is the same as reading the 1st word, significantly reducing costs.</li>
+            <li><strong>Solving "Lost in the Middle"</strong>: Transformers tend to ignore information in the middle of ultra-long texts. Paper experiments show that HOPE, based on "deep memory," is more robust in long-text information extraction.</li>
+        </ul>
+
+        <hr>
+
+        <h3>Conclusion</h3>
+
+        <p>Google's Nested Learning tells us that the direction of AI evolution may not be simply making models "bigger," but making the structure "alive."</p>
+
+        <p>It breaks the boundary between training and usage. Through the architecture of <strong>"Shared Brain + Exclusive Memory,"</strong> AI evolves from a static encyclopedia into an intelligent life form that constantly reshapes itself during interaction. For the industry, this is not just an architectural innovation, but the beginning of a business model transformation from "selling compute" to "selling memory and personalization."</p>
+
+        <div class="download-section">
+            <p><strong>Paper Download URL:</strong></p>
+            <span class="url-display">https://abehrouz.github.io/files/NL.pdf</span>
+            <p class="download-note">Paper Title: Nested Learning: The Illusion of Deep Learning Architectures</p>
+        </div>
     </div>
+
+    <script>
+        function switchLanguage() {
+            const selector = document.getElementById('lang-selector');
+            const lang = selector.value;
+            const zhContent = document.getElementById('content-zh');
+            const enContent = document.getElementById('content-en');
+
+            if (lang === 'zh') {
+                zhContent.classList.remove('hidden');
+                enContent.classList.add('hidden');
+                document.documentElement.lang = 'zh-CN';
+            } else {
+                enContent.classList.remove('hidden');
+                zhContent.classList.add('hidden');
+                document.documentElement.lang = 'en';
+            }
+        }
+
+        // 初始化：确保页面加载时状态正确（虽然HTML结构已经默认设置好了，这里做双重保险）
+        window.onload = function() {
+            const selector = document.getElementById('lang-selector');
+            // 强制设为英文
+            selector.value = 'en';
+            switchLanguage();
+        };
+    </script>
 
 </body>
 </html>
