@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenClaw + Gemini 3.1 Pro 视频事件检索与目标框选方案</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --card: #ffffff;
+      --text: #1e293b;
+      --muted: #475569;
+      --accent: #0f766e;
+      --accent-2: #0369a1;
+      --warn: #b45309;
+      --ok: #166534;
+      --border: #dbe2ea;
+      --code-bg: #0b1020;
+      --code-text: #dbeafe;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 24px;
+      font-family: "PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+      background: linear-gradient(180deg, #eef4f8 0%, #f8fafc 100%);
+      color: var(--text);
+      line-height: 1.65;
+    }
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .hero {
+      background: radial-gradient(circle at top right, #d1fae5, #e0f2fe 45%, #ffffff 100%);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 28px;
+      margin-bottom: 18px;
+    }
+    h1, h2, h3 {
+      margin: 0 0 12px;
+      line-height: 1.35;
+    }
+    h1 { font-size: 30px; }
+    h2 { font-size: 24px; margin-top: 28px; }
+    h3 { font-size: 19px; margin-top: 18px; }
+    p { margin: 8px 0; }
+    .lead {
+      font-size: 17px;
+      color: #0f172a;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      margin-top: 14px;
+    }
+    .badge {
+      display: inline-block;
+      background: #d1fae5;
+      color: #065f46;
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    ul, ol { margin: 8px 0 8px 24px; }
+    li { margin: 6px 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      vertical-align: top;
+    }
+    th {
+      text-align: left;
+      background: #f8fafc;
+    }
+    .note {
+      border-left: 4px solid var(--accent-2);
+      padding: 10px 12px;
+      background: #eff6ff;
+      margin: 10px 0;
+      color: #0f172a;
+    }
+    .warn {
+      border-left-color: var(--warn);
+      background: #fff7ed;
+    }
+    .ok {
+      border-left-color: var(--ok);
+      background: #f0fdf4;
+    }
+    pre {
+      margin: 12px 0;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border-radius: 10px;
+      padding: 14px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      margin-top: 10px;
+    }
+    .kpi {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      background: #fff;
+    }
+    .kpi b { font-size: 18px; color: #0f172a; }
+    .small { color: var(--muted); font-size: 13px; }
+    .footer {
+      margin-top: 30px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    code { background: #f1f5f9; padding: 1px 5px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <section class="hero">
+      <h1>基于 OpenClaw + Gemini 3.1 Pro 的视频事件检索与目标框选方案</h1>
+      <p class="lead">目标：从约 3GB 视频中检索出符合 <code>description.jpg</code> 描述的目标/行为，返回对应时间点帧图，并输出类似 <code>frame1.png</code> 的高质量画框结果。</p>
+      <div>
+        <span class="badge">推荐架构：YOLO 预过滤 + Gemini 语义召回 + 精定位</span>
+        <span class="badge">适配场景：离线审查 / 准实时回放分析</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>1. 最终推荐（结论先行）</h2>
+      <p><b>最合理的方案不是“纯 Gemini”也不是“纯 YOLO”，而是分层混合：</b></p>
+      <ol>
+        <li><b>本地轻量预过滤：</b> YOLO(person) + 运动检测 + 简单人群统计，快速剔除空帧和低价值片段。</li>
+        <li><b>语义时间召回：</b> 对候选片段调用 Gemini 3.1 Pro，找“事件发生时间窗”（而非直接像素级最终框）。</li>
+        <li><b>空间精定位：</b> 对时间窗内关键帧使用 Grounding DINO / YOLO(定制) + 跟踪器进行精框与连续性校验。</li>
+        <li><b>规则引擎判定：</b> 将“其他人坐着、仅一人站立并举手”等复杂关系写入可解释规则层。</li>
+        <li><b>渲染输出：</b> 回到原视频时间点截帧，画框、标注置信度、时间戳和规则命中原因。</li>
+      </ol>
+      <div class="note ok">
+        这条链路在准确率、成本、吞吐和可维护性上最均衡，且与 OpenClaw 的 Agent 编排模式天然匹配。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>2. 为什么这样设计</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>环节</th>
+            <th>只用 Gemini 的问题</th>
+            <th>只用检测模型的问题</th>
+            <th>混合方案收益</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>粗筛</td>
+            <td>成本高、耗时高</td>
+            <td>能筛“有人”，但筛不出复杂语义</td>
+            <td>本地模型快速降样本，减少 API 调用量</td>
+          </tr>
+          <tr>
+            <td>事件理解</td>
+            <td>可做，但如果全量扫会慢</td>
+            <td>关系语义弱（例如“只有一人站立且举手”）</td>
+            <td>Gemini 专注“时间定位 + 语义解释”</td>
+          </tr>
+          <tr>
+            <td>精准框选</td>
+            <td>坐标稳定性依赖模型与模式</td>
+            <td>擅长框选，但不懂复杂语义上下文</td>
+            <td>检测器负责几何精度，LLM 负责语义判断</td>
+          </tr>
+          <tr>
+            <td>可解释性</td>
+            <td>黑盒风险高</td>
+            <td>规则缺失时难解释</td>
+            <td>规则引擎输出命中依据，便于审计</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>3. 端到端技术架构</h2>
+      <pre>┌──────────────────────────────────────────────────────────────────┐
+│                        OpenClaw Agent Orchestrator               │
+│  - 任务拆解  - Tool 调度  - 重试策略  - 结果聚合  - 报告生成       │
+└──────────────┬───────────────────────────────────────────────────┘
+               │
+        ┌──────▼───────────────────────────────────────────────────┐
+        │ A. 预处理层 (Local CV)                                   │
+        │ - FFmpeg 分片/转码(尽量不先降清晰度)                       │
+        │ - YOLO person 检测 + 运动检测 + ROI 裁剪                 │
+        │ - 输出候选时间窗 candidate_windows.json                  │
+        └──────┬───────────────────────────────────────────────────┘
+               │
+        ┌──────▼───────────────────────────────────────────────────┐
+        │ B. 语义召回层 (Gemini 3.1 Pro)                           │
+        │ - 输入候选视频片段 + 行为描述模板                         │
+        │ - 输出事件时间窗 + 语义解释 + 置信度                      │
+        └──────┬───────────────────────────────────────────────────┘
+               │
+        ┌──────▼───────────────────────────────────────────────────┐
+        │ C. 精定位层 (Grounding DINO / YOLO + Tracker)            │
+        │ - 对时间窗关键帧做 bbox + 跨帧跟踪                         │
+        │ - 规则引擎做关系判定(站/坐/举手/独自等)                    │
+        └──────┬───────────────────────────────────────────────────┘
+               │
+        ┌──────▼───────────────────────────────────────────────────┐
+        │ D. 产物层                                                 │
+        │ - 标注帧图（类似 frame1.png）                             │
+        │ - 事件 JSON 报告（时间戳、框坐标、证据、置信度）          │
+        └───────────────────────────────────────────────────────────┘</pre>
+    </section>
+
+    <section class="card">
+      <h2>4. OpenClaw 工具编排（建议）</h2>
+      <h3>4.1 Tool/Skill 列表</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Tool 名称</th>
+            <th>输入</th>
+            <th>输出</th>
+            <th>说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>video_preprocess</code></td>
+            <td>原视频路径、分片策略</td>
+            <td>分片文件列表</td>
+            <td>优先切片，不默认降到 720p</td>
+          </tr>
+          <tr>
+            <td><code>prefilter_yolo_motion</code></td>
+            <td>分片视频、采样 FPS</td>
+            <td>候选时间窗</td>
+            <td>去空帧、去静止帧，降低 Gemini 成本</td>
+          </tr>
+          <tr>
+            <td><code>gemini_temporal_search</code></td>
+            <td>候选片段、行为描述</td>
+            <td>事件时间窗 + 解释</td>
+            <td>仅做语义召回，不直接当最终 bbox 真值</td>
+          </tr>
+          <tr>
+            <td><code>frame_extract</code></td>
+            <td>原视频、时间窗</td>
+            <td>关键帧序列</td>
+            <td>从原视频抽帧，保证细节</td>
+          </tr>
+          <tr>
+            <td><code>spatial_localize</code></td>
+            <td>关键帧、文本提示</td>
+            <td>bbox 序列</td>
+            <td>Grounding DINO / YOLO 定位</td>
+          </tr>
+          <tr>
+            <td><code>rule_engine</code></td>
+            <td>姿态/目标/人群状态</td>
+            <td>规则命中结论</td>
+            <td>处理“独自站立+他人坐下”等关系</td>
+          </tr>
+          <tr>
+            <td><code>render_result</code></td>
+            <td>原始帧、bbox、标签</td>
+            <td>标注图片 + JSON</td>
+            <td>输出最终可视化与结构化结果</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>4.2 Agent 决策逻辑（简化）</h3>
+      <pre>{
+  "policy": [
+    "先运行 prefilter_yolo_motion，未命中候选窗口则直接输出未检测到",
+    "候选窗口数量过大时，先按运动强度和人数变化排序取 Top-K",
+    "Gemini 仅返回时间窗与语义置信度，不直接用于最终框",
+    "空间框必须经过 detector + tracker 双重确认",
+    "规则引擎不满足时，结果标记为疑似而非命中"
+  ]
+}</pre>
+    </section>
+
+    <section class="card">
+      <h2>5. 关键算法与参数建议</h2>
+      <h3>5.1 采样策略</h3>
+      <ul>
+        <li>全视频粗采样：<code>0.5~1 FPS</code>（用于预过滤统计）。</li>
+        <li>候选窗精采样：<code>4~8 FPS</code>（用于动作细节和跟踪）。</li>
+        <li>高速动作（如“快速奔跑/拔取动作”）：局部可升到 <code>10~15 FPS</code>。</li>
+      </ul>
+
+      <h3>5.2 规则引擎示例（“其他人坐着，独自站立并举手”）</h3>
+      <ol>
+        <li>检测到人数 <code>N >= 3</code>。</li>
+        <li>姿态估计得到“站立人数 == 1”。</li>
+        <li>该站立者手部关键点满足“双手高于肩线”持续 <code>T >= 1.0s</code>。</li>
+        <li>其余人员坐姿比例满足 <code>&gt;= 70%</code> 且持续 <code>T &gt;= 1.0s</code>。</li>
+        <li>跟踪 ID 连续存在，排除瞬时误检。</li>
+      </ol>
+
+      <h3>5.3 抗幻觉策略</h3>
+      <ul>
+        <li>Gemini Prompt 固定要求：无证据时返回 <code>NOT_FOUND</code>。</li>
+        <li>同一事件需满足“语义召回 + 空间定位 + 规则引擎”三重一致。</li>
+        <li>输出附带证据字段：<code>timestamps</code>、<code>bbox_seq</code>、<code>pose_score</code>、<code>reason</code>。</li>
+      </ul>
+      <div class="note warn">
+        不建议把“LLM 文本回答”直接当最终检测结果。必须经过检测器和规则层复核。
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>6. API/模型调用契约（建议 JSON）</h2>
+      <h3>6.1 Gemini 时间召回输出</h3>
+      <pre>{
+  "action_id": "A09",
+  "action_name": "others_sitting_one_person_standing_hands_up",
+  "segments": [
+    { "start_sec": 923.2, "end_sec": 928.7, "confidence": 0.78, "reason": "..." }
+  ],
+  "status": "FOUND"
+}</pre>
+
+      <h3>6.2 精定位输出</h3>
+      <pre>{
+  "segment_id": "A09_001",
+  "frame_results": [
+    {
+      "ts": 924.00,
+      "detections": [
+        { "track_id": 12, "label": "person", "bbox_xyxy": [420, 180, 520, 410], "score": 0.93 }
+      ]
+    }
+  ]
+}</pre>
+
+      <h3>6.3 最终事件结果</h3>
+      <pre>{
+  "event_id": "A09_001",
+  "hit": true,
+  "evidence": {
+    "window": [923.2, 928.7],
+    "target_track_id": 12,
+    "rule_scores": {
+      "single_standing": 0.92,
+      "hands_up": 0.89,
+      "others_sitting": 0.76
+    }
+  },
+  "artifacts": {
+    "best_frame": "outputs/A09_001_best.jpg",
+    "annotated_clip": "outputs/A09_001_clip.mp4",
+    "report_json": "outputs/A09_001.json"
+  }
+}</pre>
+    </section>
+
+    <section class="card">
+      <h2>7. 工程实现要点（非常关键）</h2>
+      <h3>7.1 不要默认先压 720p</h3>
+      <ul>
+        <li>优先：分片 + 保清晰抽帧。</li>
+        <li>仅在带宽/上传限制需要时再进行有控制压缩。</li>
+        <li>可采用 ROI 裁剪（看台区域、通道区域）替代全局降分辨率。</li>
+      </ul>
+
+      <h3>7.2 性能与成本控制</h3>
+      <ul>
+        <li>批处理：按分片并行跑预过滤。</li>
+        <li>缓存：同片段语义搜索结果缓存，避免重复调用。</li>
+        <li>阈值门控：低运动、低人数变化窗口直接跳过 Gemini。</li>
+        <li>Top-K 策略：仅将高可疑窗口送入精定位。</li>
+      </ul>
+
+      <h3>7.3 质量评估体系</h3>
+      <div class="grid">
+        <div class="kpi"><b>Recall@Event</b><br><span class="small">事件召回率（优先指标）</span></div>
+        <div class="kpi"><b>Precision@Event</b><br><span class="small">事件精确率（降低误报）</span></div>
+        <div class="kpi"><b>mAP@BBox</b><br><span class="small">框选几何精度</span></div>
+        <div class="kpi"><b>Latency/Hour Video</b><br><span class="small">每小时视频处理耗时</span></div>
+        <div class="kpi"><b>Cost/Hour Video</b><br><span class="small">每小时视频 API+算力成本</span></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>8. 分阶段落地计划</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>阶段</th>
+            <th>目标</th>
+            <th>输出</th>
+            <th>验收标准</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>P0（1-2周）</td>
+            <td>跑通端到端</td>
+            <td>可对单条行为检索+出框图</td>
+            <td>手工验证样本可复现结果</td>
+          </tr>
+          <tr>
+            <td>P1（2-4周）</td>
+            <td>支持多行为并行</td>
+            <td>规则引擎 + 批处理流水线</td>
+            <td>事件召回率达到业务可用阈值</td>
+          </tr>
+          <tr>
+            <td>P2（4-8周）</td>
+            <td>成本优化与稳定性</td>
+            <td>缓存/重试/监控/告警</td>
+            <td>单位视频成本下降，误报下降</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section class="card">
+      <h2>9. 示例工作流伪代码（可直接映射到 OpenClaw）</h2>
+      <pre>def pipeline(video_path, action_defs):
+    segments = video_preprocess(video_path, split_minutes=10, keep_resolution=True)
+
+    candidates = []
+    for seg in segments:
+      c = prefilter_yolo_motion(seg, fps=1)
+      candidates.extend(c)
+
+    semantic_hits = []
+    for action in action_defs:
+      semantic_hits.extend(
+        gemini_temporal_search(candidates, action.prompt, enforce_not_found=True)
+      )
+
+    final_events = []
+    for hit in semantic_hits:
+      keyframes = frame_extract(video_path, hit.start_sec, hit.end_sec, fps=6)
+      dets = spatial_localize(keyframes, hit.localization_prompt)
+      tracks = track_objects(dets)
+      verdict = rule_engine(action=hit.action_id, tracks=tracks, min_duration=1.0)
+      if verdict.hit:
+        artifact = render_result(video_path, verdict.best_ts, verdict.best_bbox, hit.action_name)
+        final_events.append({**verdict, "artifact": artifact})
+
+    return final_events</pre>
+    </section>
+
+    <section class="card">
+      <h2>10. 风险与对策清单</h2>
+      <ul>
+        <li><b>小目标看不清：</b> 不先全局降采样，优先 ROI + 高分辨率关键帧。</li>
+        <li><b>快动作漏检：</b> 候选窗提高 FPS，增加连续帧判定。</li>
+        <li><b>误报偏高：</b> 引入规则持续时间阈值、跨模型一致性校验。</li>
+        <li><b>成本过高：</b> YOLO/motion 预过滤 + Top-K + 缓存。</li>
+        <li><b>模型波动：</b> 多模型兜底与 A/B 评估，不绑定单一供应商能力。</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>11. 你当前项目的推荐默认配置</h2>
+      <ul>
+        <li>场景类型：离线审查（非硬实时）。</li>
+        <li>视频处理：10 分钟分片，原分辨率保留。</li>
+        <li>预过滤：YOLO(person) + motion，粗采样 1 FPS。</li>
+        <li>语义召回：Gemini 仅分析候选片段。</li>
+        <li>精定位：Grounding DINO + ByteTrack，关键窗 6 FPS。</li>
+        <li>输出：<code>best_frame.jpg</code>、<code>annotated_clip.mp4</code>、<code>event_report.json</code>。</li>
+      </ul>
+      <div class="note ok">
+        这套默认配置可以先快速上线，后续再按数据集迭代阈值和模型组合。
+      </div>
+    </section>
+
+    <p class="footer">文档生成时间：2026-03-04（Asia/Shanghai）。注：具体 API 限制、配额和计费以官方实时文档为准。</p>
+  </div>
+</body>
+</html>
