@@ -7,17 +7,22 @@
   <meta name="description" content="Spatial Agent Memory 与 SpatialRAG 技术介绍，包含点云与体素的区别、系统架构与检索机制说明。">
   <style>
     :root {
-      --bg: #f5f1e8;
-      --panel: rgba(255, 252, 245, 0.92);
-      --panel-strong: #fffdf8;
-      --text: #1c1b18;
-      --muted: #5b554d;
-      --line: rgba(72, 58, 40, 0.14);
-      --accent: #b45309;
-      --accent-soft: rgba(180, 83, 9, 0.10);
-      --shadow: 0 18px 50px rgba(63, 43, 20, 0.10);
-      --radius: 22px;
-      --max: 1180px;
+      --bg: #ffffff;
+      --bg-subtle: #f8fafc;
+      --panel: #ffffff;
+      --panel-subtle: #f5f7fb;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --accent: #2563eb;
+      --accent-soft: #eff6ff;
+      --code-bg: #0b1220;
+      --code-text: #e2e8f0;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+      --max-width: 1240px;
+      --content-width: 760px;
+      --radius: 16px;
     }
 
     * {
@@ -30,12 +35,11 @@
 
     body {
       margin: 0;
-      font-family: "PingFang SC", "Hiragino Sans GB", "Noto Sans SC", sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans SC", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top left, rgba(196, 125, 42, 0.16), transparent 28%),
-        radial-gradient(circle at 85% 10%, rgba(145, 86, 34, 0.10), transparent 22%),
-        linear-gradient(180deg, #f8f3e8 0%, #f4efe5 52%, #efe7da 100%);
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.05), transparent 26%),
+        linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
       line-height: 1.75;
     }
 
@@ -44,135 +48,204 @@
       text-decoration: none;
     }
 
-    .shell {
-      width: min(calc(100% - 32px), var(--max));
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      width: min(calc(100% - 32px), var(--max-width));
       margin: 0 auto;
-      padding: 32px 0 56px;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--muted);
+      letter-spacing: 0.01em;
+    }
+
+    .brand-mark {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.12);
+    }
+
+    .top-links {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .top-links a {
+      padding: 8px 0;
+    }
+
+    .page {
+      width: min(calc(100% - 32px), var(--max-width));
+      margin: 0 auto;
+      padding: 32px 0 72px;
     }
 
     .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 56px;
-      border: 1px solid var(--line);
-      border-radius: 32px;
-      background:
-        linear-gradient(140deg, rgba(255, 249, 239, 0.96), rgba(246, 236, 220, 0.94)),
-        var(--panel);
-      box-shadow: var(--shadow);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      inset: auto -40px -40px auto;
-      width: 220px;
-      height: 220px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(180, 83, 9, 0.16), transparent 65%);
-      pointer-events: none;
+      padding: 40px 0 28px;
+      border-bottom: 1px solid var(--border);
     }
 
     .eyebrow {
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 8px 14px;
+      padding: 6px 12px;
       border-radius: 999px;
       background: var(--accent-soft);
       color: var(--accent);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 600;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.02em;
     }
 
     h1 {
-      margin: 18px 0 12px;
-      font-size: clamp(2.3rem, 4vw, 4.5rem);
-      line-height: 1.06;
-      letter-spacing: -0.03em;
+      margin: 18px 0 14px;
+      max-width: 960px;
+      font-size: clamp(2.4rem, 4vw, 3.8rem);
+      line-height: 1.08;
+      letter-spacing: -0.04em;
     }
 
-    .hero p {
-      max-width: 780px;
+    .hero-lead {
+      max-width: 820px;
       margin: 0;
       font-size: 1.08rem;
       color: var(--muted);
     }
 
-    .hero-grid {
+    .hero-summary {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr;
-      gap: 24px;
-      margin-top: 32px;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+      margin-top: 28px;
     }
 
-    .card {
-      padding: 24px;
-      border: 1px solid var(--line);
+    .summary-card {
+      padding: 18px;
+      border: 1px solid var(--border);
       border-radius: var(--radius);
-      background: rgba(255, 253, 249, 0.78);
-      backdrop-filter: blur(8px);
+      background: var(--panel);
+      box-shadow: var(--shadow);
     }
 
-    .stat {
+    .summary-card strong {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 1rem;
+    }
+
+    .layout {
       display: grid;
-      gap: 10px;
+      grid-template-columns: 240px minmax(0, var(--content-width));
+      gap: 44px;
+      align-items: start;
+      margin-top: 28px;
     }
 
-    .stat strong {
-      font-size: 2rem;
-      line-height: 1;
-      color: var(--accent);
+    .sidebar {
+      position: sticky;
+      top: 92px;
+    }
+
+    .sidebar-card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.88);
+    }
+
+    .sidebar-title {
+      margin: 0 0 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .toc {
-      margin: 28px 0 0;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
+      display: grid;
+      gap: 6px;
     }
 
     .toc a {
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.62);
-      font-size: 14px;
+      padding: 9px 10px;
+      border-radius: 10px;
       color: var(--muted);
+      font-size: 14px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .toc a:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
     }
 
     main {
-      margin-top: 28px;
-      display: grid;
-      gap: 22px;
+      min-width: 0;
     }
 
     section {
-      padding: 34px;
-      border: 1px solid var(--line);
-      border-radius: 28px;
-      background: var(--panel);
-      box-shadow: 0 10px 30px rgba(63, 43, 20, 0.06);
+      padding: 34px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    section:first-child {
+      padding-top: 6px;
+    }
+
+    section:last-child {
+      border-bottom: 0;
+      padding-bottom: 0;
     }
 
     h2 {
-      margin: 0 0 14px;
-      font-size: 1.8rem;
-      line-height: 1.2;
-      letter-spacing: -0.02em;
+      margin: 0 0 16px;
+      font-size: 2rem;
+      line-height: 1.18;
+      letter-spacing: -0.03em;
     }
 
     h3 {
       margin: 24px 0 10px;
-      font-size: 1.1rem;
+      font-size: 1.08rem;
+      line-height: 1.35;
     }
 
     p {
       margin: 12px 0;
+      color: #1e293b;
     }
 
-    ul {
+    .muted {
+      color: var(--muted);
+    }
+
+    ul,
+    ol {
       margin: 12px 0;
       padding-left: 22px;
     }
@@ -181,311 +254,371 @@
       margin-top: 8px;
     }
 
-    .table-wrap {
-      overflow-x: auto;
+    .callout {
+      margin: 18px 0;
+      padding: 16px 18px;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      background: #f8fbff;
+      color: #1e3a8a;
+    }
+
+    .callout strong {
+      color: #1d4ed8;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
       margin-top: 18px;
+    }
+
+    .mini-card {
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--panel-subtle);
+    }
+
+    .mini-card .label {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+    }
+
+    .table-wrap {
+      margin-top: 18px;
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: #ffffff;
+      box-shadow: 0 4px 18px rgba(15, 23, 42, 0.03);
     }
 
     table {
       width: 100%;
-      border-collapse: collapse;
       min-width: 680px;
-      background: var(--panel-strong);
-      border-radius: 18px;
-      overflow: hidden;
+      border-collapse: collapse;
+      font-size: 14px;
     }
 
     th,
     td {
       padding: 14px 16px;
-      border-bottom: 1px solid var(--line);
+      border-bottom: 1px solid var(--border);
       text-align: left;
       vertical-align: top;
     }
 
     th {
-      background: rgba(180, 83, 9, 0.08);
+      background: #f8fafc;
       font-weight: 700;
+      color: #0f172a;
     }
 
     tr:last-child td {
       border-bottom: 0;
     }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 18px;
-      margin-top: 18px;
-    }
-
-    .tag {
-      display: inline-block;
-      margin-bottom: 10px;
-      padding: 6px 10px;
-      border-radius: 999px;
-      background: var(--accent-soft);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
+    code {
+      padding: 1px 6px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      font-family: "SFMono-Regular", Menlo, Consolas, Monaco, monospace;
+      font-size: 0.92em;
     }
 
     pre {
       margin: 18px 0 0;
-      padding: 20px;
+      padding: 18px 20px;
       overflow-x: auto;
-      border-radius: 20px;
-      border: 1px solid rgba(44, 37, 28, 0.08);
-      background: #201914;
-      color: #f6efe5;
-      line-height: 1.6;
-      font-size: 0.95rem;
+      border-radius: 16px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      line-height: 1.65;
+      font-size: 0.93rem;
     }
 
-    code {
-      font-family: "SFMono-Regular", "Menlo", "Consolas", monospace;
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      font-size: inherit;
     }
 
-    .summary {
-      border-left: 4px solid var(--accent);
-      padding-left: 18px;
+    .section-intro {
       color: var(--muted);
+      margin-top: -4px;
+      margin-bottom: 18px;
     }
 
-    footer {
-      margin-top: 18px;
-      padding: 12px 6px 0;
-      color: var(--muted);
-      font-size: 14px;
-      text-align: center;
+    .closing {
+      padding: 24px;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: linear-gradient(180deg, #ffffff, #f8fbff);
     }
 
-    @media (max-width: 900px) {
-      .hero {
-        padding: 32px 24px;
+    @media (max-width: 1080px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
       }
 
-      .hero-grid,
-      .grid-2 {
+      .sidebar {
+        position: static;
+      }
+
+      .hero-summary {
         grid-template-columns: 1fr;
       }
-
-      section {
-        padding: 26px 20px;
-      }
     }
 
-    @media (max-width: 560px) {
-      .shell {
-        width: min(calc(100% - 20px), var(--max));
-        padding-top: 16px;
+    @media (max-width: 720px) {
+      .page,
+      .topbar-inner {
+        width: min(calc(100% - 20px), var(--max-width));
+      }
+
+      .top-links {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 24px;
       }
 
       h1 {
-        font-size: 2.1rem;
+        font-size: 2.3rem;
       }
 
-      .toc {
-        gap: 10px;
+      h2 {
+        font-size: 1.7rem;
       }
 
-      .toc a {
-        width: 100%;
+      .grid-2 {
+        grid-template-columns: 1fr;
       }
     }
   </style>
 </head>
 <body>
-  <div class="shell">
-    <header class="hero">
-      <span class="eyebrow">Spatial Intelligence · Technical Brief</span>
-      <h1>Spatial Agent Memory 与 SpatialRAG</h1>
-      <p>
-        这是一套面向机器人与空间智能体的三维记忆与检索框架。其关键不只是“看见世界”，而是把原始感知转化为可持续更新、可检索、可推理的空间知识系统。
-      </p>
-      <div class="hero-grid">
-        <div class="card">
-          <div class="stat">
-            <strong>点云负责感知</strong>
-            <span>保留原始三维观测，提供高保真几何证据。</span>
-          </div>
-          <div class="stat" style="margin-top: 20px;">
-            <strong>体素负责记忆</strong>
-            <span>把空间离散化为统一网格，承载语义、时间和检索索引。</span>
-          </div>
-        </div>
-        <div class="card">
-          <div class="stat">
-            <strong>SpatialRAG 负责调用</strong>
-            <span>在任务发生时，从三维记忆中检索最相关的空间上下文，支撑回答、导航与行动决策。</span>
-          </div>
-        </div>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true"></span>
+        <span>Spatial Intelligence Docs</span>
       </div>
-      <nav class="toc" aria-label="目录">
-        <a href="#voxel">体素</a>
-        <a href="#point-cloud">点云</a>
-        <a href="#difference">点云与体素区别</a>
+      <nav class="top-links" aria-label="快速导航">
+        <a href="#difference">点云 vs 体素</a>
         <a href="#memory">Spatial Agent Memory</a>
         <a href="#rag">SpatialRAG</a>
-        <a href="#architecture">整体架构</a>
-        <a href="#summary">总结</a>
       </nav>
-    </header>
+    </div>
+  </header>
 
-    <main>
-      <section id="voxel">
-        <h2>1. 什么是体素（Voxel）？</h2>
-        <p><strong>像素（Pixel）</strong>是二维图像的最小单位，<strong>体素（Voxel）= Volume + Pixel</strong>，可以理解为像素在三维空间中的对应物。</p>
-        <p>如果把连续的三维空间切成大量规则的小立方体，那么每个小立方体就是一个体素。每个体素对应一个固定空间位置，并可携带丰富属性。</p>
-        <div class="grid-2">
-          <div class="card">
-            <span class="tag">空间表达</span>
-            <p>体素的核心价值在于把连续世界离散化、结构化，形成适合计算、融合和检索的三维网格。</p>
-          </div>
-          <div class="card">
-            <span class="tag">可挂载信息</span>
-            <ul>
-              <li>占据状态与可通行性</li>
-              <li>颜色、纹理、材质特征</li>
-              <li>语义标签与向量嵌入</li>
-              <li>观测时间与更新状态</li>
-            </ul>
-          </div>
+  <div class="page">
+    <section class="hero">
+      <span class="eyebrow">Technical Overview</span>
+      <h1>Spatial Agent Memory 与 SpatialRAG</h1>
+      <p class="hero-lead">
+        这是一套面向机器人与空间智能体的三维记忆与检索框架。关键不只是“看见世界”，而是把原始感知转化为可持续更新、可检索、可推理的空间知识系统。
+      </p>
+      <div class="hero-summary">
+        <div class="summary-card">
+          <strong>点云负责感知</strong>
+          <span class="muted">保留原始三维观测，提供高保真几何证据。</span>
         </div>
-      </section>
+        <div class="summary-card">
+          <strong>体素负责记忆</strong>
+          <span class="muted">把空间离散化为统一网格，承载语义、时间和索引。</span>
+        </div>
+        <div class="summary-card">
+          <strong>SpatialRAG 负责调用</strong>
+          <span class="muted">在任务发生时检索相关空间上下文，支撑回答、导航与行动决策。</span>
+        </div>
+      </div>
+    </section>
 
-      <section id="point-cloud">
-        <h2>2. 什么是点云（Point Cloud）？</h2>
-        <p>点云通常由<strong>激光雷达（LiDAR）</strong>、<strong>深度相机</strong>或其他三维传感器产生，本质上是大量三维坐标点的集合。</p>
-        <p>每个点至少包含三维位置 <code>(x, y, z)</code>，有时还会附带反射强度、颜色、法向量等属性。点云更接近传感器对世界的原始观测结果。</p>
-        <p>它像一张三维草图，能清晰反映轮廓和几何形状，但通常只有“点”，没有天然的体积填充与规则网格结构。</p>
-        <div class="card">
-          <span class="tag">典型特征</span>
+    <div class="layout">
+      <aside class="sidebar">
+        <div class="sidebar-card">
+          <p class="sidebar-title">On this page</p>
+          <nav class="toc" aria-label="目录">
+            <a href="#voxel">1. 体素</a>
+            <a href="#point-cloud">2. 点云</a>
+            <a href="#difference">3. 点云与体素区别</a>
+            <a href="#memory">4. Spatial Agent Memory</a>
+            <a href="#rag">5. SpatialRAG</a>
+            <a href="#architecture">6. 整体架构</a>
+            <a href="#summary">7. 总结</a>
+          </nav>
+        </div>
+      </aside>
+
+      <main>
+        <section id="voxel">
+          <h2>1. 什么是体素（Voxel）？</h2>
+          <p class="section-intro">体素是三维空间中的基础表达单元，本质上是像素在空间维度上的延展。</p>
+          <p><strong>像素（Pixel）</strong>是二维图像的最小单位，<strong>体素（Voxel）= Volume + Pixel</strong>，可以理解为像素在三维空间中的对应物。</p>
+          <p>如果把连续的三维空间切成大量规则的小立方体，那么每个小立方体就是一个体素。每个体素对应一个固定空间位置，并可携带丰富属性。</p>
+          <div class="grid-2">
+            <div class="mini-card">
+              <span class="label">空间表达</span>
+              <p>体素的核心价值在于把连续世界离散化、结构化，形成适合计算、融合和检索的三维网格。</p>
+            </div>
+            <div class="mini-card">
+              <span class="label">可挂载信息</span>
+              <ul>
+                <li>占据状态与可通行性</li>
+                <li>颜色、纹理、材质特征</li>
+                <li>语义标签与向量嵌入</li>
+                <li>观测时间与更新状态</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section id="point-cloud">
+          <h2>2. 什么是点云（Point Cloud）？</h2>
+          <p class="section-intro">点云更接近传感器的原始观测结果，是机器人感知空间的第一手几何证据。</p>
+          <p>点云通常由<strong>激光雷达（LiDAR）</strong>、<strong>深度相机</strong>或其他三维传感器产生，本质上是大量三维坐标点的集合。</p>
+          <p>每个点至少包含三维位置 <code>(x, y, z)</code>，有时还会附带反射强度、颜色、法向量等属性。点云更接近传感器对世界的原始观测结果。</p>
+          <p>它像一张三维草图，能清晰反映轮廓和几何形状，但通常只有“点”，没有天然的体积填充与规则网格结构。</p>
+          <div class="callout">
+            <strong>典型特征</strong>：稀疏、无序、密度不均匀，受距离、视角和遮挡影响明显。它保真度高，但直接用于长期记忆和检索并不理想。
+          </div>
+        </section>
+
+        <section id="difference">
+          <h2>3. 点云和体素的区别</h2>
+          <p class="section-intro">两者都能表达三维空间，但属于不同层级的表示方法。前者偏原始观测，后者偏结构化建模。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>维度</th>
+                  <th>点云（Point Cloud）</th>
+                  <th>体素（Voxel）</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>本质</td>
+                  <td>原始三维采样点集合</td>
+                  <td>规则化的三维空间网格</td>
+                </tr>
+                <tr>
+                  <td>数据形态</td>
+                  <td>无序、稀疏、不规则</td>
+                  <td>有序、离散、结构化</td>
+                </tr>
+                <tr>
+                  <td>来源</td>
+                  <td>直接来自传感器扫描</td>
+                  <td>由点云、图像和位姿信息融合后构建</td>
+                </tr>
+                <tr>
+                  <td>表达重点</td>
+                  <td>哪里测到了点</td>
+                  <td>这个空间单元里有什么</td>
+                </tr>
+                <tr>
+                  <td>空间覆盖</td>
+                  <td>主要记录观测到的表面点</td>
+                  <td>可表达占据、空闲、未知等状态</td>
+                </tr>
+                <tr>
+                  <td>计算特点</td>
+                  <td>保真度高，但处理复杂</td>
+                  <td>更适合融合、索引、检索和推理</td>
+                </tr>
+                <tr>
+                  <td>存储特点</td>
+                  <td>大场景下通常更紧凑</td>
+                  <td>分辨率越高，存储成本越大</td>
+                </tr>
+                <tr>
+                  <td>典型用途</td>
+                  <td>重建、测量、目标检测、几何匹配</td>
+                  <td>语义地图、空间记忆、规划与 SpatialRAG</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="grid-2">
+            <div class="mini-card">
+              <span class="label">一句话理解</span>
+              <p><strong>点云</strong>是机器人“看到”的原始三维世界。</p>
+              <p><strong>体素</strong>是机器人“整理和记住”的结构化三维世界。</p>
+            </div>
+            <div class="mini-card">
+              <span class="label">工程关系</span>
+              <p>二者通常不是替代关系，而是上下游关系。常见流程是先采集点云，再进行融合和体素化，构建长期可用的空间记忆。</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="memory">
+          <h2>4. 什么是 Spatial Agent Memory？</h2>
+          <p class="section-intro">核心目标不是保存零散传感器数据，而是形成一个持续更新、可查询、带语义的三维世界模型。</p>
+          <p>Spatial Agent Memory 是面向机器人或空间智能体的<strong>多模态三维记忆系统</strong>。它把图像、激光雷达、位姿信息与点云统一融合到体素化空间中，形成长期可维护的空间记忆。</p>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>数据来源</th>
+                  <th>作用</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>视频帧 / RGB 图像</td>
+                  <td>提供外观、颜色、纹理信息</td>
+                </tr>
+                <tr>
+                  <td>激光雷达 / 深度传感器</td>
+                  <td>提供高精度三维几何结构</td>
+                </tr>
+                <tr>
+                  <td>里程计 / SLAM 位姿</td>
+                  <td>提供机器人位置、视角和运动轨迹</td>
+                </tr>
+                <tr>
+                  <td>点云</td>
+                  <td>提供场景的原始空间采样与几何证据</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <h3>体素化之后，系统能在每个空间单元上挂载更丰富的信息：</h3>
           <ul>
-            <li>稀疏、无序、密度不均匀</li>
-            <li>受视角、距离、遮挡影响明显</li>
-            <li>保真度高，但直接用于长期记忆和检索较困难</li>
+            <li><strong>占据状态</strong>：该位置是否有物体，是否可通行</li>
+            <li><strong>语义标签</strong>：例如门、桌子、椅子、墙面</li>
+            <li><strong>视觉特征</strong>：颜色、纹理、图像嵌入</li>
+            <li><strong>几何特征</strong>：形状描述、局部结构信息</li>
+            <li><strong>时间信息</strong>：何时首次观测、最近更新时间</li>
+            <li><strong>向量嵌入</strong>：便于相似性检索与任务推理</li>
           </ul>
-        </div>
-      </section>
-
-      <section id="difference">
-        <h2>3. 点云和体素的区别</h2>
-        <p>点云和体素都用于表达三维空间，但属于不同层级的表示方法。前者是原始观测，后者是结构化建模结果。</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>维度</th>
-                <th>点云（Point Cloud）</th>
-                <th>体素（Voxel）</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>本质</td>
-                <td>原始三维采样点集合</td>
-                <td>规则化的三维空间网格</td>
-              </tr>
-              <tr>
-                <td>数据形态</td>
-                <td>无序、稀疏、不规则</td>
-                <td>有序、离散、结构化</td>
-              </tr>
-              <tr>
-                <td>来源</td>
-                <td>直接来自传感器扫描</td>
-                <td>由点云、图像和位姿信息融合后构建</td>
-              </tr>
-              <tr>
-                <td>表达重点</td>
-                <td>哪里测到了点</td>
-                <td>这个空间单元里有什么</td>
-              </tr>
-              <tr>
-                <td>空间覆盖</td>
-                <td>主要记录观测到的表面点</td>
-                <td>可表达占据、空闲、未知等状态</td>
-              </tr>
-              <tr>
-                <td>计算特点</td>
-                <td>保真度高，但处理复杂</td>
-                <td>更适合融合、索引、检索和推理</td>
-              </tr>
-              <tr>
-                <td>存储特点</td>
-                <td>大场景下通常更紧凑</td>
-                <td>分辨率越高，存储成本越大</td>
-              </tr>
-              <tr>
-                <td>典型用途</td>
-                <td>重建、测量、目标检测、几何匹配</td>
-                <td>语义地图、空间记忆、规划与 SpatialRAG</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <div class="grid-2">
-          <div class="card">
-            <span class="tag">一句话理解</span>
-            <p><strong>点云</strong>是机器人“看到”的原始三维世界。</p>
-            <p><strong>体素</strong>是机器人“整理和记住”的结构化三维世界。</p>
+          <div class="callout">
+            <strong>工程上的关键取舍</strong>：点云适合感知，体素适合记忆。Spatial Agent Memory 的价值就在于把多源观测沉淀为统一的空间知识单元。
           </div>
-          <div class="card">
-            <span class="tag">工程关系</span>
-            <p>二者通常不是替代关系，而是上下游关系。常见流程是先采集点云，再进行融合和体素化，构建长期可用的空间记忆。</p>
-          </div>
-        </div>
-      </section>
+        </section>
 
-      <section id="memory">
-        <h2>4. 什么是 Spatial Agent Memory？</h2>
-        <p>Spatial Agent Memory 是面向机器人或空间智能体的<strong>多模态三维记忆系统</strong>。它的目标不是保留零散传感器数据，而是构建一个持续更新、可查询、带语义的三维世界模型。</p>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>数据来源</th>
-                <th>作用</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>视频帧 / RGB 图像</td>
-                <td>提供外观、颜色、纹理信息</td>
-              </tr>
-              <tr>
-                <td>激光雷达 / 深度传感器</td>
-                <td>提供高精度三维几何结构</td>
-              </tr>
-              <tr>
-                <td>里程计 / SLAM 位姿</td>
-                <td>提供机器人位置、视角和运动轨迹</td>
-              </tr>
-              <tr>
-                <td>点云</td>
-                <td>提供场景的原始空间采样与几何证据</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <h3>体素化之后，系统能在每个空间单元上挂载更丰富的信息：</h3>
-        <ul>
-          <li><strong>占据状态</strong>：该位置是否有物体，是否可通行</li>
-          <li><strong>语义标签</strong>：例如门、桌子、椅子、墙面</li>
-          <li><strong>视觉特征</strong>：颜色、纹理、图像嵌入</li>
-          <li><strong>几何特征</strong>：形状描述、局部结构信息</li>
-          <li><strong>时间信息</strong>：何时首次观测、最近更新时间</li>
-          <li><strong>向量嵌入</strong>：便于相似性检索与任务推理</li>
-        </ul>
-        <p class="summary">换句话说，点云更适合感知，体素更适合记忆。Spatial Agent Memory 的核心就在于把多源观测沉淀为统一的空间知识单元。</p>
-      </section>
-
-      <section id="rag">
-        <h2>5. 什么是 SpatialRAG？</h2>
-        <p>RAG（Retrieval-Augmented Generation）本质上是“先检索，再生成”。SpatialRAG 则将这种逻辑从文本知识库扩展到三维空间记忆中。</p>
-        <pre><code>输入问题或任务
+        <section id="rag">
+          <h2>5. 什么是 SpatialRAG？</h2>
+          <p class="section-intro">SpatialRAG 把“检索增强生成”的思路，从文本知识库扩展到三维空间记忆。</p>
+          <p>RAG（Retrieval-Augmented Generation）本质上是“先检索，再生成”。SpatialRAG 则将这种逻辑应用到机器人空间系统中：任务发生时，机器人先在空间记忆中检索与当前目标最相关的上下文，再结合推理模型输出回答或行动决策。</p>
+          <pre><code>输入问题或任务
     ↓
 在空间记忆中进行多维检索
     ↓
@@ -494,22 +627,23 @@
 将上下文与任务一起输入推理模型
     ↓
 输出有空间依据的回答或行动决策</code></pre>
-        <h3>SpatialRAG 的价值在于支持跨维度的空间检索：</h3>
-        <ul>
-          <li><strong>Object</strong>：目标物体在哪里，例如“红色杯子在哪”</li>
-          <li><strong>Room</strong>：特定房间内有哪些物体与结构</li>
-          <li><strong>Semantic</strong>：语义上适合某类行为的位置，例如“适合坐下休息的地方”</li>
-          <li><strong>Geometry</strong>：是否有足够高度、宽度和净空供机器人通行</li>
-          <li><strong>Time</strong>：某个物体最近一次出现的时间</li>
-          <li><strong>Image</strong>：外观相似区域或相似物体</li>
-          <li><strong>Point Cloud / Shape</strong>：几何结构或局部形状相似的区域</li>
-        </ul>
-        <p>其中，<strong>点云维度</strong>主要提供原始几何匹配依据，<strong>体素化记忆</strong>则提供统一坐标系下的长期索引基础。二者结合，使检索结果既有几何证据，又可被推理系统直接使用。</p>
-      </section>
+          <h3>SpatialRAG 的检索可以跨多个维度同时进行：</h3>
+          <ul>
+            <li><strong>Object</strong>：目标物体在哪里，例如“红色杯子在哪”</li>
+            <li><strong>Room</strong>：特定房间内有哪些物体与结构</li>
+            <li><strong>Semantic</strong>：语义上适合某类行为的位置，例如“适合坐下休息的地方”</li>
+            <li><strong>Geometry</strong>：是否有足够高度、宽度和净空供机器人通行</li>
+            <li><strong>Time</strong>：某个物体最近一次出现的时间</li>
+            <li><strong>Image</strong>：外观相似区域或相似物体</li>
+            <li><strong>Point Cloud / Shape</strong>：几何结构或局部形状相似的区域</li>
+          </ul>
+          <p>其中，<strong>点云维度</strong>主要提供原始几何匹配依据，<strong>体素化记忆</strong>则提供统一坐标系下的长期索引基础。二者结合，使检索结果既有几何证据，又能被推理系统直接消费。</p>
+        </section>
 
-      <section id="architecture">
-        <h2>6. 整体架构</h2>
-        <pre><code>物理世界
+        <section id="architecture">
+          <h2>6. 整体架构</h2>
+          <p class="section-intro">从物理世界到推理决策，这套系统的主链路可以概括为感知、建模、索引、检索和推理五个阶段。</p>
+          <pre><code>物理世界
     ↓ 传感器采集
 图像 / 视频 + 激光雷达 + 深度数据 + 里程计
     ↓ 数据配准与融合
@@ -520,28 +654,27 @@ Spatial Agent Memory（三维语义记忆）
 SpatialRAG 检索
     ↓ 上下文增强推理
 机器人回答、导航与行动决策</code></pre>
-        <div class="grid-2">
-          <div class="card">
-            <span class="tag">建模阶段</span>
-            <p>将多模态观测统一对齐到同一空间坐标系，并持续写入体素记忆。</p>
+          <div class="grid-2">
+            <div class="mini-card">
+              <span class="label">建模阶段</span>
+              <p>将多模态观测统一对齐到同一空间坐标系，并持续写入体素记忆。</p>
+            </div>
+            <div class="mini-card">
+              <span class="label">调用阶段</span>
+              <p>在任务触发时，从体素记忆和附属向量索引中检索最相关的空间上下文，供模型决策使用。</p>
+            </div>
           </div>
-          <div class="card">
-            <span class="tag">调用阶段</span>
-            <p>在任务触发时，从体素记忆和附属向量索引中检索最相关的空间上下文，供模型决策使用。</p>
+        </section>
+
+        <section id="summary">
+          <h2>7. 总结</h2>
+          <div class="closing">
+            <p><strong>点云负责感知世界，体素负责组织世界，Spatial Agent Memory 负责记住世界，SpatialRAG 负责在需要时找出相关空间知识。</strong></p>
+            <p>相比传统机器人依赖瞬时感知或扁平地图的方式，这套系统提供的是一种持久化、语义化、可检索、可推理的空间知识底座，使机器人不只是“看见环境”，而是具备对环境的长期空间认知能力。</p>
           </div>
-        </div>
-      </section>
-
-      <section id="summary">
-        <h2>7. 总结</h2>
-        <p><strong>点云负责感知世界，体素负责组织世界，Spatial Agent Memory 负责记住世界，SpatialRAG 负责在需要时找出相关空间知识。 </strong></p>
-        <p>相比传统机器人依赖瞬时感知或扁平地图的方式，这套系统提供的是一种持久化、语义化、可检索、可推理的空间知识底座，使机器人不只是“看见环境”，而是具备对环境的长期空间认知能力。</p>
-      </section>
-    </main>
-
-    <footer>
-      单文件静态页，可直接作为 GitLab Pages 首页部署。
-    </footer>
+        </section>
+      </main>
+    </div>
   </div>
 </body>
 </html>
