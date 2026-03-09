@@ -1,0 +1,1857 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SensePedia Agent Platform 架构设计</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            padding: 40px 20px;
+            margin-bottom: 30px;
+        }
+        header h1 {
+            font-size: 3.2em;
+            margin-bottom: 15px;
+            background: linear-gradient(90deg, #00d4ff, #7c3aed);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        header p {
+            font-size: 1.3em;
+            opacity: 0.85;
+        }
+        .legend {
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 0.95em;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 5px;
+        }
+        .section {
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .section-title {
+            color: #00d4ff;
+            font-size: 1.8em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(0,212,255,0.3);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .section-title .icon {
+            font-size: 1.2em;
+        }
+        .architecture-grid {
+            display: grid;
+            grid-template-columns: 220px minmax(0, 1fr) 260px;
+            gap: 20px;
+            align-items: start;
+        }
+        .layer {
+            background: rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .left-column {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .layer-title {
+            color: white;
+            font-size: 1.1em;
+            font-weight: 600;
+            text-align: center;
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid rgba(255,255,255,0.2);
+        }
+        .module {
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            color: white;
+            font-size: 0.9em;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        .module:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        }
+        .module-title {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .module-title .icon {
+            font-size: 1.2em;
+        }
+        .module-desc {
+            font-size: 0.8em;
+            opacity: 0.75;
+            line-height: 1.5;
+        }
+        .center-area {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .core-module {
+            background: linear-gradient(135deg, rgba(124, 58, 237, 0.4), rgba(0, 212, 255, 0.3));
+            border: 3px solid #00d4ff;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,212,255,0.2);
+        }
+        .core-module .module-title {
+            font-size: 1.5em;
+            justify-content: center;
+            color: #00d4ff;
+        }
+        .sub-modules {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .sub-module {
+            background: rgba(255,255,255,0.15);
+            border-radius: 10px;
+            padding: 18px;
+            text-align: center;
+            color: white;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .sub-module .module-title {
+            justify-content: center;
+            font-size: 1.1em;
+            margin-bottom: 12px;
+            color: #ffd700;
+        }
+        /* 模块颜色 */
+        .module.client { background: linear-gradient(135deg, #10b981, #059669); }
+        .module.gateway { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+        .module.app { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .module.observability { background: linear-gradient(135deg, #6366f1, #4f46e5); }
+        .module.router { background: linear-gradient(135deg, #ec4899, #be185d); }
+        .module.channel-adapter { background: linear-gradient(135deg, #2563eb, #0f766e); }
+        .module.planner { background: linear-gradient(135deg, #ec4899, #db2777); }
+        .module.executor { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+        .module.multi-agent { background: linear-gradient(135deg, #06b6d4, #0891b2); }
+        .module.tool-registry { background: linear-gradient(135deg, #22c55e, #16a34a); }
+        .module.skills { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+        .module.checkpoint { background: linear-gradient(135deg, #f97316, #ea580c); }
+        .module.trace { background: linear-gradient(135deg, #eab308, #ca8a04); }
+        .module.user-isolation { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .module.llm { background: linear-gradient(135deg, #78716c, #57534e); }
+        .module.external-memory { background: linear-gradient(135deg, #0ea5e9, #0284c7); }
+        .module.improvement { background: linear-gradient(135deg, #f43f5e, #be123c); }
+        .module.knowledge-infra { background: linear-gradient(135deg, #0f766e, #0ea5e9); }
+        .module.ops-inbox { background: linear-gradient(135deg, #b45309, #f59e0b); }
+        .module.feedback-store { background: linear-gradient(135deg, #334155, #0f172a); }
+        .module.evaluation-service { background: linear-gradient(135deg, #7c2d12, #c2410c); }
+        .module.policy-registry { background: linear-gradient(135deg, #166534, #15803d); }
+        .module.experiment-manager { background: linear-gradient(135deg, #312e81, #4338ca); }
+        /* 扩展性设计区域 */
+        .extension-section {
+            background: rgba(255,255,255,0.08);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        .extension-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+        .agent-type {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .agent-type-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .agent-type-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8em;
+        }
+        .agent-type-name {
+            color: white;
+            font-size: 1.3em;
+            font-weight: 600;
+        }
+        .agent-type-desc {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.9em;
+            margin-bottom: 15px;
+        }
+        .common-modules {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .common-modules-title {
+            color: #ffd700;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        .common-module-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.85em;
+            padding: 6px 0;
+        }
+
+        /* Agent 注册流程 */
+        .register-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+        .register-step {
+            background: linear-gradient(135deg, #7c3aed, #5b21b6);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .register-step-num {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffd700;
+        }
+        .register-arrow {
+            color: rgba(255,255,255,0.5);
+            font-size: 1.5em;
+        }
+
+        /* 用户记忆系统 */
+        .memory-design {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 25px;
+            margin-top: 25px;
+        }
+        .memory-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
+            border-radius: 12px;
+            padding: 25px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .memory-card-title {
+            color: #00d4ff;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .memory-card-desc {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9em;
+            line-height: 1.7;
+        }
+        .memory-features {
+            margin-top: 15px;
+        }
+        .memory-feature {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.85em;
+            padding: 5px 0;
+        }
+
+        /* 外部记忆系统集成 */
+        .external-integration {
+            background: rgba(14, 165, 233, 0.2);
+            border: 2px solid #0ea5e9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 25px;
+        }
+        .external-title {
+            color: #0ea5e9;
+            font-size: 1.2em;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        .external-adapters {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+        }
+        .adapter-item {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            color: white;
+        }
+        .adapter-icon {
+            font-size: 1.8em;
+            margin-bottom: 8px;
+        }
+        .adapter-name {
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        .adapter-desc {
+            font-size: 0.75em;
+            color: rgba(255,255,255,0.6);
+            margin-top: 5px;
+        }
+
+        /* 数据流 */
+        .data-flow {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .data-flow h3 {
+            color: white;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3em;
+        }
+        .flow-steps {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .flow-step {
+            background: rgba(255,255,255,0.15);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 0.9em;
+        }
+        .flow-arrow {
+            color: rgba(255,255,255,0.5);
+            display: flex;
+            align-items: center;
+        }
+
+        /* 知识库基础设施与流水线 */
+        .infra-strip {
+            margin-top: 26px;
+            padding: 22px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .infra-strip-title {
+            color: #ffd700;
+            font-size: 1.08em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .infra-strip-desc {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.9em;
+            line-height: 1.7;
+            margin-bottom: 18px;
+        }
+        .infra-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+        }
+        .infra-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.16), rgba(255,255,255,0.06));
+            border-radius: 12px;
+            padding: 18px;
+            border: 1px solid rgba(255,255,255,0.12);
+            color: white;
+        }
+        .infra-card-title {
+            color: #00d4ff;
+            font-size: 1em;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .infra-card-desc {
+            color: rgba(255,255,255,0.72);
+            font-size: 0.82em;
+            line-height: 1.6;
+        }
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: 1.25fr 1fr;
+            gap: 24px;
+            margin-top: 24px;
+        }
+        .pipeline-panel {
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .pipeline-panel-title {
+            color: #00d4ff;
+            font-size: 1.12em;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .pipeline-step-list {
+            display: grid;
+            gap: 12px;
+        }
+        .pipeline-step {
+            background: rgba(0,0,0,0.28);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.88em;
+            line-height: 1.65;
+        }
+        .pipeline-step strong {
+            color: #ffd700;
+        }
+        .pipeline-summary {
+            margin-top: 20px;
+            padding: 16px 18px;
+            border-radius: 12px;
+            background: rgba(14, 165, 233, 0.14);
+            border: 1px solid rgba(14, 165, 233, 0.35);
+            color: rgba(255,255,255,0.82);
+            font-size: 0.9em;
+            line-height: 1.7;
+        }
+
+        /* Self-improving 设计 */
+        .improvement-intro {
+            color: rgba(255,255,255,0.82);
+            margin-bottom: 24px;
+            font-size: 0.98em;
+        }
+        .improvement-loop {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-top: 20px;
+        }
+        .improvement-step {
+            background: linear-gradient(135deg, rgba(244, 63, 94, 0.18), rgba(0, 212, 255, 0.12));
+            border: 1px solid rgba(255,255,255,0.16);
+            border-radius: 14px;
+            padding: 22px;
+        }
+        .improvement-step-title {
+            color: #ffd700;
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .improvement-step-desc {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.88em;
+            line-height: 1.7;
+        }
+        .improvement-step ul {
+            margin-top: 12px;
+            margin-left: 18px;
+            color: rgba(255,255,255,0.75);
+            font-size: 0.84em;
+            line-height: 1.7;
+        }
+        .improvement-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: 24px;
+            margin-top: 26px;
+        }
+        .improvement-panel {
+            background: rgba(255,255,255,0.08);
+            border-radius: 14px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.12);
+        }
+        .panel-title {
+            color: #00d4ff;
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        .strategy-list {
+            display: grid;
+            gap: 12px;
+        }
+        .strategy-item {
+            background: rgba(0,0,0,0.28);
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.88em;
+            line-height: 1.6;
+        }
+        .strategy-item strong {
+            color: #ffd700;
+        }
+        .guardrail-list {
+            display: grid;
+            gap: 12px;
+        }
+        .guardrail-item {
+            background: rgba(0,0,0,0.28);
+            border-left: 4px solid #00d4ff;
+            border-radius: 10px;
+            padding: 14px 16px;
+            color: rgba(255,255,255,0.8);
+            font-size: 0.88em;
+            line-height: 1.6;
+        }
+
+        @media (max-width: 1200px) {
+            .architecture-grid {
+                grid-template-columns: 1fr;
+            }
+            .arrow-column {
+                display: none;
+            }
+            .sub-modules {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .extension-grid {
+                grid-template-columns: 1fr;
+            }
+            .memory-design {
+                grid-template-columns: 1fr;
+            }
+            .external-adapters {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .improvement-loop {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .improvement-grid {
+                grid-template-columns: 1fr;
+            }
+            .infra-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            .pipeline-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .improvement-loop {
+                grid-template-columns: 1fr;
+            }
+            .infra-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>SensePedia Agent Platform</h1>
+            <p>企业级 Agent 平台架构设计 - 支持多业务 Agent 扩展与用户个性化记忆</p>
+        </header>
+
+        <!-- 图例 -->
+        <div class="legend">
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #10b981, #059669);"></div><span>客户端</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);"></div><span>网关</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #f59e0b, #d97706);"></div><span>应用层</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: #00d4ff;"></div><span>核心层</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #22c55e, #14b8a6);"></div><span>工具层</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #f97316, #eab308);"></div><span>Memory</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #78716c, #6366f1);"></div><span>LLM</span></div>
+            <div class="legend-item"><div class="legend-color" style="background: linear-gradient(135deg, #6366f1, #4f46e5);"></div><span>可观测性</span></div>
+        </div>
+
+        <!-- 架构总览 -->
+        <div class="section">
+            <div class="section-title"><span class="icon">🏗️</span> 平台架构总览</div>
+            <div class="architecture-grid">
+                <!-- 左侧 -->
+                <div class="left-column">
+                    <div class="layer">
+                        <div class="layer-title">客户端</div>
+                        <div class="module client">
+                            <div class="module-title"><span class="icon">🌐</span> Web Frontend</div>
+                            <div class="module-desc">用户 Web 界面</div>
+                        </div>
+                        <div class="module client">
+                            <div class="module-title"><span class="icon">🔌</span> External API</div>
+                            <div class="module-desc">外部系统 API</div>
+                        </div>
+                        <div class="module client">
+                            <div class="module-title"><span class="icon">✈️</span> Telegram Bot</div>
+                            <div class="module-desc">通过 Bot API / Webhook 接入消息</div>
+                        </div>
+                        <div class="module client">
+                            <div class="module-title"><span class="icon">🪽</span> Feishu / Lark Bot</div>
+                            <div class="module-desc">通过事件订阅 / Open API 接入企业消息</div>
+                        </div>
+                    </div>
+                    <div class="layer">
+                        <div class="layer-title">运营后台</div>
+                        <div class="module app">
+                            <div class="module-title"><span class="icon">📬</span> 收件箱</div>
+                            <div class="module-desc">红点提醒 / 待审批更新 / 人工干预入口</div>
+                        </div>
+                        <div class="module observability">
+                            <div class="module-title"><span class="icon">👥</span> 用户角色权限管理</div>
+                            <div class="module-desc">账号、角色、租户、权限策略配置</div>
+                        </div>
+                        <div class="module gateway">
+                            <div class="module-title"><span class="icon">⚙️</span> 系统参数配置</div>
+                            <div class="module-desc">Agent 路由、知识源、任务调度、系统参数</div>
+                        </div>
+                        <div class="module trace">
+                            <div class="module-title"><span class="icon">🪵</span> 日志管理</div>
+                            <div class="module-desc">运行日志、审计日志、任务日志查看</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 中间 -->
+                <div class="center-area">
+                    <div class="module channel-adapter">
+                        <div class="module-title"><span class="icon">🔄</span> Channel Adapter</div>
+                        <div class="module-desc">Webhook / Bot API / Event Normalize</div>
+                    </div>
+                    <div class="module gateway">
+                        <div class="module-title"><span class="icon">🚪</span> API Gateway</div>
+                        <div class="module-desc">认证、限流、请求路由</div>
+                    </div>
+                    <div class="module router">
+                        <div class="module-title"><span class="icon">🧭</span> Agent Router</div>
+                        <div class="module-desc">识别任务类型，选择当前最合适的业务 Agent</div>
+                    </div>
+                    <div class="module app">
+                        <div class="module-title"><span class="icon">📱</span> Selected Business Agent</div>
+                        <div class="module-desc">RAG Agent / Knowledge Ingestion Agent / OCR Agent / Document Generator Agent / Translation Agent / Compliance Agent / Legal Agent / Finance Agent</div>
+                    </div>
+                    <div class="core-module">
+                        <div class="module-title"><span class="icon">⚡</span> SensePedia Core</div>
+                        <div class="module-desc" style="text-align: center; color: rgba(255,255,255,0.82); font-size: 0.95em; margin-top: 8px;">
+                            Shared execution kernel reused by all business agents
+                        </div>
+                        <div class="sub-modules">
+                            <div class="sub-module">
+                                <div class="module-title"><span class="icon">🧠</span> LLM Planner</div>
+                                <div class="module-desc">Task Analyzer<br/>Plan Generator<br/>ReAct Reasoning</div>
+                            </div>
+                            <div class="sub-module">
+                                <div class="module-title"><span class="icon">⚙️</span> Graph Executor</div>
+                                <div class="module-desc">Node Router<br/>State Manager<br/>Checkpoint Manager</div>
+                            </div>
+                            <div class="sub-module">
+                                <div class="module-title"><span class="icon">🤖</span> Multi-Agent</div>
+                                <div class="module-desc">Main Agent<br/>Sub Agent Pool<br/>Result Aggregator</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="module tool-registry">
+                        <div class="module-title"><span class="icon">🛠️</span> Tool Registry</div>
+                        <div class="module-desc">工具注册、发现、调用</div>
+                    </div>
+                    <div class="module skills">
+                        <div class="module-title"><span class="icon">📦</span> Skills</div>
+                        <div class="module-desc">Skill Loader → Skill Registry → Skill Executor</div>
+                    </div>
+                    <div class="module knowledge-infra">
+                        <div class="module-title"><span class="icon">🏗️</span> Knowledge Infrastructure</div>
+                        <div class="module-desc">DocumentParser / MinIO / MariaDB / MongoDB / RabbitMQ / llm_server / BM25 Encoder / Milvus / Web Crawler</div>
+                    </div>
+                </div>
+
+                <!-- 右侧 -->
+                <div class="layer">
+                    <div class="layer-title">支撑系统</div>
+                    <div class="module llm">
+                        <div class="module-title"><span class="icon">🗣️</span> LLM Gateway</div>
+                        <div class="module-desc">Model Router<br/>Prompt Manager<br/>Response Parser</div>
+                    </div>
+                    <div class="module checkpoint">
+                        <div class="module-title"><span class="icon">💾</span> Checkpoint Store</div>
+                        <div class="module-desc">状态快照 / 断点恢复</div>
+                    </div>
+                    <div class="module trace">
+                        <div class="module-title"><span class="icon">📜</span> Trace Store</div>
+                        <div class="module-desc">执行轨迹 / 调试查看</div>
+                    </div>
+                    <div class="module user-isolation">
+                        <div class="module-title"><span class="icon">🔒</span> User Isolation</div>
+                        <div class="module-desc">User ID 路由 / Quota 控制</div>
+                    </div>
+                    <div class="module external-memory">
+                        <div class="module-title"><span class="icon">🧠</span> Memory Service</div>
+                        <div class="module-desc">Daily / Long-term Memory<br/>Compaction / Recall / Index Sync</div>
+                    </div>
+                    <div class="module improvement">
+                        <div class="module-title"><span class="icon">🔁</span> Improvement Engine</div>
+                        <div class="module-desc">Feedback Ingest<br/>Evaluator / Policy Update</div>
+                    </div>
+                    <div class="module ops-inbox">
+                        <div class="module-title"><span class="icon">📬</span> Ops Inbox / Approval Queue</div>
+                        <div class="module-desc">变更提醒 / 人工确认 / 红点通知</div>
+                    </div>
+                    <div class="module observability">
+                        <div class="module-title"><span class="icon">📊</span> Observability</div>
+                        <div class="module-desc">Metrics / LangFuse<br/>Error Tracker</div>
+                    </div>
+                </div>
+            </div>
+            <p style="color: rgba(255,255,255,0.82); margin-top: 20px; font-size: 0.95em; line-height: 1.8;">
+                这里需要明确区分两个层次：<strong>Agent Router</strong> 负责在 API Gateway 之后判断当前请求应该进入哪个业务 Agent；
+                <strong>LLM Planner</strong> 属于 SensePedia Core，负责在选中的业务 Agent 内部进行任务拆解、工具选择和执行规划。
+                前者解决“选哪个 Agent”，后者解决“选中后怎么执行”。
+            </p>
+            <p style="color: rgba(255,255,255,0.74); margin-top: 12px; font-size: 0.92em; line-height: 1.8;">
+                另外，<strong>Checkpoint Store</strong> 与 <strong>Memory Service</strong> 不是替代关系。
+                Checkpoint Store 保存的是一次执行过程中的短期运行态与断点恢复快照；Memory Service 保存的是跨会话、可召回的长期记忆与 compaction 写回结果。
+                前者解决执行连续性，后者解决知识连续性。
+            </p>
+            <div class="data-flow" style="margin-top: 22px;">
+                <h3>📡 渠道接入标准链路</h3>
+                <div class="flow-steps">
+                    <div class="flow-step">Web / External API / Telegram / 飞书</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Channel Adapter</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">API Gateway</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Agent Router</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Selected Business Agent</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">SensePedia Core</div>
+                </div>
+            </div>
+            <div class="data-flow" style="margin-top: 18px;">
+                <h3>📬 收件箱审批链路</h3>
+                <div class="flow-steps">
+                    <div class="flow-step">Web Crawler / Change Detector</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Ops Inbox / Approval Queue</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">收件箱</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">人工确认 / 驳回</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">Knowledge Ingestion Agent</div>
+                </div>
+            </div>
+            <div class="infra-strip">
+                <div class="infra-strip-title">知识库主基础设施（Memory Service 选择性复用部分原语）</div>
+                <div class="infra-strip-desc">
+                    这组基础设施主要服务于知识库入库与检索；Memory Service 不会默认复用整条知识库重链路，而是按需复用其中的 chunk、embedding、sparse encode、hybrid retrieval、diff 和审批等原语能力。
+                </div>
+                <div class="infra-grid">
+                    <div class="infra-card">
+                        <div class="infra-card-title">DocumentParser</div>
+                        <div class="infra-card-desc">将 pdf/doc/docx/ppt/pptx 转成 Markdown。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">MinIO</div>
+                        <div class="infra-card-desc">存储原始文件、Markdown、Chunk 标记文件和图片附件。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">MariaDB</div>
+                        <div class="infra-card-desc">保存文档元数据、状态、资源关系和中间处理关联信息。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">MongoDB</div>
+                        <div class="infra-card-desc">保存 Parent Chunk 阶段的中间数据，不承担最终检索。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">RabbitMQ</div>
+                        <div class="infra-card-desc">串联解析、切分、Embedding 与入库等异步任务。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">llm_server</div>
+                        <div class="infra-card-desc">通过 `/v1/embeddings` 为 Sub Chunk 和查询生成 Dense Embedding。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">BM25 Encoder</div>
+                        <div class="infra-card-desc">在应用侧本地训练，生成文档与查询的 Sparse Vector。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">Milvus</div>
+                        <div class="infra-card-desc">存储 Dense/Sparse 向量，执行 Dense Search、Sparse Search 和 RRF Hybrid Search。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">Web Crawler / Change Detector</div>
+                        <div class="infra-card-desc">定时抓取网页知识源，对比新旧页面内容，触发自动更新或人工审批。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">Ops Inbox / Approval Queue</div>
+                        <div class="infra-card-desc">当网页内容变更存在风险或需人工干预时，向系统收件箱推送待处理事项。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 业务 Agent 扩展设计 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">🔌</span> 业务 Agent 扩展设计</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px;">
+                平台采用<strong>插件化架构</strong>，通过定义通用的 Agent 基类和标准接口，可以快速接入新的业务 Agent。每个 Agent 只需实现特定的业务逻辑，通用能力由平台提供。
+            </p>
+            <p style="color: rgba(255,255,255,0.72); margin-bottom: 24px; font-size: 0.92em; line-height: 1.8;">
+                这些业务 Agent 是 Agent Router 的候选目标。Router 会基于请求意图、租户配置、权限范围和可用工具，选出一个
+                <strong>Selected Business Agent</strong>，随后再进入该 Agent 内部的 LLM Planner 与 Graph 执行流程。
+            </p>
+
+            <!-- Agent 注册流程 -->
+            <div class="register-flow">
+                <div class="register-step">
+                    <div class="register-step-num">1</div>
+                    <div>定义 Agent 规范<br/><small>manifest.yaml</small></div>
+                </div>
+                <div class="register-arrow">→</div>
+                <div class="register-step">
+                    <div class="register-step-num">2</div>
+                    <div>实现业务 Skill<br/><small>Python Scripts</small></div>
+                </div>
+                <div class="register-arrow">→</div>
+                <div class="register-step">
+                    <div class="register-step-num">3</div>
+                    <div>注册到平台<br/><small>自动发现</small></div>
+                </div>
+                <div class="register-arrow">→</div>
+                <div class="register-step">
+                    <div class="register-step-num">4</div>
+                    <div>注册到 Agent Router<br/><small>Route Rules / Intent Mapping</small></div>
+                </div>
+                <div class="register-arrow">→</div>
+                <div class="register-step">
+                    <div class="register-step-num">5</div>
+                    <div>上线服务<br/><small>热更新</small></div>
+                </div>
+            </div>
+
+            <!-- 已有和可扩展的 Agent 类型 -->
+            <div class="extension-grid">
+                <!-- RAG Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #10b981, #059669);">📚</div>
+                        <div class="agent-type-name">RAG Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        面向知识库检索问答的专业 Agent，聚焦 Hybrid Search、证据整合与引用回答
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>🧭</span> Retrieval Orchestration (检索编排)</div>
+                        <div class="common-module-item"><span>🔍</span> Hybrid Search (混合检索)</div>
+                        <div class="common-module-item"><span>🗂️</span> Scope &amp; Metadata Resolution (范围与元数据解析)</div>
+                        <div class="common-module-item"><span>📥</span> Source Retrieval (源文件回取)</div>
+                        <div class="common-module-item"><span>📑</span> Citation Normalization (引用归一化)</div>
+                        <div class="common-module-item"><span>📚</span> Evidence Composition (证据整合)</div>
+                    </div>
+                </div>
+
+                <!-- 知识入库 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #f97316, #ea580c);">📥</div>
+                        <div class="agent-type-name">Knowledge Ingestion Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        面向知识库创建、发布与自动更新的共享入库 Agent，供多个业务场景复用同一套解析、切分、向量化、网页监控和发布流程
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>🧾</span> Upload Registrar (上传登记)</div>
+                        <div class="common-module-item"><span>🪄</span> Markdown Parser Adapter (文档转 Markdown)</div>
+                        <div class="common-module-item"><span>✂️</span> Parent/Sub Chunk Pipeline (双阶段切分)</div>
+                        <div class="common-module-item"><span>🕸️</span> Source Monitor &amp; Diff (网页监控与差异检测)</div>
+                        <div class="common-module-item"><span>📬</span> Approval Inbox Hook (人工审批接入)</div>
+                        <div class="common-module-item"><span>🚀</span> Vector Publish Orchestrator (向量入库发布)</div>
+                    </div>
+                </div>
+
+                <!-- OCR Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #0891b2, #1d4ed8);">🖼️</div>
+                        <div class="agent-type-name">OCR Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        面向高精度文档识别的 OCR Agent，先用 Uniparse 做初步 PDF 解析，再结合 VLM 对照原始页面图像进行校正
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>📄</span> Uniparse Parser (初步 PDF 解析)</div>
+                        <div class="common-module-item"><span>🧭</span> Layout Comparator (版面与文本对照)</div>
+                        <div class="common-module-item"><span>👁️</span> VLM Verifier (图文一致性校验)</div>
+                        <div class="common-module-item"><span>✍️</span> OCR Correction Writer (结果修订输出)</div>
+                    </div>
+                </div>
+
+                <!-- 文档生成 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">📝</div>
+                        <div class="agent-type-name">Document Generator Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        根据模板和用户输入自动生成各类文档（报告、合同、方案等）
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>📋</span> Template Manager (模板管理)</div>
+                        <div class="common-module-item"><span>📊</span> Content Filler (内容填充)</div>
+                        <div class="common-module-item"><span>🎨</span> Formatter (格式排版)</div>
+                        <div class="common-module-item"><span>📤</span> Export Engine (导出引擎)</div>
+                    </div>
+                </div>
+
+                <!-- 翻译 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #8b5cf6, #7c3aed);">🌐</div>
+                        <div class="agent-type-name">Translation Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        多语言翻译 Agent，支持文档翻译、术语一致性保持
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>🗣️</span> Language Detector (语言检测)</div>
+                        <div class="common-module-item"><span>📖</span> Term Dictionary (术语字典)</div>
+                        <div class="common-module-item"><span>🔄</span> Context Translator (上下文翻译)</div>
+                        <div class="common-module-item"><span>✍️</span> Style Adapter (风格适配)</div>
+                    </div>
+                </div>
+
+                <!-- 合规校验 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #ef4444, #dc2626);">✅</div>
+                        <div class="agent-type-name">Compliance Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        文档合规性校验 Agent，检查内容是否符合法规和内部政策
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>📜</span> Rule Engine (规则引擎)</div>
+                        <div class="common-module-item"><span>⚖️</span> Policy Checker (政策检查)</div>
+                        <div class="common-module-item"><span>🚨</span> Risk Scanner (风险扫描)</div>
+                        <div class="common-module-item"><span>📋</span> Report Generator (报告生成)</div>
+                    </div>
+                </div>
+
+                <!-- 法律 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #9333ea, #6d28d9);">⚖️</div>
+                        <div class="agent-type-name">Legal Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        面向法律咨询、规则推理与知识图谱检索的专业 Agent，支持多意图识别、槽位门控、规则适配和法条依据生成
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>🏷️</span> Multi-Intent Classifier (多意图识别)</div>
+                        <div class="common-module-item"><span>🧩</span> Unified Schema Extractor (统一结构化抽取)</div>
+                        <div class="common-module-item"><span>🚦</span> Slot Completeness Gate (槽位完整性门控)</div>
+                        <div class="common-module-item"><span>⚖️</span> Rule Adapter Layer (规则引擎适配层)</div>
+                        <div class="common-module-item"><span>🕸️</span> Legal Knowledge Graph Retriever (法律知识图谱检索)</div>
+                        <div class="common-module-item"><span>📝</span> Assumptions &amp; Disclaimer Composer (假设与免责声明生成)</div>
+                    </div>
+                </div>
+
+                <!-- 财经 Agent -->
+                <div class="agent-type">
+                    <div class="agent-type-header">
+                        <div class="agent-type-icon" style="background: linear-gradient(135deg, #0f766e, #0d9488);">💹</div>
+                        <div class="agent-type-name">Finance Agent</div>
+                    </div>
+                    <div class="agent-type-desc">
+                        面向研报阅读、财报问答、指标解释和市场事件归因的财经分析 Agent
+                    </div>
+                    <div class="common-modules">
+                        <div class="common-modules-title">🎯 特有模块</div>
+                        <div class="common-module-item"><span>📈</span> Financial Metrics Analyzer (指标分析)</div>
+                        <div class="common-module-item"><span>📰</span> Market Event Digest (市场事件摘要)</div>
+                        <div class="common-module-item"><span>📊</span> Report Interpreter (研报解读)</div>
+                        <div class="common-module-item"><span>🧮</span> Table Reasoner (表格推理)</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 每个 Agent 的通用模块 -->
+            <div style="margin-top: 35px;">
+                <div class="section-title" style="font-size: 1.4em; border-bottom: 2px solid rgba(255,215,0,0.3);">
+                    <span class="icon">⚙️</span> 每个业务 Agent 的通用子模块
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px;">
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">1</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">Request Adapter</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>请求验证与规范化</li>
+                                <li>参数提取与转换</li>
+                                <li>权限校验</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">2</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">Context &amp; Memory Adapter</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>加载长期记忆与会话上下文</li>
+                                <li>接入共享知识/基础设施能力</li>
+                                <li>组织 planner 输入上下文</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">3</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">LLM Planner / Decision Layer</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>任务拆解与工具选择</li>
+                                <li>决策模式切换</li>
+                                <li>生成执行计划</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">4</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">Skill Orchestrator</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>多 Skill 编排</li>
+                                <li>执行顺序控制</li>
+                                <li>结果聚合</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">5</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">Guardrail / Policy Gate</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>完整性检查与追问门控</li>
+                                <li>风险控制与审批分流</li>
+                                <li>假设/免责声明约束</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="agent-type" style="border-color: #00d4ff;">
+                        <div class="agent-type-header">
+                            <div class="agent-type-icon" style="background: #00d4ff;">6</div>
+                            <div class="agent-type-name" style="font-size: 1.1em;">Response Adapter</div>
+                        </div>
+                        <div class="agent-type-desc">
+                            <ul style="text-align: left; margin-left: 20px; font-size: 0.85em;">
+                                <li>响应格式化</li>
+                                <li>Schema 校验</li>
+                                <li>错误处理与输出包装</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legal Agent 抽象设计 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">⚖️</span> Legal Agent 抽象设计</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.8;">
+                这类法律咨询 Agent 不应只抽象成“法条检索”或“案例摘要”，更合理的抽象是：
+                先完成 <strong>意图识别 + 统一结构化抽取 + 槽位门控</strong>，再进入
+                <strong>规则引擎适配 + 法律知识图谱检索 + 可解释答复生成</strong>。
+            </p>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">端到端推理链路</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>1. Multi-Intent Classifier</strong><br/>对用户问题做多标签法律意图识别，例如监护、领养、父母身份、跨境拐带儿童等。</div>
+                        <div class="pipeline-step"><strong>2. Unified Schema Extractor</strong><br/>使用统一 schema 抽取事实槽位，避免每个意图各自维护一套输入结构。</div>
+                        <div class="pipeline-step"><strong>3. Slot Completeness Gate</strong><br/>按 critical / secondary 槽位完整性决定进入 `ASK_MORE`、`PRELIMINARY` 或 `FULL_ADVICE`。</div>
+                        <div class="pipeline-step"><strong>4. Rule Adapter Layer</strong><br/>若信息足够，则根据领域规则将统一结构映射到对应规则引擎或法条章节适配层。</div>
+                        <div class="pipeline-step"><strong>5. Legal Knowledge Graph Retriever</strong><br/>从法律知识图谱或法条知识库中检索相关法条原文、条款关系和来源标识，作为答复依据。</div>
+                        <div class="pipeline-step"><strong>6. Answer Composer</strong><br/>生成自然语言答复，并固定输出 assumptions、缺失事实和 disclaimer，保证可解释与合规。</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">可复用模块抽象</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>Intent Layer</strong><br/>多意图分类器，支持单标签与多标签并存，适合法律、合规、医疗等高门槛咨询场景。</div>
+                        <div class="pipeline-step"><strong>Fact Layer</strong><br/>统一结构化抽取器 + 槽位完整性校验器，负责把自然语言转成规则引擎可消费的结构。</div>
+                        <div class="pipeline-step"><strong>Decision Layer</strong><br/>Response Mode Controller 统一决定 `ASK_MORE / PRELIMINARY / FULL_ADVICE`，避免直接进入高风险推理。</div>
+                        <div class="pipeline-step"><strong>Reasoning Layer</strong><br/>Rule Adapter Layer 负责“追问优先、skip 兜底、默认值可解释”，避免事实缺失时误推理。</div>
+                        <div class="pipeline-step"><strong>Evidence Layer</strong><br/>Legal Knowledge Graph Retriever 负责法条、知识图谱节点、来源章节与关系边的检索与返回。</div>
+                        <div class="pipeline-step"><strong>Compliance Layer</strong><br/>Assumptions / Missing Facts / Disclaimer Composer 统一负责对用户展示不确定性、缺失项与结论边界。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">ASK_MORE / PRELIMINARY / FULL_ADVICE 的抽象意义</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>ASK_MORE</strong><br/>critical 槽位缺失时，系统只追问，不给出正式法律结论。</div>
+                        <div class="pipeline-step"><strong>PRELIMINARY</strong><br/>secondary 槽位缺失时，列出缺失项，给初步分析，但明确非最终结论。</div>
+                        <div class="pipeline-step"><strong>FULL_ADVICE</strong><br/>信息完整、规则依据充分时，输出正式分析，同时附免责声明与依据来源。</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">当前边界与后续扩展</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>当前主依据</strong><br/>当前回答以规则引擎结论 + 法律知识图谱 / 法条原文检索为主，不依赖判例参考作为主链路。</div>
+                        <div class="pipeline-step"><strong>可解释性约束</strong><br/>每个结论都应绑定 source norm id / chapter，并限制 LLM 仅使用检索到的法律上下文。</div>
+                        <div class="pipeline-step"><strong>后续扩展</strong><br/>可以逐步加入判例参考、跨法域适配、知识图谱自动更新和更复杂的审查工作流。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 知识库创建与检索流水线 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">📚</span> 知识库创建与检索流水线</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.8;">
+                知识库能力分成两条主线：<strong>Knowledge Ingestion Agent</strong> 负责文档入库与发布，
+                <strong>RAG Agent</strong> 负责查询时的 Hybrid Search 检索与答案生成。除此之外，Knowledge Ingestion Agent 还需要负责网页类知识源的定时监控、变更检测和增量重发。
+            </p>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">入库流水线（Knowledge Ingestion Agent）</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>1. 上传登记</strong><br/>用户上传原始文档后，原始文件写入 MinIO，同时在 MariaDB 中记录文档元数据、状态和更新时间。</div>
+                        <div class="pipeline-step"><strong>2. Markdown 转换</strong><br/>pdf/doc/docx/ppt/pptx 通过 DocumentParser 异步转 Markdown；txt/md/xlsx 走本地转换逻辑。</div>
+                        <div class="pipeline-step"><strong>3. 解析产物落盘</strong><br/>生成的 Markdown、图片、附件等资源写回 MinIO，并把资源关系和文档状态写入 MariaDB。</div>
+                        <div class="pipeline-step"><strong>4. Parent Chunk 阶段</strong><br/>调用 splitter 逻辑切 Parent Chunk，带 chunk 标记的 Markdown 上传 MinIO，中间结果写入 MongoDB。</div>
+                        <div class="pipeline-step"><strong>5. Sub Chunk + 向量生成</strong><br/>继续切成最终检索用的 Sub Chunk；通过 llm_server 生成 Dense Embedding，并在应用侧训练 BM25 编码器生成 Sparse Embedding。</div>
+                        <div class="pipeline-step"><strong>6. 发布入库</strong><br/>RabbitMQ 串联各异步阶段，将 Sub Chunk 的 dense_embedding 与 sparse_embedding 一起写入 Milvus，文档随后进入可检索状态。</div>
+                    </div>
+                    <div class="pipeline-summary">
+                        关键点：真正写入 Milvus 的是 <strong>Sub Chunk</strong> 的稠密/稀疏向量；BM25 训练与 sparse_embedding 生成发生在应用侧，不发生在 Milvus 内部。
+                    </div>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">检索流水线（RAG Agent）</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>1. Dense Query</strong><br/>查询文本通过 llm_server `/v1/embeddings` 生成查询稠密向量，在 Milvus 中执行 Dense Search。</div>
+                        <div class="pipeline-step"><strong>2. Sparse Query</strong><br/>查询文本通过对应文档 BM25 编码器生成 query sparse vector，在 Milvus 中执行 Sparse Search。</div>
+                        <div class="pipeline-step"><strong>3. Hybrid Fusion</strong><br/>Milvus 对 Dense 与 Sparse 结果做 Hybrid Search，并通过 RRF 进行融合排序。</div>
+                        <div class="pipeline-step"><strong>4. Answer Composition</strong><br/>RAG Agent 对检索证据进行聚合、引用归一化和回答生成，输出带引用的最终答案。</div>
+                    </div>
+                    <div class="pipeline-summary">
+                        一句话概括：知识库创建本质上是 <strong>RabbitMQ + MariaDB + MongoDB + MinIO + llm_server + BM25 本地编码器 + Milvus</strong> 共同协作完成的异步入库链路。
+                    </div>
+                </div>
+            </div>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">网页知识源自动更新链路（Knowledge Ingestion Agent）</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>1. 定时抓取</strong><br/>对配置过的网页知识源执行定时爬虫任务，例如组织架构、政策公告、规则说明页等。</div>
+                        <div class="pipeline-step"><strong>2. 变更检测</strong><br/>将新抓取页面与上次快照对比；如果正文、结构或关键字段没有变化，则跳过，不重复入库。</div>
+                        <div class="pipeline-step"><strong>3. 自动判定</strong><br/>若变化较小且风险低，可直接触发增量更新；若变化较大、解析不稳定或涉及关键知识页，则转入人工确认。</div>
+                        <div class="pipeline-step"><strong>4. 收件箱审批</strong><br/>向系统页面的收件箱推送待处理事项，界面显示红点提醒；运营人员进入收件箱查看 diff、来源页面和建议操作后决定是否发布。</div>
+                        <div class="pipeline-step"><strong>5. 重新入库发布</strong><br/>人工确认或自动放行后，Knowledge Ingestion Agent 重新走 Markdown 转换、切分、向量化与 Milvus 发布流程，替换旧版本知识。</div>
+                    </div>
+                    <div class="pipeline-summary">
+                        推荐策略：把“自动检测”与“人工审批”做成可配置模式。低风险网页走自动更新，高风险或重要网页走 <strong>Inbox + Human-in-the-loop</strong>。
+                    </div>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">自动更新能力的系统落点</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>Knowledge Ingestion Agent</strong><br/>负责抓取、比对、决定是否触发重新入库，并调用知识库更新接口。</div>
+                        <div class="pipeline-step"><strong>Web Crawler / Change Detector</strong><br/>负责定时抓取网页、生成页面快照与结构化 diff。</div>
+                        <div class="pipeline-step"><strong>Ops Inbox / Approval Queue</strong><br/>负责把待审批更新推送到系统页面，支持红点提醒、人工确认与操作留痕。</div>
+                        <div class="pipeline-step"><strong>Knowledge Infrastructure</strong><br/>复用现有 MinIO、MariaDB、MongoDB、RabbitMQ、llm_server、BM25 与 Milvus，不需要单独再造一条入库底座。</div>
+                    </div>
+                    <div class="pipeline-summary">
+                        这意味着 Knowledge Ingestion Agent 不再只是“文档上传入库 Agent”，而是一个同时覆盖 <strong>人工上传 + 网页源同步 + 增量重发</strong> 的知识库生命周期 Agent。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户记忆系统设计 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">🧠</span> 用户个性化记忆系统设计</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 22px; line-height: 1.8;">
+                这里的长期记忆由 <strong>Memory Service</strong> 承担；而总览图中的 <strong>Checkpoint Store</strong> 仍然保留，用于保存 workflow 的短期运行态与断点恢复快照。
+                两者分别服务于不同层级：Checkpoint 是执行态，Memory 是知识态。
+            </p>
+
+            <div class="memory-design">
+                <!-- 短期记忆 -->
+                <div class="memory-card">
+                    <div class="memory-card-title"><span>⚡</span> 短期记忆 (Working Memory)</div>
+                    <div class="memory-card-desc">
+                        当前会话内的上下文信息，会话结束后自动清除。类似于人类的工作记忆。
+                    </div>
+                    <div class="memory-features">
+                        <div class="memory-feature"><span>✓</span> 当前对话历史</div>
+                        <div class="memory-feature"><span>✓</span> 本次检索的知识</div>
+                        <div class="memory-feature"><span>✓</span> 临时变量/状态</div>
+                        <div class="memory-feature"><span>✓</span> Graph 执行状态</div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85em; color: #ffd700;">
+                        实现：InMemoryCheckpointStore + State
+                    </div>
+                </div>
+
+                <!-- 长期记忆 -->
+                <div class="memory-card">
+                    <div class="memory-card-title"><span>💾</span> 长期记忆 (Long-term Memory)</div>
+                    <div class="memory-card-desc">
+                        跨会话持久化的用户偏好、学习到的信息、历史交互摘要。默认采用类似 OpenClaw 的内置长期记忆，为每个用户维护独立的长期记忆文件与检索索引。
+                    </div>
+                    <div class="memory-features">
+                        <div class="memory-feature"><span>✓</span> 用户偏好设置</div>
+                        <div class="memory-feature"><span>✓</span> 交互历史摘要</div>
+                        <div class="memory-feature"><span>✓</span> 角色/人格设定</div>
+                        <div class="memory-feature"><span>✓</span> 用户专属 MEMORY.md / daily memory</div>
+                        <div class="memory-feature"><span>✓</span> 自定义知识</div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85em; color: #ffd700;">
+                        默认实现：内置文件记忆 + 向量索引；增强选项：PostgreSQL / MemOS / Recall
+                    </div>
+                </div>
+
+                <!-- 共享记忆 -->
+                <div class="memory-card">
+                    <div class="memory-card-title"><span>👥</span> 共享记忆 (Shared Memory)</div>
+                    <div class="memory-card-desc">
+                        团队/组织共享的知识、文档、配置，团队内所有成员可见。
+                    </div>
+                    <div class="memory-features">
+                        <div class="memory-feature"><span>✓</span> 团队知识库</div>
+                        <div class="memory-feature"><span>✓</span> 常用模板</div>
+                        <div class="memory-feature"><span>✓</span> 团队规范</div>
+                        <div class="memory-feature"><span>✓</span> 项目文档</div>
+                    </div>
+                    <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85em; color: #ffd700;">
+                        实现：Team Scope 知识库 + MinIO
+                    </div>
+                </div>
+            </div>
+
+            <!-- 外部记忆系统集成 -->
+            <div class="external-integration">
+                <div class="external-title"><span class="icon">🔗</span> 外部记忆系统集成 (MemOS 等)</div>
+                <p style="color: rgba(255,255,255,0.8); margin-bottom: 15px;">
+                    平台默认先使用内置长期记忆；在需要跨系统同步、统一治理或更强检索能力时，再对接外部记忆系统实现增强：
+                </p>
+                <div class="external-adapters">
+                    <div class="adapter-item">
+                        <div class="adapter-icon">📝</div>
+                        <div class="adapter-name">Built-in Memory</div>
+                        <div class="adapter-desc">默认选项<br/>每用户独立长期记忆</div>
+                    </div>
+                    <div class="adapter-item">
+                        <div class="adapter-icon">🧠</div>
+                        <div class="adapter-name">MemOS</div>
+                        <div class="adapter-desc">开源记忆框架<br/>记忆检索与摘要</div>
+                    </div>
+                    <div class="adapter-item">
+                        <div class="adapter-icon">💬</div>
+                        <div class="adapter-name">Recall</div>
+                        <div class="adapter-desc">AI 记忆库<br/>长期记忆存储</div>
+                    </div>
+                    <div class="adapter-item">
+                        <div class="adapter-icon">🔎</div>
+                        <div class="adapter-name">Mem0</div>
+                        <div class="adapter-desc">智能记忆层<br/>自适应记忆</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 记忆系统接口定义 -->
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 15px; font-weight: 600;">
+                    📌 Memory Service 接口规范
+                </div>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.85em;">
+class UserMemoryAdapter(Protocol):
+    """用户记忆系统适配器接口"""
+
+    async def store(self, user_id: str, memory: MemoryItem) -> None:
+        """存储用户记忆"""
+        ...
+
+    async def retrieve(self, user_id: str, query: str, limit: int = 5) -> List[MemoryItem]:
+        """根据查询检索相关记忆"""
+        ...
+
+    async def get_summary(self, user_id: str) -> UserSummary:
+        """获取用户记忆摘要"""
+        ...
+
+    async def delete(self, user_id: str, memory_id: str) -> None:
+        """删除指定记忆"""
+        ...
+
+
+class MemoryItem:
+    content: str              # 记忆内容
+    memory_type: str         # short_term / long_term / shared
+    importance: float        # 重要性评分 (0-1)
+    embedding: List[float]    # 向量表示
+    created_at: datetime     # 创建时间
+    metadata: Dict          # 元数据
+
+
+# 默认内置长期记忆布局（参考 OpenClaw）
+memory/{user_id}/MEMORY.md          # 用户长期记忆
+memory/{user_id}/daily/YYYY-MM-DD.md # 用户每日记忆</pre>
+            </div>
+        </div>
+
+        <!-- Memory 复用架构图 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">🧩</span> Memory 复用架构图</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.8;">
+                如果同时借鉴 OpenClaw 的文件即记忆真相源、双层记忆、混合检索、时间衰减、增量同步、优雅降级以及
+                memory compaction writeback，那么最合理的落点不是把 Memory 直接挂到 <strong>RAG Agent</strong> 或
+                <strong>Knowledge Ingestion Agent</strong> 下面，而是单独抽成一个 <strong>Memory Service / Memory Pipeline</strong>，
+                复用它们的底层原语。
+            </p>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">总体关系图</div>
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.8;">
+                    User / Channel / Session
+                              │
+                              ▼
+                        Channel Adapter
+                              │
+                              ▼
+                          API Gateway
+                              │
+                              ▼
+                          Agent Router
+                              │
+                              ▼
+                    Selected Business Agent
+                              │
+                              ▼
+                  SensePedia Core / LLM Planner
+                              │
+                 ┌────────────┼────────────┐
+                 ▼            ▼            ▼
+             RAG Agent   Knowledge       Memory Service
+                          Ingestion         / Pipeline
+                            Agent              │
+                                               │
+                         ┌─────────────────────┼─────────────────────┐
+                         ▼                                           ▼
+              Ingestion Primitives                         Retrieval Primitives
+     normalize -> chunk -> embed -> sparse encode    query embed -> hybrid search
+       -> publish -> version replace/update           -> rerank -> scoped recall
+                         └─────────────────────┬─────────────────────┘
+                                               ▼
+                          Knowledge Infrastructure + Shared Primitives
+       MinIO / MariaDB / llm_server / BM25 Encoder / Milvus / Scheduler / Web Crawler
+                           Ops Inbox / File Truth Source / Diff / Approval</pre>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">为什么单独做 Memory Service</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>不是业务 Agent</strong><br/>Memory 的目标是为 Agent 提供长期记忆写入、整理、召回与压缩，不是直接面向终端用户独立回答问题。</div>
+                        <div class="pipeline-step"><strong>复用入库原语</strong><br/>从 Knowledge Ingestion Agent 复用 normalize、chunk、embedding、sparse encode、publish、source monitor、审批回路这些底层能力。</div>
+                        <div class="pipeline-step"><strong>复用检索原语</strong><br/>从 RAG Agent 复用 query embedding、hybrid retrieval、rerank、top-k merge、作用域过滤，但不复用完整 citation-heavy answer 流程。</div>
+                        <div class="pipeline-step"><strong>保留独立生命周期</strong><br/>Memory 有自己的 daily memory、MEMORY.md、temporal decay、compaction writeback、dirty sync 和 graceful degradation，不应和知识库文档生命周期混为一体。</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pipeline-grid">
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">Memory Service 内部能力</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>Truth Source</strong><br/>`memory/{user_id}/daily/*.md` + `memory/{user_id}/MEMORY.md`，文件即真相源。</div>
+                        <div class="pipeline-step"><strong>Write Path</strong><br/>用户显式记忆、会话摘要、compaction flush、网页源同步都先进入 Memory Writer，再触发索引更新。</div>
+                        <div class="pipeline-step"><strong>Recall Path</strong><br/>优先做 scoped recall，再做 temporal decay、hybrid merge 和 prompt injection，不直接强耦合 RAG 回答器。</div>
+                        <div class="pipeline-step"><strong>Sync Path</strong><br/>watcher + dirty flag + interval sync + graceful fallback，保证 memory 始终是活数据索引。</div>
+                    </div>
+                </div>
+
+                <div class="pipeline-panel">
+                    <div class="pipeline-panel-title">建议的复用边界</div>
+                    <div class="pipeline-step-list">
+                        <div class="pipeline-step"><strong>直接复用的能力</strong><br/>Chunker、Embedding Pipeline、BM25 Encoder、Hybrid Search、Reranker、Version Replace、Web Diff、Inbox 审批。</div>
+                        <div class="pipeline-step"><strong>不要直接复用的整链路</strong><br/>普通 memory 写入不应默认走完整知识库重型入库链；memory recall 也不应默认走完整 RAG answer composition。</div>
+                        <div class="pipeline-step"><strong>Compaction 的落点</strong><br/>Compaction 产生 durable memory 候选后，进入 Memory Writer，写回 Markdown truth source，再触发增量索引。</div>
+                        <div class="pipeline-step"><strong>平台中的位置</strong><br/>Memory Service 应该位于支撑系统层，与 Knowledge Infrastructure 共用底座，并服务于 SensePedia Core 与各业务 Agent。</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Self-improving Agent 设计 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">🔁</span> Self-Improving Agent 设计</div>
+            <div class="improvement-intro">
+                LangGraph 负责编排，不会天然“自我进化”。平台需要额外构建一个反馈学习闭环，把用户显式反馈、隐式行为信号与执行轨迹沉淀为可验证的策略更新，
+                优先优化 Prompt、Tool Routing、Retrieval 参数与用户偏好记忆，而不是直接在线改模型权重。
+            </div>
+
+            <div class="improvement-loop">
+                <div class="improvement-step">
+                    <div class="improvement-step-title">1. Feedback Capture</div>
+                    <div class="improvement-step-desc">
+                        从前端、API 和业务日志采集显式反馈与隐式反馈，形成统一反馈事件流。
+                    </div>
+                    <ul>
+                        <li>显式反馈：点赞、点踩、纠错、人工改写、满意度评分</li>
+                        <li>隐式反馈：是否继续追问、是否复制答案、是否采纳结果、任务是否完成</li>
+                        <li>上下文：用户 ID、线程 ID、Prompt 版本、工具链路、引用与耗时</li>
+                    </ul>
+                </div>
+                <div class="improvement-step">
+                    <div class="improvement-step-title">2. Evaluation &amp; Attribution</div>
+                    <div class="improvement-step-desc">
+                        用 evaluator/critic 节点和离线分析，对问题根因进行归因，而不是把所有负反馈都归因给模型。
+                    </div>
+                    <ul>
+                        <li>检索不足：召回文档不对、topk 不够、过滤条件错误</li>
+                        <li>工具决策失误：选错 Tool、参数映射错误、执行顺序不合理</li>
+                        <li>答案质量不足：结构混乱、未结合证据、缺少引用或引用错误</li>
+                    </ul>
+                </div>
+                <div class="improvement-step">
+                    <div class="improvement-step-title">3. Policy Update</div>
+                    <div class="improvement-step-desc">
+                        将归因结果转为低风险、可回滚的策略更新，写入平台配置中心和长期记忆。
+                    </div>
+                    <ul>
+                        <li>更新 Prompt 模板、Few-shot 示例和输出 schema</li>
+                        <li>调整 Tool 优先级、Planner 路由规则、并行执行策略</li>
+                        <li>调节 Retrieval 参数、重排阈值、用户偏好配置</li>
+                    </ul>
+                </div>
+                <div class="improvement-step">
+                    <div class="improvement-step-title">4. Safe Rollout</div>
+                    <div class="improvement-step-desc">
+                        新策略必须先经过离线回放与灰度验证，再逐步放量，避免自我进化变成自我退化。
+                    </div>
+                    <ul>
+                        <li>历史样本回放、自动评测、人工抽检</li>
+                        <li>按租户/用户分桶灰度发布，比较成功率与 fallback rate</li>
+                        <li>策略版本化与一键回滚</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="improvement-grid">
+                <div class="improvement-panel">
+                    <div class="panel-title">反馈驱动的 LangGraph 闭环</div>
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.8;">
+User Query
+   │
+   ▼
+Agent Graph (Planner -> Tools -> Answer)
+   │
+   ├── Trace / Metrics / Citations
+   ├── User Feedback Event
+   ▼
+Feedback Ingestor
+   │
+   ▼
+Evaluator / Critic / Root-Cause Analyzer
+   │
+   ├── Retrieval Tuning
+   ├── Prompt Version Update
+   ├── Tool Routing Policy Update
+   └── User Preference Memory Update
+   ▼
+Offline Replay + Canary Release
+   │
+   ▼
+Next Graph Invocation uses new strategy</pre>
+                </div>
+
+                <div class="improvement-panel">
+                    <div class="panel-title">平台内可落地的更新对象</div>
+                    <div class="strategy-list">
+                        <div class="strategy-item">
+                            <strong>Prompt Layer</strong><br/>
+                            针对高频差评场景维护 Prompt 版本、Few-shot 样例与答案模板，不直接改底模。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Planner Policy</strong><br/>
+                            根据成功率更新初始 action、follow-up tool 顺序、重试预算与路由规则。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Retrieval Policy</strong><br/>
+                            结合反馈调整 topk、过滤条件、rerank 阈值、知识域优先级和引用覆盖率。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Memory Service</strong><br/>
+                            把“用户喜欢的回答风格、常用知识域、容忍延迟、术语偏好”写入长期记忆与可召回记忆索引。
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="improvement-grid">
+                <div class="improvement-panel">
+                    <div class="panel-title">Self-Improving 配套平台能力</div>
+                    <div class="strategy-list">
+                        <div class="strategy-item">
+                            <strong>Feedback Store</strong><br/>
+                            持久化 feedback event、trace、prompt version、tool trace 与结果标签。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Evaluation Service</strong><br/>
+                            对低分回答做自动判分、根因分析和回放评测。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Policy Registry</strong><br/>
+                            维护可生效的 Prompt、Router、Retrieval、Memory 策略版本。
+                        </div>
+                        <div class="strategy-item">
+                            <strong>Experiment Manager</strong><br/>
+                            支持 A/B、canary、tenant-level rollout 和效果对比。
+                        </div>
+                    </div>
+                </div>
+
+                <div class="improvement-panel">
+                    <div class="panel-title">安全护栏</div>
+                    <div class="guardrail-list">
+                        <div class="guardrail-item">
+                            只允许更新“可解释、可回滚”的配置层，不允许 agent 直接在线修改核心代码和模型权重。
+                        </div>
+                        <div class="guardrail-item">
+                            任何策略更新都必须绑定评估指标，如 grounded answer rate、tool error rate、citation coverage、user success rate。
+                        </div>
+                        <div class="guardrail-item">
+                            将高风险领域的更新限制为“建议模式”，需要人工审批后才能进入生产。
+                        </div>
+                        <div class="guardrail-item">
+                            用户隔离必须保留，单个租户或用户的反馈不能污染其他租户的默认策略。
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LLM Planner 详细设计 -->
+        <div class="extension-section">
+            <div class="section-title"><span class="icon">🧠</span> LLM Planner 详细设计</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 22px; line-height: 1.8;">
+                本节描述的是 <strong>SensePedia Core</strong> 中的 <strong>LLM Planner</strong> 如何工作。它发生在选中某个业务 Agent 之后，
+                不负责业务 Agent 的选择；业务 Agent 选择由上游的 <strong>Agent Router</strong> 负责，LLM Planner 只负责当前 Agent 的内部执行规划。
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+                <!-- Planner 功能 -->
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                        🎯 Planner 核心功能
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">1. Task Analyzer (任务分析)</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 分析用户意图<br/>
+                            • 识别任务类型<br/>
+                            • 提取关键实体
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">2. Plan Generator (计划生成)</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 分解复杂任务为子任务<br/>
+                            • 确定执行顺序<br/>
+                            • 识别并行执行机会
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">3. ReAct Reasoning (推理行动)</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 思考 (Thought)<br/>
+                            • 行动 (Action)<br/>
+                            • 观察 (Observation)
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">4. Tool Selector (工具选择)</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 根据任务选择合适工具<br/>
+                            • 参数映射<br/>
+                            • 依赖分析
+                        </div>
+                    </div>
+                </div>
+
+                <!-- LLM Planner 交互图 -->
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                        🔗 LLM Planner 模块交互
+                    </div>
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.8;">
+┌─────────────────────────────────────────────────────┐
+│                  LLM Planner                         │
+├─────────────────────────────────────────────────────┤
+│                                                     │
+│  ┌──────────────┐     ┌──────────────┐           │
+│  │  User Query  │────▶│Task Analyzer │           │
+│  └──────────────┘     └──────┬───────┘           │
+│                               │                    │
+│                               ▼                    │
+│  ┌──────────────┐     ┌──────────────┐           │
+│  │Tool Registry │◀───▶│Plan Generator│           │
+│  └──────┬───────┘     └──────┬───────┘           │
+│         │                     │                    │
+│         │                     ▼                    │
+│         │            ┌──────────────┐              │
+│         └───────────▶│ReAct Engine │              │
+│                      └──────┬───────┘              │
+│                             │                      │
+│                             ▼                      │
+│                      ┌──────────────┐              │
+│                      │Execution Plan│              │
+│                      └──────────────┘              │
+└─────────────────────────────────────────────────────┘
+         │                    │                    │
+         ▼                    ▼                    ▼
+   ┌──────────┐        ┌──────────┐        ┌──────────┐
+   │  Skills  │        │  LLM     │        │ Graph   │
+   │          │        │          │        │Executor │
+   └──────────┘        └──────────┘        └──────────┘</pre>
+                </div>
+            </div>
+
+            <!-- LLM Planner 与各模块的交互关系 -->
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 20px; font-weight: 600;">
+                    📌 LLM Planner 与其他模块的交互关系
+                </div>
+                <table style="width: 100%; border-collapse: collapse; color: white; font-size: 0.9em;">
+                    <tr style="background: rgba(124, 58, 237, 0.3);">
+                        <th style="padding: 12px; text-align: left;">交互模块</th>
+                        <th style="padding: 12px; text-align: left;">交互方向</th>
+                        <th style="padding: 12px; text-align: left;">交互内容</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">🧭 Agent Router</td>
+                        <td style="padding: 12px;">◀ ─ 输入边界</td>
+                        <td style="padding: 12px;">Agent Router 先选定当前请求所属的业务 Agent，LLM Planner 不参与“选哪个 Agent”，只接收已选中的执行上下文。</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">📱 Selected Business Agent</td>
+                        <td style="padding: 12px;">◀ ─ 所属上下文</td>
+                        <td style="padding: 12px;">LLM Planner 运行在当前被选中的业务 Agent 内部，继承该 Agent 的领域目标、工具范围与执行约束。</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">📦 Tool Registry</td>
+                        <td style="padding: 12px;">◀ ─ ▶ 双向</td>
+                        <td style="padding: 12px;">查询可用工具列表、获取工具 schema、验证工具存在性</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">🗣️ LLM Gateway</td>
+                        <td style="padding: 12px;">─ ▶ 输出</td>
+                        <td style="padding: 12px;">发送规划请求、接收 LLM 生成的计划 JSON</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">⚙️ Graph Executor</td>
+                        <td style="padding: 12px;">─ ▶ 输出</td>
+                        <td style="padding: 12px;">传递执行计划、接收执行结果</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">📦 Skills</td>
+                        <td style="padding: 12px;">◀ ─ ▶ 间接</td>
+                        <td style="padding: 12px;">通过 Tool Registry 间接调用具体 Skill</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">🏗️ Knowledge Infrastructure</td>
+                        <td style="padding: 12px;">◀ ─ ▶ 间接</td>
+                        <td style="padding: 12px;">在知识库相关 Agent 中，LLM Planner 会围绕检索、入库、网页更新等任务规划对共享知识基础设施的调用顺序。</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">🧠 Memory Service</td>
+                        <td style="padding: 12px;">◀ ─ ▶ 双向</td>
+                        <td style="padding: 12px;">读取长期记忆与偏好上下文，并在需要时把新的 durable memory、摘要或 compaction 写回候选交给 Memory Service。</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">📊 Observability</td>
+                        <td style="padding: 12px;">─ ▶ 输出</td>
+                        <td style="padding: 12px;">记录规划过程、耗时、决策依据</td>
+                    </tr>
+                </table>
+            </div>
+
+            <!-- LLM Planner Prompt 示例 -->
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 15px; font-weight: 600;">
+                    📌 LLM Planner Prompt 示例
+                </div>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.6;">
+你是 SensePedia Core 中的 LLM Planner。
+
+你不负责选择业务 Agent。
+当前请求已经经过 Agent Router，并且已经确定了 Selected Business Agent。
+你的职责是在当前业务 Agent 的上下文内完成任务拆解、工具选择与执行规划。
+
+## 可用工具
+- wisdom-vault-orchestrator: 综合检索知识库
+- wisdom-vault-hybrid-search: 混合向量搜索
+- wisdom-vault-mariadb: 数据库查询
+- wisdom-vault-minio: 文档下载
+
+## 用户问题
+{user_query}
+
+## 当前上下文
+- Selected Business Agent: {selected_business_agent}
+- Agent Router Decision Reason: {router_reason}
+- 用户ID: {user_id}
+- 知识库: {doc_ids}
+- 历史对话: {history}
+- Memory Service Recall: {memory_context}
+- Knowledge Infrastructure Availability: {knowledge_capabilities}
+
+## 任务
+1. 分析问题类型和复杂度
+2. 在当前 Selected Business Agent 的边界内规划需要调用的工具及顺序
+3. 判断是否需要读取 Memory Service 或调用 Knowledge Infrastructure
+4. 识别可并行执行的任务
+5. 输出 JSON 格式的执行计划
+
+请按以下格式输出：
+{
+    "reasoning": "你的分析过程...",
+    "agent_scope": "{selected_business_agent}",
+    "tasks": [
+        {"id": "task1", "tool": "tool_name", "params": {}, "depends_on": []},
+        {"id": "task2", "tool": "tool_name", "params": {}, "depends_on": ["task1"]}
+    ]
+}</pre>
+            </div>
+        </div>
+        <div class="data-flow">
+            <h3>📌 典型用户请求处理流程</h3>
+            <div class="flow-steps">
+                <div class="flow-step">1. 请求入口</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">2. Channel Adapter</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">3. API Gateway</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">4. Agent Router</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">5. Selected Business Agent</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">6. SensePedia Core 执行</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">7. Memory / Knowledge Infrastructure</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">8. 返回响应</div>
+            </div>
+        </div>
+        <div class="data-flow">
+            <h3>📌 典型收件箱审批更新流程</h3>
+            <div class="flow-steps">
+                <div class="flow-step">1. 定时抓取网页知识源</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">2. 变更检测 / Diff</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">3. 推送 Ops Inbox / 红点提醒</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">4. 运营后台人工确认</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">5. Knowledge Ingestion Agent</div>
+                <div class="flow-arrow">→</div>
+                <div class="flow-step">6. 重新入库发布</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
