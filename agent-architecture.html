@@ -398,6 +398,63 @@
             align-items: center;
         }
 
+        /* 时序图（Mermaid 片段展示） */
+        .sequence-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+        .sequence-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .sequence-card-title {
+            color: #ffd700;
+            font-size: 1.05em;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .sequence-card-desc {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.85em;
+            line-height: 1.7;
+            margin-bottom: 12px;
+        }
+        pre.mermaid-code {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            font-size: 0.78em;
+            line-height: 1.6;
+        }
+        .sequence-image-wrap {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-x: auto;
+        }
+        img.sequence-image {
+            display: block;
+            height: auto;
+            max-width: none;
+        }
+        .sequence-source {
+            margin-top: 10px;
+            font-size: 0.82em;
+            color: rgba(255,255,255,0.72);
+        }
+        .sequence-source a {
+            color: #00d4ff;
+            text-decoration: none;
+        }
+        .sequence-source a:hover {
+            text-decoration: underline;
+        }
+
         /* 知识库基础设施与流水线 */
         .infra-strip {
             margin-top: 26px;
@@ -2223,6 +2280,53 @@ Next Graph Invocation uses new strategy</pre>
                 <div class="flow-step">5. Knowledge Ingestion Agent</div>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step">6. 重新入库发布</div>
+            </div>
+        </div>
+        <div class="data-flow">
+            <h3>关键时序图（Mermaid sequenceDiagram）</h3>
+            <div class="sequence-grid">
+                <div class="sequence-card">
+                    <div class="sequence-card-title">1) 典型用户请求处理（端到端）</div>
+                    <div class="sequence-card-desc">
+                        涵盖 Channel Adapter / Gateway / Router / Business Agent / SensePedia Core（Planner + Executor）与 Memory、Knowledge、Tools、Observability 的主链路与可选分支。源文件：sequence-user-request.mermaid
+                    </div>
+                    <div class="sequence-image-wrap">
+                        <img class="sequence-image" src="./diagrams/sequence-user-request.svg" alt="典型用户请求处理（端到端）时序图" />
+                    </div>
+                    <div class="sequence-source">
+                        源文件：<a href="./sequence-user-request.mermaid">sequence-user-request.mermaid</a>
+                    </div>
+                </div>
+
+                <div class="sequence-card">
+                    <div class="sequence-card-title">2) Planner + Executor（Checkpoint / Retry / Replan）</div>
+                    <div class="sequence-card-desc">
+                        更贴近实现侧：checkpoint 恢复、工具 span、失败重试/回退、必要时 replan，并在每步落盘与打点。源文件：sequence-planner-executor.mermaid
+                    </div>
+                    <div class="sequence-image-wrap">
+                        <img class="sequence-image" src="./diagrams/sequence-planner-executor.svg" alt="Planner + Executor（Checkpoint / Retry / Replan）时序图" />
+                    </div>
+                    <div class="sequence-source">
+                        源文件：<a href="./sequence-planner-executor.mermaid">sequence-planner-executor.mermaid</a>
+                    </div>
+                </div>
+
+                <div class="sequence-card">
+                    <div class="sequence-card-title">3) 收件箱审批更新（监控→Diff→审批→入库发布）</div>
+                    <div class="sequence-card-desc">
+                        对应 Ops Inbox 的变更检测与入库发布闭环，覆盖手动审批与策略自动放行两条路径。源文件：sequence-inbox-update.mermaid
+                    </div>
+                    <div class="sequence-image-wrap">
+                        <img class="sequence-image" src="./diagrams/sequence-inbox-update.svg" alt="收件箱审批更新（监控→Diff→审批→入库发布）时序图" />
+                    </div>
+                    <div class="sequence-source">
+                        源文件：<a href="./sequence-inbox-update.mermaid">sequence-inbox-update.mermaid</a>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 14px; color: rgba(255,255,255,0.72); font-size: 0.85em; line-height: 1.7; text-align: center;">
+                说明：页面展示为静态 SVG 图片；如需修改，请编辑对应的 <span style="color: #00d4ff;">.mermaid</span> 源文件后重新导出。
             </div>
         </div>
     </div>
