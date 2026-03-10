@@ -18,7 +18,13 @@ sequenceDiagram
     U->>CA: Send request (message / API)
     CA->>GW: Normalize + Auth context
     GW->>AR: Route decision request
-    AR->>AR: Select business agent + scope
+    alt Router mode = single_agent
+        AR->>AR: Bind fixed agent (for example legal_agent)
+    else Router mode = configured_routing
+        AR->>AR: Apply tenant / channel / capability rules
+    else Router mode = dynamic_routing
+        AR->>AR: Evaluate rules + intent + fallback
+    end
     AR->>BA: Forward request + routing context
     BA->>P: Ask to plan within agent scope
 
@@ -57,4 +63,3 @@ sequenceDiagram
     BA-->>GW: Response (optionally streaming)
     GW-->>CA: Deliver
     CA-->>U: Show answer
-

@@ -210,6 +210,72 @@
             gap: 25px;
             margin-top: 25px;
         }
+        .router-design-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 24px;
+        }
+        .router-design-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+            border-radius: 12px;
+            padding: 22px;
+            border: 1px solid rgba(255,255,255,0.18);
+        }
+        .router-design-card-title {
+            color: #ffd700;
+            font-size: 1.02em;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        .router-design-card p,
+        .router-design-card li {
+            color: rgba(255,255,255,0.78);
+            font-size: 0.9em;
+            line-height: 1.7;
+        }
+        .router-design-card ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+        .router-flow {
+            margin-top: 24px;
+            background: rgba(0,0,0,0.28);
+            border-radius: 12px;
+            padding: 22px;
+            overflow-x: auto;
+        }
+        .router-flow pre {
+            margin: 0;
+            color: #d4d4d4;
+            font-size: 0.84em;
+            line-height: 1.75;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+        .router-mode-table {
+            width: 100%;
+            border-collapse: collapse;
+            color: white;
+            font-size: 0.9em;
+            margin-top: 24px;
+        }
+        .router-mode-table th,
+        .router-mode-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            vertical-align: top;
+        }
+        .router-note {
+            margin-top: 22px;
+            background: rgba(236,72,153,0.12);
+            border-left: 4px solid #ec4899;
+            border-radius: 10px;
+            padding: 18px 20px;
+            color: rgba(255,255,255,0.82);
+            font-size: 0.92em;
+            line-height: 1.8;
+        }
         .agent-type {
             background: linear-gradient(135deg, rgba(255,255,255,0.15), rgba(255,255,255,0.05));
             border-radius: 12px;
@@ -2056,6 +2122,96 @@ Next Graph Invocation uses new strategy</pre>
             </div>
         </div>
 
+        <div class="extension-section">
+            <div class="section-title">Agent Router 分层与可插拔设计</div>
+            <p style="color: rgba(255,255,255,0.8); margin-bottom: 18px; line-height: 1.8;">
+                为了同时支持<strong>单需求单 Agent</strong>和<strong>多需求多 Agent</strong>两种交付模式，Agent Router 保持统一入口与统一输出契约，
+                但内部实现拆分为可替换的策略模块。这样既不破坏总链路，也避免在单 Agent 项目里强行启用复杂的多 Agent 智能路由。
+            </p>
+            <p style="color: rgba(255,255,255,0.72); margin-bottom: 10px; font-size: 0.92em; line-height: 1.8;">
+                对外仍然是 Gateway 之后进入 Router、产出 <strong>Selected Business Agent</strong>；对内则拆为 Registry、Policy、Strategy、Dispatcher 四层，
+                通过配置切换运行模式，而不是修改主流程代码。
+            </p>
+
+            <div class="router-design-grid">
+                <div class="router-design-card">
+                    <div class="router-design-card-title">1. 稳定契约层</div>
+                    <p>
+                        Router 对上游只暴露统一的 <strong>route(request)</strong> 接口，对下游只产出统一的
+                        <strong>RouteDecision</strong>，包含 selected_agent、reason、policy_result、route_mode。
+                    </p>
+                </div>
+                <div class="router-design-card">
+                    <div class="router-design-card-title">2. 可替换策略层</div>
+                    <ul>
+                        <li><strong>single_agent</strong>: 固定返回唯一 Agent，例如 legal_agent</li>
+                        <li><strong>configured_routing</strong>: 按租户、渠道、权限、功能标签静态分流</li>
+                        <li><strong>dynamic_routing</strong>: 按规则 + 意图识别 + fallback 动态选 Agent</li>
+                    </ul>
+                </div>
+                <div class="router-design-card">
+                    <div class="router-design-card-title">3. 可插拔扩展点</div>
+                    <ul>
+                        <li><strong>AgentRegistry</strong>: 基于 manifest.yaml 自动发现 Agent</li>
+                        <li><strong>RoutePolicy</strong>: 做租户、权限、灰度、黑白名单过滤</li>
+                        <li><strong>RoutingStrategy</strong>: 负责真正的 Agent 选择逻辑</li>
+                        <li><strong>Dispatcher</strong>: 只负责把已选中的上下文传给业务 Agent</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="router-flow">
+                <pre>Request
+  -> AgentRegistry(list available agents for tenant/channel)
+  -> RoutePolicy(filter by auth / role / tenant / allowlist)
+  -> RoutingStrategy(select one agent from allowed candidates)
+  -> RouteDecision(selected_agent, reason, route_mode, policy_result)
+  -> Dispatcher(forward request + routing context)
+  -> Selected Business Agent</pre>
+            </div>
+
+            <table class="router-mode-table">
+                <tr style="background: rgba(236,72,153,0.22);">
+                    <th>运行模式</th>
+                    <th>适用场景</th>
+                    <th>Router 行为</th>
+                    <th>是否需要复杂意图识别</th>
+                </tr>
+                <tr>
+                    <td><strong>single_agent</strong></td>
+                    <td>单企业、单需求、单 Agent 交付</td>
+                    <td>静态绑定唯一 Agent，只保留准入校验、审计、灰度开关</td>
+                    <td>否</td>
+                </tr>
+                <tr>
+                    <td><strong>configured_routing</strong></td>
+                    <td>少量需求、少量 Agent、规则边界清晰</td>
+                    <td>按 tenant / channel / capability / request_type 进行规则路由</td>
+                    <td>通常不需要</td>
+                </tr>
+                <tr>
+                    <td><strong>dynamic_routing</strong></td>
+                    <td>平台化、多需求、多 Agent 协同</td>
+                    <td>基于规则、优先级、意图判断、fallback 选出最合适 Agent</td>
+                    <td>是，可按需启用</td>
+                </tr>
+            </table>
+
+            <div class="router-flow" style="margin-top: 18px;">
+                <pre>router:
+  mode: single_agent            # single_agent | configured_routing | dynamic_routing
+  default_agent: legal_agent
+  strategy: fixed_agent         # fixed_agent | rule_based | intent_based | hybrid
+  enable_policy_filter: true
+  enable_fallback: true</pre>
+            </div>
+
+            <div class="router-note">
+                这意味着 Router 的<strong>职责边界不变</strong>，仍然只负责“选哪个业务 Agent”；变化的是其内部实现从单一方案改为<strong>分层 + 可插拔 + 可退化</strong>。
+                单 Agent 项目使用最薄的固定路由策略，多 Agent 平台再启用规则路由或动态路由能力。
+            </div>
+        </div>
+
         <!-- LLM Planner 详细设计 -->
         <div class="extension-section">
             <div class="section-title">LLM Planner 详细设计</div>
@@ -2292,6 +2448,7 @@ Next Graph Invocation uses new strategy</pre>
                     <div class="sequence-card-title">1) 典型用户请求处理（端到端）</div>
                     <div class="sequence-card-desc">
                         涵盖 Channel Adapter / Gateway / Router / Business Agent / SensePedia Core（Planner + Executor）与 Memory、Knowledge、Tools、Observability 的主链路与可选分支。
+                        其中 Router 在图中仍抽象为单一模块，但实现上可运行于 single_agent、configured_routing、dynamic_routing 三种模式。
                     </div>
                     <div class="sequence-image-wrap">
                         <img class="sequence-image" src="./diagrams/sequence-user-request.svg" alt="典型用户请求处理（端到端）时序图" />
@@ -2326,6 +2483,12 @@ Next Graph Invocation uses new strategy</pre>
                         源文件：<a href="./diagrams/sequence-inbox-update.mermaid">sequence-inbox-update.mermaid</a>
                     </div>
                 </div>
+            </div>
+
+            <div class="router-note" style="margin-top: 24px;">
+                本次 Router 设计调整后，底部三个时序图的主链路边界不需要整体重画。
+                其中第 1 个端到端时序图可以继续保留，因为它表达的是 Router 的对外契约，而不是 Router 内部采用哪一种策略；
+                第 2 个图聚焦 Planner / Executor，第 3 个图聚焦 Inbox / Ingestion，二者与 Router 的内部模式无直接耦合。
             </div>
 
             <!-- Note removed per request -->
