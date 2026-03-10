@@ -342,7 +342,7 @@
         }
         .external-adapters {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 15px;
         }
         .adapter-item {
@@ -1718,17 +1718,17 @@ package/
                 <div class="memory-card">
                     <div class="memory-card-title"><span></span> 长期记忆 (Long-term Memory)</div>
                     <div class="memory-card-desc">
-                        跨会话持久化的用户偏好、学习到的信息、历史交互摘要。默认采用类似 OpenClaw 的内置长期记忆，为每个用户维护独立的长期记忆文件与检索索引。
+                        跨会话持久化的用户偏好、角色设定、学习到的信息和历史交互摘要。默认采用类似 OpenClaw 的内置长期记忆机制，但在产品实现上拆分为角色记忆、用户私有记忆、用户-角色绑定记忆三层命名空间，由 Memory Service 统一管理真相源、索引与 compaction。
                     </div>
                     <div class="memory-features">
-                        <div class="memory-feature"><span>✓</span> 用户偏好设置</div>
-                        <div class="memory-feature"><span>✓</span> 交互历史摘要</div>
-                        <div class="memory-feature"><span>✓</span> 角色/人格设定</div>
-                        <div class="memory-feature"><span>✓</span> 用户专属 MEMORY.md / daily memory</div>
-                        <div class="memory-feature"><span>✓</span> 自定义知识</div>
+                        <div class="memory-feature"><span>✓</span> Role Memory: 角色设定 / 人格 / 默认行为</div>
+                        <div class="memory-feature"><span>✓</span> User Memory: 用户偏好 / 历史摘要 / daily memory</div>
+                        <div class="memory-feature"><span>✓</span> User-Role Memory: 关系记忆 / 专属互动上下文</div>
+                        <div class="memory-feature"><span>✓</span> MEMORY.md + daily/*.md 作为真相源</div>
+                        <div class="memory-feature"><span>✓</span> 检索索引 + compaction 作为派生层</div>
                     </div>
                     <div style="margin-top: 15px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; font-size: 0.85em; color: #ffd700;">
-                        默认实现：内置文件记忆 + 向量索引；增强选项：PostgreSQL / MemOS / Recall
+                        默认实现：Built-in Memory（三层命名空间 + 文件真相源 + 语义检索 + 触发式压缩，复用现有底座）；外部记忆系统：MemOS / Mem0
                     </div>
                 </div>
 
@@ -1760,7 +1760,7 @@ package/
                     <div class="adapter-item">
                         
                         <div class="adapter-name">Built-in Memory</div>
-                        <div class="adapter-desc">默认选项<br/>每用户独立长期记忆</div>
+                        <div class="adapter-desc">类似 OpenClaw<br/>三层命名空间 + 检索 + compaction</div>
                     </div>
                     <div class="adapter-item">
                         
@@ -1768,12 +1768,6 @@ package/
                         <div class="adapter-desc">开源记忆框架<br/>记忆检索与摘要</div>
                     </div>
                     <div class="adapter-item">
-                        
-                        <div class="adapter-name">Recall</div>
-                        <div class="adapter-desc">AI 记忆库<br/>长期记忆存储</div>
-                    </div>
-                    <div class="adapter-item">
-                        
                         <div class="adapter-name">Mem0</div>
                         <div class="adapter-desc">智能记忆层<br/>自适应记忆</div>
                     </div>
@@ -1786,50 +1780,59 @@ package/
                      Memory Service 接口规范
                 </div>
                 <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.85em;">
-class UserMemoryAdapter(Protocol):
-    """用户记忆系统适配器接口"""
+class MemoryScope:
+    scope_type: str   # role / user / user_role / shared
+    role_id: Optional[str]
+    user_id: Optional[str]
 
-    async def store(self, user_id: str, memory: MemoryItem) -> None:
-        """存储用户记忆"""
+
+class MemoryAdapter(Protocol):
+    """多租户记忆系统适配器接口"""
+
+    async def store(self, scope: MemoryScope, memory: MemoryItem) -> None:
+        """按 scope 存储记忆"""
         ...
 
-    async def retrieve(self, user_id: str, query: str, limit: int = 5) -> List[MemoryItem]:
-        """根据查询检索相关记忆"""
+    async def retrieve(self, scope: MemoryScope, query: str, limit: int = 5) -> List[MemoryItem]:
+        """按 scope 检索相关记忆"""
         ...
 
-    async def get_summary(self, user_id: str) -> UserSummary:
-        """获取用户记忆摘要"""
+    async def get_summary(self, scope: MemoryScope) -> UserSummary:
+        """获取指定 scope 的记忆摘要"""
         ...
 
-    async def delete(self, user_id: str, memory_id: str) -> None:
-        """删除指定记忆"""
+    async def delete(self, scope: MemoryScope, memory_id: str) -> None:
+        """删除指定 scope 下的记忆"""
         ...
 
 
 class MemoryItem:
     content: str              # 记忆内容
-    memory_type: str         # short_term / long_term / shared
+    memory_type: str         # role / user / user_role / shared
     importance: float        # 重要性评分 (0-1)
     embedding: List[float]    # 向量表示
     created_at: datetime     # 创建时间
     metadata: Dict          # 元数据
 
 
-# 默认内置长期记忆布局（参考 OpenClaw）
-memory/{user_id}/MEMORY.md          # 用户长期记忆
-memory/{user_id}/daily/YYYY-MM-DD.md # 用户每日记忆</pre>
+# 默认内置长期记忆布局（类似 OpenClaw，但按三层命名空间产品化）
+memory/roles/{role_id}/PROFILE.md                 # 角色设定与默认人格
+memory/roles/{role_id}/MEMORY.md                  # 角色长期记忆
+memory/users/{user_id}/MEMORY.md                  # 用户私有长期记忆
+memory/users/{user_id}/daily/YYYY-MM-DD.md        # 用户每日记忆
+memory/bindings/{role_id}/{user_id}/MEMORY.md     # 用户-角色绑定记忆</pre>
             </div>
         </div>
 
         <!-- Memory 复用架构图 -->
         <div class="extension-section">
             <div class="section-title">Memory 复用架构图</div>
-            <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.8;">
-                如果同时借鉴 OpenClaw 的文件即记忆真相源、双层记忆、混合检索、时间衰减、增量同步、优雅降级以及
-                memory compaction writeback，那么最合理的落点不是把 Memory 直接挂到 <strong>RAG Agent</strong> 或
-                <strong>Knowledge Ingestion Agent</strong> 下面，而是单独抽成一个 <strong>Memory Service / Memory Pipeline</strong>，
-                复用它们的底层原语。
-            </p>
+                <p style="color: rgba(255,255,255,0.8); margin-bottom: 20px; line-height: 1.8;">
+                    如果同时借鉴 OpenClaw 的文件即记忆真相源、双层记忆、混合检索、时间衰减、增量同步、优雅降级以及
+                    memory compaction writeback，那么最合理的落点不是把 Memory 直接挂到 <strong>RAG Agent</strong> 或
+                    <strong>Knowledge Ingestion Agent</strong> 下面，而是单独抽成一个 <strong>Memory Service / Memory Pipeline</strong>：
+                    与 Knowledge Infrastructure <strong>共用基础设施</strong>，但在 scope、索引、权限和生命周期上与知识库<strong>分开数据域</strong>。
+                </p>
 
             <div class="pipeline-grid">
                 <div class="pipeline-panel">
@@ -1885,10 +1888,10 @@ memory/{user_id}/daily/YYYY-MM-DD.md # 用户每日记忆</pre>
                 <div class="pipeline-panel">
                     <div class="pipeline-panel-title">Memory Service 内部能力</div>
                     <div class="pipeline-step-list">
-                        <div class="pipeline-step"><strong>Truth Source</strong><br/>`memory/{user_id}/daily/*.md` + `memory/{user_id}/MEMORY.md`，文件即真相源。</div>
-                        <div class="pipeline-step"><strong>Write Path</strong><br/>用户显式记忆、会话摘要、compaction flush、网页源同步都先进入 Memory Writer，再触发索引更新。</div>
-                        <div class="pipeline-step"><strong>Recall Path</strong><br/>优先做 scoped recall，再做 temporal decay、hybrid merge 和 prompt injection，不直接强耦合 RAG 回答器。</div>
-                        <div class="pipeline-step"><strong>Sync Path</strong><br/>watcher + dirty flag + interval sync + graceful fallback，保证 memory 始终是活数据索引。</div>
+                        <div class="pipeline-step"><strong>Truth Source</strong><br/>`memory/roles/*` + `memory/users/*` + `memory/bindings/*`，Markdown 文件即真相源。</div>
+                        <div class="pipeline-step"><strong>Write Path</strong><br/>先按 scope 归属路由：角色固有设定写入 role scope，用户稳定偏好与长期事实写入 user scope，当前角色下形成的专属互动与关系记忆写入 user-role scope；随后统一进入 Memory Writer，落 Markdown 真相源并触发索引更新与 compaction。</div>
+                        <div class="pipeline-step"><strong>Recall Path</strong><br/>按三层 scope 优先级召回：先 user-role，再 user，最后 role；完成 scoped recall 后再做 temporal decay、hybrid merge、去重与 prompt injection，避免高专属性记忆被低专属性基线记忆淹没，不直接强耦合 RAG 回答器。</div>
+                        <div class="pipeline-step"><strong>Sync Path</strong><br/>watcher + dirty flag + interval sync + graceful fallback，保证 memory 始终是活数据索引；底层可复用 MariaDB / Milvus / MinIO，但 memory collection、metadata table、truth-source 路径与知识库分域隔离。</div>
                     </div>
                 </div>
 
@@ -1898,7 +1901,7 @@ memory/{user_id}/daily/YYYY-MM-DD.md # 用户每日记忆</pre>
                         <div class="pipeline-step"><strong>直接复用的能力</strong><br/>Chunker、Embedding Pipeline、BM25 Encoder、Hybrid Search、Reranker、Version Replace、Web Diff、Inbox 审批。</div>
                         <div class="pipeline-step"><strong>不要直接复用的整链路</strong><br/>普通 memory 写入不应默认走完整知识库重型入库链；memory recall 也不应默认走完整 RAG answer composition。</div>
                         <div class="pipeline-step"><strong>Compaction 的落点</strong><br/>Compaction 产生 durable memory 候选后，进入 Memory Writer，写回 Markdown truth source，再触发增量索引。</div>
-                        <div class="pipeline-step"><strong>平台中的位置</strong><br/>Memory Service 应该位于支撑系统层，与 Knowledge Infrastructure 共用底座，并服务于 SensePedia Core 与各业务 Agent。</div>
+                        <div class="pipeline-step"><strong>平台中的位置</strong><br/>Memory Service 应该位于支撑系统层，与 Knowledge Infrastructure 共用基础设施，但采用分开数据域的方式管理 memory metadata、memory index 和 memory truth source，并服务于 SensePedia Core 与各业务 Agent。</div>
                     </div>
                 </div>
             </div>
