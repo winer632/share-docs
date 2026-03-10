@@ -2288,39 +2288,39 @@ Next Graph Invocation uses new strategy</pre>
                 <div class="sequence-card">
                     <div class="sequence-card-title">1) 典型用户请求处理（端到端）</div>
                     <div class="sequence-card-desc">
-                        涵盖 Channel Adapter / Gateway / Router / Business Agent / SensePedia Core（Planner + Executor）与 Memory、Knowledge、Tools、Observability 的主链路与可选分支。源文件：sequence-user-request.mermaid
+                        涵盖 Channel Adapter / Gateway / Router / Business Agent / SensePedia Core（Planner + Executor）与 Memory、Knowledge、Tools、Observability 的主链路与可选分支。
                     </div>
                     <div class="sequence-image-wrap">
                         <img class="sequence-image" src="./diagrams/sequence-user-request.svg" alt="典型用户请求处理（端到端）时序图" />
                     </div>
                     <div class="sequence-source">
-                        源文件：<a href="./sequence-user-request.mermaid">sequence-user-request.mermaid</a>
+                        源文件：<a href="./diagrams/sequence-user-request.mermaid">sequence-user-request.mermaid</a>
                     </div>
                 </div>
 
                 <div class="sequence-card">
                     <div class="sequence-card-title">2) Planner + Executor（Checkpoint / Retry / Replan）</div>
                     <div class="sequence-card-desc">
-                        更贴近实现侧：checkpoint 恢复、工具 span、失败重试/回退、必要时 replan，并在每步落盘与打点。源文件：sequence-planner-executor.mermaid
+                        更贴近实现侧：checkpoint 恢复、工具 span、失败重试/回退、必要时 replan，并在每步落盘与打点。
                     </div>
                     <div class="sequence-image-wrap">
                         <img class="sequence-image" src="./diagrams/sequence-planner-executor.svg" alt="Planner + Executor（Checkpoint / Retry / Replan）时序图" />
                     </div>
                     <div class="sequence-source">
-                        源文件：<a href="./sequence-planner-executor.mermaid">sequence-planner-executor.mermaid</a>
+                        源文件：<a href="./diagrams/sequence-planner-executor.mermaid">sequence-planner-executor.mermaid</a>
                     </div>
                 </div>
 
                 <div class="sequence-card">
                     <div class="sequence-card-title">3) 收件箱审批更新（监控→Diff→审批→入库发布）</div>
                     <div class="sequence-card-desc">
-                        对应 Ops Inbox 的变更检测与入库发布闭环，覆盖手动审批与策略自动放行两条路径。源文件：sequence-inbox-update.mermaid
+                        对应 Ops Inbox 的变更检测与入库发布闭环，覆盖手动审批与策略自动放行两条路径。
                     </div>
                     <div class="sequence-image-wrap">
                         <img class="sequence-image" src="./diagrams/sequence-inbox-update.svg" alt="收件箱审批更新（监控→Diff→审批→入库发布）时序图" />
                     </div>
                     <div class="sequence-source">
-                        源文件：<a href="./sequence-inbox-update.mermaid">sequence-inbox-update.mermaid</a>
+                        源文件：<a href="./diagrams/sequence-inbox-update.mermaid">sequence-inbox-update.mermaid</a>
                     </div>
                 </div>
             </div>
