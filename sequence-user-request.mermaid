@@ -1,0 +1,60 @@
+sequenceDiagram
+    autonumber
+    actor U as "User / Client"
+    participant CA as "Channel Adapter"
+    participant GW as "API Gateway"
+    participant AR as "Agent Router"
+    participant BA as "Selected Business Agent"
+    participant P as "SensePedia Core / LLM Planner"
+    participant E as "SensePedia Core / Graph Executor"
+    participant MS as "Memory Service"
+    participant KI as "Knowledge Infrastructure"
+    participant LLM as "LLM Gateway"
+    participant TR as "Tool Registry"
+    participant TX as "Tool / Skill Executor"
+    participant EXT as "External Systems (DB / Milvus / MinIO / Web)"
+    participant OB as "Observability (LangFuse / Metrics / Logs)"
+
+    U->>CA: Send request (message / API)
+    CA->>GW: Normalize + Auth context
+    GW->>AR: Route decision request
+    AR->>AR: Select business agent + scope
+    AR->>BA: Forward request + routing context
+    BA->>P: Ask to plan within agent scope
+
+    opt Recall durable memory / user prefs
+        P->>MS: Recall(thread_id, user_id)
+        MS-->>P: Memory context
+    end
+
+    opt Use shared knowledge capabilities
+        P->>KI: Capability check / retrieve primitives
+        KI-->>P: Available tools + constraints
+    end
+
+    P->>LLM: Generate plan JSON (tasks + deps)
+    LLM-->>P: Plan
+    P->>E: Submit plan + initial state
+
+    loop For each task (serial or parallel)
+        E->>TR: Resolve tool + policy
+        TR-->>E: Tool binding (impl + schema)
+        par Execute tool and trace
+            E->>TX: Execute(tool, params)
+            TX->>EXT: Call external dependency
+            EXT-->>TX: Result / error
+            TX-->>E: Tool result
+        and
+            E->>OB: Emit spans + events
+        end
+        opt Checkpoint / state snapshot
+            E->>MS: Persist checkpoint + summary
+            MS-->>E: Ack
+        end
+    end
+
+    E-->>BA: Final answer + citations / artifacts
+    BA-->>GW: Response (optionally streaming)
+    GW-->>CA: Deliver
+    CA-->>U: Show answer
+

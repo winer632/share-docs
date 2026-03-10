@@ -1,0 +1,60 @@
+sequenceDiagram
+    autonumber
+    participant BA as "Business Agent"
+    participant P as "LLM Planner"
+    participant LLM as "LLM Gateway"
+    participant E as "Graph Executor"
+    participant CP as "Checkpoint Store"
+    participant TR as "Tool Registry"
+    participant TX as "Tool / Skill Executor"
+    participant EXT as "External Systems"
+    participant PR as "Policy Registry (Retry/Fallback)"
+    participant OB as "Observability"
+
+    BA->>P: Plan request (query + context)
+    P->>LLM: Create plan (tasks + deps + parallel hints)
+    LLM-->>P: Plan JSON
+    P-->>E: Dispatch plan + initial state
+
+    E->>CP: Load checkpoint(thread_id)
+    alt Resume available
+        CP-->>E: Restore state snapshot
+    else New thread
+        CP-->>E: Empty state
+    end
+    E->>OB: Start trace + execution metadata
+
+    loop For each task
+        E->>TR: Resolve tool binding
+        TR-->>E: Tool impl + schema
+
+        TX->>OB: Start tool span
+        E->>TX: Execute(tool, params, timeout)
+        TX->>EXT: Perform call
+
+        alt Success
+            EXT-->>TX: Result
+            TX-->>E: Normalized output
+        else Tool error / timeout
+            EXT-->>TX: Error
+            TX->>PR: Retry + fallback decision
+            alt Retry allowed
+                PR-->>TX: Retry budget + backoff
+                TX->>EXT: Retry call
+                EXT-->>TX: Result / error
+                TX-->>E: Output / final error
+            else Need re-plan
+                PR-->>E: Replan required
+                E->>LLM: Ask for revised plan (include failure)
+                LLM-->>E: Revised plan
+            end
+        end
+
+        E->>CP: Save checkpoint(state + tool trace)
+        CP-->>E: Ack
+        TX-->>OB: End tool span (status + cost + latency)
+    end
+
+    E-->>BA: Final state + answer payload
+    BA-->>OB: Emit summary metrics (success/fallback rate)
+

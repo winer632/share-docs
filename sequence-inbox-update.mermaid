@@ -1,0 +1,41 @@
+sequenceDiagram
+    autonumber
+    participant SCH as "Scheduler / Monitor"
+    participant SRC as "Web Source / Repo"
+    participant DIFF as "Change Detector (Diff)"
+    participant INBOX as "Ops Inbox"
+    participant OP as "Operator Console"
+    participant AG as "Knowledge Ingestion Agent"
+    participant PIPE as "Ingestion Pipeline"
+    participant VDB as "Vector Store (Milvus)"
+    participant PUB as "Publisher / Index"
+    participant OB as "Observability"
+
+    SCH->>SRC: Fetch latest content
+    SRC-->>SCH: Raw documents
+    SCH->>DIFF: Compare with last snapshot
+    DIFF-->>SCH: Change set (add/update/delete)
+
+    alt No change
+        SCH-->>OB: Emit "no-op" event
+    else Change detected
+        SCH->>INBOX: Create/update approval item
+        INBOX-->>OP: Notify (badge / webhook)
+        OP->>INBOX: Review diff + metadata
+
+        alt Manual approve
+            OP->>INBOX: Approve + scope + notes
+        else Auto approve (policy)
+            INBOX->>INBOX: Apply policy gates (risk / size / allowlist)
+        end
+
+        INBOX->>AG: Trigger ingestion job (approved item)
+        AG->>PIPE: Parse -> clean -> chunk -> embed
+        PIPE->>VDB: Upsert vectors + metadata
+        VDB-->>PIPE: Ack
+        PIPE->>PUB: Publish new version + swap index
+        PUB-->>PIPE: Ack
+        AG-->>INBOX: Update item status (done / failed)
+        AG-->>OB: Emit job trace + metrics
+    end
+
