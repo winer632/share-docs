@@ -890,6 +890,66 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Python 源码加密方案 -->
+            <div class="infra-strip" style="margin-top: 20px;">
+                <div class="infra-strip-title">Python 源码加密方案（客户私有化部署 IP 保护）</div>
+                <div class="infra-strip-desc">
+                    为保障客户私有化部署时的知识产权保护，需要对 Python 源码进行加密处理。采用 <strong>Cython</strong> 方案将源码编译为二进制扩展模块（.so 文件），使逆向工程难度大幅提升。
+                </div>
+                <div class="infra-grid">
+                    <div class="infra-card">
+                        <div class="infra-card-title">加密原理</div>
+                        <div class="infra-card-desc">Python (.py) → C 代码 (.c) → 编译为 C 扩展模块 (.so/.pyd)，编译后的二进制代码难以直接阅读和逆向。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">入口文件保留</div>
+                        <div class="infra-card-desc">启动脚本、配置文件、__init__.py 等入口文件保持 .py 格式以便修改；业务逻辑代码全部编译为 .so。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">不兼容文件处理</div>
+                        <div class="infra-card-desc">部分 Python 特性（如 redis 向量操作）无法编译，需保持 .py 源码或使用替代方案。</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">编译脚本</div>
+                        <div class="infra-card-desc">使用 setup_main.py 自动遍历项目目录，调用 setup.py 逐文件编译，并打包至 package 目录交付。</div>
+                    </div>
+                </div>
+                <div class="infra-grid" style="margin-top: 15px;">
+                    <div class="infra-card">
+                        <div class="infra-card-title">部署包结构</div>
+                        <div class="infra-card-desc">
+                            <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.85em; overflow-x: auto;">
+package/
+├── app/                    # 编译后的 .so 模块
+│   └── __init__.py        # 入口文件（保持 .py）
+├── skills/                 # 编译后的 skill 模块
+├── agent_platform/         # 编译后的核心模块
+├── setup.py               # 编译入口（交付用）
+├── setup_main.py          # 自动编译脚本（仅开发使用）
+├── requirements.txt       # 依赖清单
+└── Dockerfile            # 容器构建文件</pre>
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">编译流程</div>
+                        <div class="infra-card-desc">
+                            <ol style="margin: 0; padding-left: 18px; line-height: 1.7;">
+                                <li>开发环境安装 Cython: <code>pip install Cython</code></li>
+                                <li>执行 <code>python setup_main.py</code> 自动编译</li>
+                                <li>脚本自动添加 <code># cython: language_level=3</code> 头部</li>
+                                <li>调用 setup.py 编译为 .so 文件</li>
+                                <li>移动 .so 至 package 目录</li>
+                                <li>复制非编译文件（配置、入口、__init__.py）</li>
+                                <li>交付 package 目录给客户</li>
+                            </ol>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: rgba(255,255,255,0.65); margin-top: 16px; font-size: 0.88em; line-height: 1.7;">
+                    <strong>注意事项：</strong>编译前需在目标运行环境中测试，因为不同 Python 版本、操作系统编译的 .so 文件可能存在兼容性问题。建议在 Docker 容器中统一编译环境。
+                </p>
+            </div>
         </div>
 
         <!-- 业务 Agent 扩展设计 -->
