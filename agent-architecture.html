@@ -732,7 +732,11 @@
                     <div class="layer-title">支撑系统</div>
                     <div class="module llm">
                         <div class="module-title">LLM Gateway</div>
-                        <div class="module-desc">Model Router<br/>Prompt Manager<br/>Response Parser</div>
+                        <div class="module-desc">Model Router<br/>Prompt Manager<br/>Response Parser<br/>多API切换/降级</div>
+                    </div>
+                    <div class="module gateway">
+                        <div class="module-title">熔断限流</div>
+                        <div class="module-desc">QPS限制/熔断降级<br/>超时控制/队列缓冲</div>
                     </div>
                     <div class="module checkpoint">
                         <div class="module-title">Checkpoint Store</div>
@@ -829,6 +833,59 @@
                 </p>
             </div>
             <div class="data-flow" style="margin-top: 18px;">
+                <h3> 系统稳定性保障 - 降级方案</h3>
+                <p style="color: rgba(255,255,255,0.75); margin: 12px 0 16px 0; font-size: 0.92em; line-height: 1.8;">
+                    Agent 模式会多次调用外部服务（LLM、检索服务），存在<strong>QPS 放大</strong>效应，需要完善的降级方案保障系统稳定性。
+                </p>
+                <div class="flow-steps">
+                    <div class="flow-step">请求进入</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">限流检查</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">熔断判断</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">服务调用</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">结果返回</div>
+                </div>
+                <div class="infra-grid" style="margin-top: 20px;">
+                    <div class="infra-card">
+                        <div class="infra-card-title">LLM 多 API 降级</div>
+                        <div class="infra-card-desc">
+                            <strong>SAAS API 场景：</strong>配置多个 API Key（如主用 Claude，备用 GPT-4），主节点故障时自动切换到备选 API。<br/>
+                            <strong>本地部署场景：</strong>建议只做服务不可用时的快速失败，不做 API 级别降级。
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">QPS 限流</div>
+                        <div class="infra-card-desc">
+                            <strong>全局限流：</strong>限制系统总并发请求数，防止过载。<br/>
+                            <strong>单用户限流：</strong>限制单个用户的并发请求数，防止资源抢占。<br/>
+                            <strong>Agent 放大控制：</strong>限制 Agent 单次任务的最大工具调用次数。
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">熔断机制</div>
+                        <div class="infra-card-desc">
+                            <strong>超时熔断：</strong>LLM 调用、检索服务响应超时（建议 30s）自动放弃，避免请求堆积。<br/>
+                            <strong>错误熔断：</strong>连续失败 N 次后熔断该服务，恢复后逐步放行流量。<br/>
+                            <strong>半开状态：</strong>熔断恢复时先放行少量请求探测，可用则恢复正常。
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">服务降级策略</div>
+                        <div class="infra-card-desc">
+                            <strong>检索不可用：</strong>返回"知识库暂不可用，请稍后重试"，不返回错误信息。<br/>
+                            <strong>LLM 不可用：</strong>返回"服务繁忙，请稍后重试"。<br/>
+                            <strong>Agent 任务超时：</strong>保留已执行结果，返回部分答案并提示"答案未完整"。
+                        </div>
+                    </div>
+                </div>
+                <p style="color: rgba(255,255,255,0.65); margin-top: 16px; font-size: 0.88em; line-height: 1.7;">
+                    <strong>实现位置：</strong>熔断限流模块位于 API Gateway 与 LLM Gateway 之间，统一处理限流、熔断、超时控制。
+                </p>
+            </div>
+            <div class="data-flow" style="margin-top: 18px;">
                 <h3> 收件箱审批链路</h3>
                 <div class="flow-steps">
                     <div class="flow-step">Web Crawler / Change Detector</div>
@@ -889,6 +946,224 @@
                         <div class="infra-card-desc">当网页内容变更存在风险或需人工干预时，向系统收件箱推送待处理事项。</div>
                     </div>
                 </div>
+            </div>
+
+            <!-- 部署架构 -->
+            <div class="infra-strip" style="margin-top: 20px;">
+                <div class="infra-strip-title">一、私有化部署架构</div>
+                <div class="infra-strip-desc">
+                    适用于客户自有服务器环境，采用 <strong>多容器 Docker Compose</strong> 方式部署。前端、Python 后端、基础设施组件各自独立运行，通过内部网络通信。
+                </div>
+                <div class="infra-grid">
+                    <div class="infra-card">
+                        <div class="infra-card-title">前端服务</div>
+                        <div class="infra-card-desc">
+                            <strong>Vue3 Web 应用</strong>：用户 Web 界面<br/>
+                            <strong>Nginx</strong>：反向代理、静态资源托管、SSL 终结
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">后端服务</div>
+                        <div class="infra-card-desc">
+                            <strong>Python API 服务</strong>：业务逻辑处理、Agent 执行<br/>
+                            <strong>LLM 服务</strong>：本地部署的 LLM（如 Ollama）或 SAAS API 代理
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">数据存储</div>
+                        <div class="infra-card-desc">
+                            <strong>Milvus</strong>：向量数据库，存储文档 embedding<br/>
+                            <strong>MariaDB</strong>：关系型数据库，元数据、用户、配置<br/>
+                            <strong>MinIO</strong>：对象存储，原始文件、Markdown、图片<br/>
+                            <strong>MongoDB</strong>：文档型数据库，中间处理数据
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">消息队列与缓存</div>
+                        <div class="infra-card-desc">
+                            <strong>RabbitMQ</strong>：异步任务队列，串联解析、Embedding、入库任务<br/>
+                            <strong>Redis</strong>（可选）：缓存、Session、会话状态
+                        </div>
+                    </div>
+                </div>
+                <div class="infra-grid" style="margin-top: 15px;">
+                    <div class="infra-card">
+                        <div class="infra-card-title">Docker Compose 编排</div>
+                        <div class="infra-card-desc">
+                            <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.8em; overflow-x: auto;">
+services:
+  nginx:
+    image: nginx:latest
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webfrontend
+      - pythonservice
+
+  webfrontend:
+    build: ./frontend
+
+  pythonservice:
+    build: ./backend
+    depends_on:
+      - mariadb
+      - milvus
+      - rabbitmq
+      - minio
+
+  mariadb:
+    image: mariadb:10.11
+
+  milvus:
+    image: milvusdb/milvus:latest
+
+  minio:
+    image: minio/minio:latest
+
+  rabbitmq:
+    image: rabbitmq:3.12-management
+
+  mongodb:
+    image: mongo:7.0</pre>
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">私有化部署清单</div>
+                        <div class="infra-card-desc">
+                            <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                                    <td style="padding: 6px;"><strong>组件</strong></td>
+                                    <td style="padding: 6px;"><strong>必需</strong></td>
+                                    <td style="padding: 6px;"><strong>说明</strong></td>
+                                </tr>
+                                <tr><td style="padding: 6px;">Nginx</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">反向代理</td></tr>
+                                <tr><td style="padding: 6px;">Vue3 前端</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">用户界面</td></tr>
+                                <tr><td style="padding: 6px;">Python 后端</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">业务逻辑</td></tr>
+                                <tr><td style="padding: 6px;">MariaDB</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">元数据存储</td></tr>
+                                <tr><td style="padding: 6px;">Milvus</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">向量检索</td></tr>
+                                <tr><td style="padding: 6px;">MinIO</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">文件存储</td></tr>
+                                <tr><td style="padding: 6px;">RabbitMQ</td><td style="padding: 6px;">✅</td><td style="padding: 6px;">异步任务</td></tr>
+                                <tr><td style="padding: 6px;">MongoDB</td><td style="padding: 6px;">⚠️</td><td style="padding: 6px;">可选，中间数据</td></tr>
+                                <tr><td style="padding: 6px;">LLM 服务</td><td style="padding: 6px;">⚠️</td><td style="padding: 6px;">可选，本地或 SAAS</td></tr>
+                                <tr><td style="padding: 6px;">Redis</td><td style="padding: 6px;">⚠️</td><td style="padding: 6px;">可选，缓存</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: rgba(255,255,255,0.65); margin-top: 16px; font-size: 0.88em; line-height: 1.7;">
+                    <strong>部署顺序：</strong>① 启动基础设施（DB、MQ、存储）→ ② 初始化数据 → ③ 启动后端服务 → ④ 启动前端 → ⑤ 配置 Nginx 反向代理。
+                </p>
+            </div>
+
+            <!-- 公有云 SAAS 部署 -->
+            <div class="infra-strip" style="margin-top: 20px;">
+                <div class="infra-strip-title">二、公有云 SAAS 部署</div>
+                <div class="infra-strip-desc">
+                    适用于云服务商提供的公有云环境，底层组件与私有化部署相同，但需要<strong>多租户隔离</strong>、<strong>高可用</strong>、<strong>弹性伸缩</strong>等企业级能力。采用 <strong>Kubernetes (K8s)</strong> 进行容器编排。
+                </div>
+                <div class="infra-grid">
+                    <div class="infra-card">
+                        <div class="infra-card-title">多租户隔离</div>
+                        <div class="infra-card-desc">
+                            <strong>数据隔离：</strong>租户独立数据库或逻辑隔离（行级/表级）<br/>
+                            <strong>网络隔离：</strong>VPC 划分，不同租户网络隔离<br/>
+                            <strong>资源隔离：</strong>租户Quota限制、独立的 Milvus Collection
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">高可用架构</div>
+                        <div class="infra-card-desc">
+                            <strong>多实例部署：</strong>API 服务多副本 + 负载均衡<br/>
+                            <strong>数据库高可用：</strong>MariaDB 主从复制、Milvus 集群<br/>
+                            <strong>自动故障转移：</strong>服务异常自动重启、流量切换
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">弹性伸缩</div>
+                        <div class="infra-card-desc">
+                            <strong>HPA：</strong>根据 CPU/内存/请求量自动扩缩容<br/>
+                            <strong>多可用区：</strong>跨可用区部署容灾<br/>
+                            <strong>流量调度：</strong>DNS 负载均衡、CDN 加速
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">监控与运维</div>
+                        <div class="infra-card-desc">
+                            <strong>Metrics：</strong>Prometheus + Grafana 监控面板<br/>
+                            <strong>Logging：</strong>ELK 日志收集与分析<br/>
+                            <strong>Tracing：</strong>LangFuse/Jeager 链路追踪<br/>
+                            <strong>告警：</strong>异常自动告警、短信/邮件通知
+                        </div>
+                    </div>
+                </div>
+                <div class="infra-grid" style="margin-top: 15px;">
+                    <div class="infra-card">
+                        <div class="infra-card-title">K8s 部署架构</div>
+                        <div class="infra-card-desc">
+                            <pre style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 6px; font-size: 0.8em; overflow-x: auto;">
+# K8s Deployment 示例
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sensepedia-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: sensepedia-api
+  template:
+    spec:
+      containers:
+      - name: api
+        image: sensepedia/api:latest
+        resources:
+          limits:
+            cpu: "2"
+            memory: "4Gi"
+          requests:
+            cpu: "500m"
+            memory: "1Gi"
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sensepedia-api
+spec:
+  type: LoadBalancer
+  selector:
+    app: sensepedia-api
+  ports:
+  - port: 80
+    targetPort: 8000</pre>
+                        </div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">SAAS 部署清单</div>
+                        <div class="infra-card-desc">
+                            <table style="width: 100%; font-size: 0.85em; border-collapse: collapse;">
+                                <tr style="border-bottom: 1px solid rgba(255,255,255,0.2);">
+                                    <td style="padding: 6px;"><strong>组件</strong></td>
+                                    <td style="padding: 6px;"><strong>部署方式</strong></td>
+                                </tr>
+                                <tr><td style="padding: 6px;">K8s 集群</td><td style="padding: 6px;">云厂商托管（EKS/GKE/ACK）</td></tr>
+                                <tr><td style="padding: 6px;">负载均衡</td><td style="padding: 6px;">K8s Service / Ingress</td></tr>
+                                <tr><td style="padding: 6px;">API 服务</td><td style="padding: 6px;">K8s Deployment 多副本</td></tr>
+                                <tr><td style="padding: 6px;">MariaDB</td><td style="padding: 6px;">云数据库（RDS）</td></tr>
+                                <tr><td style="padding: 6px;">Milvus</td><td style="padding: 6px;">云向量数据库服务</td></tr>
+                                <tr><td style="padding: 6px;">MinIO</td><td style="padding: 6px;">K8s 集群内或对象存储</td></tr>
+                                <tr><td style="padding: 6px;">RabbitMQ</td><td style="padding: 6px;">K8s 或云消息队列</td></tr>
+                                <tr><td style="padding: 6px;">Redis</td><td style="padding: 6px;">云缓存服务（Redis版）</td></tr>
+                                <tr><td style="padding: 6px;">监控</td><td style="padding: 6px;">Prometheus + Grafana</td></tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <p style="color: rgba(255,255,255,0.65); margin-top: 16px; font-size: 0.88em; line-height: 1.7;">
+                    <strong>与私有化部署的差异：</strong>底层组件相同，但 SAAS 部署强调多租户隔离、企业级高可用、自动化运维。云厂商提供的托管服务（如 RDS、云数据库）可简化运维工作。
+                </p>
             </div>
 
             <!-- Python 源码加密方案 -->
