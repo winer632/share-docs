@@ -679,11 +679,11 @@
                 <div class="center-area">
                     <div class="module channel-adapter">
                         <div class="module-title">Channel Adapter</div>
-                        <div class="module-desc">Webhook / Bot API / Event Normalize</div>
+                        <div class="module-desc">Webhook / Bot API / Event Normalize / 身份绑定</div>
                     </div>
                     <div class="module gateway">
                         <div class="module-title">API Gateway</div>
-                        <div class="module-desc">认证、限流、请求路由</div>
+                        <div class="module-desc">认证、限流、请求路由 / 用户隔离</div>
                     </div>
                     <div class="module router">
                         <div class="module-title">Agent Router</div>
@@ -789,6 +789,44 @@
                     <div class="flow-arrow">→</div>
                     <div class="flow-step">SensePedia Core</div>
                 </div>
+            </div>
+            <div class="data-flow" style="margin-top: 18px;">
+                <h3> 外部渠道身份绑定机制</h3>
+                <p style="color: rgba(255,255,255,0.75); margin: 12px 0 16px 0; font-size: 0.92em; line-height: 1.8;">
+                    Telegram、飞书等外部渠道需要与系统内部的多用户、多角色体系进行绑定，以确保<strong>用户隔离</strong>、<strong>权限控制</strong>和<strong>审计追溯</strong>。
+                </p>
+                <div class="flow-steps">
+                    <div class="flow-step">Telegram/飞书用户</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">身份识别</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">账号映射</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">角色同步</div>
+                    <div class="flow-arrow">→</div>
+                    <div class="flow-step">会话隔离</div>
+                </div>
+                <div class="infra-grid" style="margin-top: 20px;">
+                    <div class="infra-card">
+                        <div class="infra-card-title">Telegram 绑定方案</div>
+                        <div class="infra-card-desc">用户发送 /start 命令 → 跳转绑定页面（输入账号密码/SSO）→ 绑定 Telegram User ID 与系统账号 → 后续请求自动识别身份</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">飞书绑定方案</div>
+                        <div class="infra-card-desc">通过飞书开放平台获取用户 open_id → 自动映射到系统账号 → 继承飞书部门/职务作为系统角色 → 无需手动绑定</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">角色同步策略</div>
+                        <div class="infra-card-desc">飞书：自动同步组织架构（部门负责人→管理员、部门成员→普通用户）；Telegram：绑定时手动选择角色或由管理员分配</div>
+                    </div>
+                    <div class="infra-card">
+                        <div class="infra-card-title">多租户隔离</div>
+                        <div class="infra-card-desc">租户管理员可配置允许接入的渠道、绑定规则和可用功能；不同租户的用户绑定关系完全隔离</div>
+                    </div>
+                </div>
+                <p style="color: rgba(255,255,255,0.65); margin-top: 16px; font-size: 0.88em; line-height: 1.7;">
+                    <strong>实现位置：</strong>Channel Adapter 层负责从各渠道提取用户唯一标识并进行账号映射；API Gateway 根据映射后的系统用户 ID 进行 User Isolation 和Quota 控制。
+                </p>
             </div>
             <div class="data-flow" style="margin-top: 18px;">
                 <h3> 收件箱审批链路</h3>
