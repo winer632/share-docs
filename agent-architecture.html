@@ -2349,6 +2349,11 @@ Next Graph Invocation uses new strategy</pre>
                         <td style="padding: 12px;"> ─  双向</td>
                         <td style="padding: 12px;">读取长期记忆与偏好上下文，并在需要时把新的 durable memory、摘要或 compaction 写回候选交给 Memory Service。</td>
                     </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"> HostOps API</td>
+                        <td style="padding: 12px;"> ─  双向</td>
+                        <td style="padding: 12px;">当任务涉及宿主机、容器、进程、文件系统或远程服务器操作时，通过统一 HostOps API 发起执行请求，并接收审批状态、执行结果与审计信息。</td>
+                    </tr>
                     <tr>
                         <td style="padding: 12px;"> Observability</td>
                         <td style="padding: 12px;">─  输出</td>
@@ -2374,6 +2379,9 @@ Next Graph Invocation uses new strategy</pre>
 - wisdom-vault-hybrid-search: 混合向量搜索
 - wisdom-vault-mariadb: 数据库查询
 - wisdom-vault-minio: 文档下载
+- hostops-exec: 执行受控命令
+- hostops-ssh: 连接远程服务器
+- hostops-files: 读取/写入受控文件
 
 ## 用户问题
 {user_query}
@@ -2386,11 +2394,12 @@ Next Graph Invocation uses new strategy</pre>
 - 历史对话: {history}
 - Memory Service Recall: {memory_context}
 - Knowledge Infrastructure Availability: {knowledge_capabilities}
+- HostOps Runtime Availability: {hostops_capabilities}
 
 ## 任务
 1. 分析问题类型和复杂度
 2. 在当前 Selected Business Agent 的边界内规划需要调用的工具及顺序
-3. 判断是否需要读取 Memory Service 或调用 Knowledge Infrastructure
+3. 判断是否需要读取 Memory Service、调用 Knowledge Infrastructure 或访问 HostOps API
 4. 识别可并行执行的任务
 5. 输出 JSON 格式的执行计划
 
@@ -2403,6 +2412,154 @@ Next Graph Invocation uses new strategy</pre>
         {"id": "task2", "tool": "tool_name", "params": {}, "depends_on": ["task1"]}
     ]
 }</pre>
+            </div>
+        </div>
+        <div class="extension-section">
+            <div class="section-title">HostOps Runtime 分层方案（Python LangGraph + HostOps API + Pi/自研 Runtime）</div>
+            <p style="color: rgba(255,255,255,0.82); margin-bottom: 18px; line-height: 1.8;">
+                当平台需要具备类似 OpenClaw + Pi 的宿主机/服务器操作能力时，最稳妥的做法不是把宿主机执行逻辑直接塞进业务 Agent，
+                而是在 <strong>SensePedia Core / Python LangGraph</strong> 之外新增一层独立的 <strong>HostOps API</strong>，
+                由它统一承接权限校验、审批挂起、审计留痕、错误模型与能力发现，再把真正执行下沉到 <strong>Pi</strong> 或 <strong>自研 TS Runtime</strong>。
+            </p>
+            <p style="color: rgba(255,255,255,0.72); margin-bottom: 10px; font-size: 0.92em; line-height: 1.8;">
+                这样分层的核心价值是：<strong>业务编排层继续专注“怎么思考和拆任务”</strong>，
+                <strong>执行层专注“怎么安全地碰宿主机和服务器”</strong>。
+            </p>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                         分层总览
+                    </div>
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.8;">User / Channel / Session
+          │
+          ▼
+   Selected Business Agent
+          │
+          ▼
+SensePedia Core / Python LangGraph
+          │
+          ├── Knowledge Infrastructure
+          ├── Memory Service
+          └── HostOps API
+                    │
+                    ├── Approval / Policy / Audit
+                    ├── Capability Registry
+                    ├── Session / Sandbox Adapter
+                    └── Runtime Driver
+                             │
+                             ├── Pi
+                             └── Self-built TS Runtime
+
+Optional durable backend:
+Temporal (long-running jobs / approval resume / retry)</pre>
+                </div>
+
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                         各层职责
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">1. Python LangGraph（业务编排层）</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 任务分析 / 路由 / 规划<br/>
+                            • 工具选择与调用顺序<br/>
+                            • 不直接持有宿主机权限
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">2. HostOps API（能力抽象层）</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 统一 `exec / ssh / files / process / docker / browser` 契约<br/>
+                            • 审批、审计、权限、配额、租户隔离<br/>
+                            • 将执行层差异对上层隐藏
+                        </div>
+                    </div>
+                    <div>
+                        <div style="color: white; font-weight: 600; margin-bottom: 10px;">3. Pi / 自研 TS Runtime（执行层）</div>
+                        <div style="color: rgba(255,255,255,0.7); font-size: 0.9em; margin-left: 15px;">
+                            • 真正执行命令、进程、文件、远程连接<br/>
+                            • 对接 sandbox / session / process 生命周期<br/>
+                            • 不承担上层业务 Agent 的推理职责
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 20px; font-weight: 600;">
+                     HostOps API 建议契约
+                </div>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.7;">interface HostOpsRequest {
+  action: "exec" | "ssh" | "files.read" | "files.write" | "process.list" | "docker.run" | "browser.open";
+  target: string;
+  args?: Record&lt;string, any&gt;;
+  tenant_id: string;
+  user_id: string;
+  session_id: string;
+  requires_approval?: boolean;
+  approval_scope?: "none" | "user" | "ops" | "security";
+  audit_tags?: string[];
+}
+
+interface HostOpsResponse {
+  status: "completed" | "pending_approval" | "running" | "failed";
+  output?: string;
+  error_code?: string;
+  audit_id: string;
+  runtime: "pi" | "self_built_ts";
+  resumable_token?: string;
+}</pre>
+            </div>
+
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 20px; font-weight: 600;">
+                     Runtime 选型对比
+                </div>
+                <table style="width: 100%; border-collapse: collapse; color: white; font-size: 0.9em;">
+                    <tr style="background: rgba(236,72,153,0.22);">
+                        <th style="padding: 12px; text-align: left;">维度</th>
+                        <th style="padding: 12px; text-align: left;">自研 TS Runtime</th>
+                        <th style="padding: 12px; text-align: left;">直接使用 Pi</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">上线速度</td>
+                        <td style="padding: 12px;">慢，前期研发成本高</td>
+                        <td style="padding: 12px;">快，适合先做 MVP</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">架构控制力</td>
+                        <td style="padding: 12px;">最高，接口、状态、权限都可自定义</td>
+                        <td style="padding: 12px;">中等，需要适配 Pi 的模型</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">与现有系统契合度</td>
+                        <td style="padding: 12px;">最高，能贴合审批流、审计、租户隔离</td>
+                        <td style="padding: 12px;">中等，需要桥接层</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;">长期策略</td>
+                        <td style="padding: 12px;">长期最优</td>
+                        <td style="padding: 12px;">短期最优</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;">推荐用法</td>
+                        <td style="padding: 12px;">平台化、私有化、企业级强治理场景</td>
+                        <td style="padding: 12px;">快速验证、早期试点、先跑通闭环</td>
+                    </tr>
+                </table>
+            </div>
+
+            <div style="margin-top: 25px; background: rgba(255,255,255,0.08); border-radius: 12px; padding: 22px;">
+                <div style="color: #ffd700; font-size: 1.02em; margin-bottom: 12px; font-weight: 600;">
+                     Temporal 的建议落点
+                </div>
+                <div style="color: rgba(255,255,255,0.78); line-height: 1.8; font-size: 0.92em;">
+                    <strong>Temporal 不是 Agent Brain，而是可选的 durable workflow backend。</strong>
+                    当 HostOps 进入长任务、跨机器步骤编排、审批后恢复、失败重试、定时等待等场景时，
+                    可以在 HostOps API 之下把 Temporal 作为可靠执行底座；而在 MVP 阶段通常可以先不引入，
+                    先以 Pi 或自研 TS Runtime 跑通最小闭环。
+                </div>
             </div>
         </div>
         <div class="data-flow">
@@ -2420,7 +2577,7 @@ Next Graph Invocation uses new strategy</pre>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step">6. SensePedia Core 执行</div>
                 <div class="flow-arrow">→</div>
-                <div class="flow-step">7. Memory / Knowledge Infrastructure</div>
+                <div class="flow-step">7. Memory / Knowledge / HostOps API</div>
                 <div class="flow-arrow">→</div>
                 <div class="flow-step">8. 返回响应</div>
             </div>
