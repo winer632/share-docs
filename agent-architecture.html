@@ -838,7 +838,15 @@
                     </div>
                     <div class="module tool-registry">
                         <div class="module-title">Tool Registry</div>
-                        <div class="module-desc">工具注册、发现、调用</div>
+                        <div class="module-desc">统一工具目录与路由<br/>Local Skills / HostOps API / MCP Tools</div>
+                    </div>
+                    <div class="module gateway">
+                        <div class="module-title">MCP Adapter</div>
+                        <div class="module-desc">平台适配层<br/>Schema 映射 / 权限注入 / Tool Registry 集成</div>
+                    </div>
+                    <div class="module gateway">
+                        <div class="module-title">MCP Client</div>
+                        <div class="module-desc">协议客户端<br/>Server 发现 / Session 管理 / MCP 调用</div>
                     </div>
                     <div class="module skills">
                         <div class="module-title">Skills</div>
@@ -889,12 +897,22 @@
                         <div class="module-title">Observability</div>
                         <div class="module-desc">Metrics / LangFuse<br/>Error Tracker</div>
                     </div>
+                    <div class="module client">
+                        <div class="module-title">External MCP Servers</div>
+                        <div class="module-desc">Filesystem / Browser / Git / Database / Enterprise Tools</div>
+                    </div>
                 </div>
             </div>
             <p style="color: rgba(255,255,255,0.82); margin-top: 20px; font-size: 0.95em; line-height: 1.8;">
                 这里需要明确区分两个层次：<strong>Agent Router</strong> 负责在 API Gateway 之后判断当前请求应该进入哪个业务 Agent；
                 <strong>LLM Planner</strong> 属于 SensePedia Core，负责在选中的业务 Agent 内部进行任务拆解、工具选择和执行规划。
                 前者解决“选哪个 Agent”，后者解决“选中后怎么执行”。
+            </p>
+            <p style="color: rgba(255,255,255,0.74); margin-top: 12px; font-size: 0.92em; line-height: 1.8;">
+                在工具接入层，平台保留 <strong>Tool Registry + Skills + HostOps API</strong> 作为原生能力，同时支持通过
+                <strong>MCP Adapter + MCP Client</strong> 接入外部 <strong>MCP Server</strong>。其中 <strong>MCP Client</strong> 负责按协议连接和调用，
+                <strong>MCP Adapter</strong> 负责把 MCP 能力映射为平台内部统一工具模型。MCP 的定位是标准化外部工具协议，
+                不是替代 SensePedia Core、Knowledge Infrastructure 或 HostOps API 的内部执行内核。
             </p>
             <p style="color: rgba(255,255,255,0.74); margin-top: 12px; font-size: 0.92em; line-height: 1.8;">
                 另外，<strong>Checkpoint Store</strong> 与 <strong>Memory Service</strong> 不是替代关系。
@@ -2322,7 +2340,17 @@ Next Graph Invocation uses new strategy</pre>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> Tool Registry</td>
                         <td style="padding: 12px;"> ─  双向</td>
-                        <td style="padding: 12px;">查询可用工具列表、获取工具 schema、验证工具存在性</td>
+                        <td style="padding: 12px;">查询可用工具列表、获取工具 schema、验证工具存在性，并统一路由到 Local Skills、HostOps API 或 MCP Tools</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"> MCP Adapter</td>
+                        <td style="padding: 12px;"> ─  间接</td>
+                        <td style="padding: 12px;">通过 Tool Registry 间接消费 MCP Client 拉取到的能力，将 tools/resources/prompts 映射为平台统一 schema，并注入权限、审计、trace 与租户上下文。</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"> MCP Client</td>
+                        <td style="padding: 12px;"> ─  间接</td>
+                        <td style="padding: 12px;">负责与外部 MCP Server 建立连接、初始化 session、拉取 capabilities，并按 MCP 协议转发工具调用。</td>
                     </tr>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> LLM Gateway</td>
@@ -2335,9 +2363,9 @@ Next Graph Invocation uses new strategy</pre>
                         <td style="padding: 12px;">传递执行计划、接收执行结果</td>
                     </tr>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                        <td style="padding: 12px;"> Skills</td>
+                        <td style="padding: 12px;"> Local Skills</td>
                         <td style="padding: 12px;"> ─  间接</td>
-                        <td style="padding: 12px;">通过 Tool Registry 间接调用具体 Skill</td>
+                        <td style="padding: 12px;">通过 Tool Registry 间接调用平台内置 Skill；与 MCP Tools 并列作为两类工具来源。</td>
                     </tr>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> Knowledge Infrastructure</td>
@@ -2413,6 +2441,75 @@ Next Graph Invocation uses new strategy</pre>
     ]
 }</pre>
             </div>
+        </div>
+        <div class="extension-section">
+            <div class="section-title">MCP 协议接入设计</div>
+            <p style="color: rgba(255,255,255,0.82); margin-bottom: 18px; line-height: 1.8;">
+                平台基于 <strong>Python LangGraph</strong> 构建，在保留内置 Skills、Knowledge Infrastructure 与 HostOps API 的基础上，
+                支持通过 <strong>MCP（Model Context Protocol）</strong> 接入外部工具、资源与提示模板。MCP 在本架构中的定位是
+                <strong>标准化外部工具接入协议</strong>，而不是替代平台内部执行内核。
+            </p>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 25px;">
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                         接入链路
+                    </div>
+                    <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.82em; line-height: 1.8;">LLM Planner
+  -> Tool Registry
+  -> MCP Adapter
+  -> MCP Client
+  -> External MCP Servers
+  -> tools / resources / prompts</pre>
+                </div>
+                <div style="background: rgba(255,255,255,0.08); border-radius: 12px; padding: 25px;">
+                    <div style="color: #ec4899; font-size: 1.2em; margin-bottom: 20px; font-weight: 600;">
+                         设计原则
+                    </div>
+                    <div style="color: rgba(255,255,255,0.78); line-height: 1.8; font-size: 0.92em;">
+                        <strong>1. 统一入口：</strong>Planner 仍只面向 Tool Registry 选工具，不直接绑定具体 MCP Server。<br/>
+                        <strong>2. 协议角色：</strong>MCP Client 只负责按 MCP 协议连接 server、管理 session、拉取 capabilities 与转发调用。<br/>
+                        <strong>3. 平台适配：</strong>MCP Adapter 负责 schema 映射、权限注入、错误归一、trace 透传与 Tool Registry 集成。<br/>
+                        <strong>4. 边界清晰：</strong>知识库、长期记忆与高治理 HostOps 能力默认优先走平台原生接口；第三方工具生态优先通过 MCP 接入。<br/>
+                        <strong>5. 并列来源：</strong>Local Skills 与 MCP Tools 并列存在，由 Tool Registry 统一暴露给 LangGraph 执行流。
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 20px; font-weight: 600;">
+                     MCP Client / Adapter 建议职责
+                </div>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.7;">interface MCPClientSession {
+  server_id: string;
+  transport: "stdio" | "streamable_http";
+  connected: boolean;
+  capability_types: Array&lt;"tools" | "resources" | "prompts"&gt;;
+  session_id?: string;
+}
+
+interface MCPToolBinding {
+  server_id: string;
+  server_type: "local_stdio" | "remote_http";
+  capability_types: Array&lt;"tools" | "resources" | "prompts"&gt;;
+  auth_policy?: "inherit_gateway_auth" | "tenant_secret" | "user_oauth";
+  enabled_scopes?: string[];
+}
+
+interface MCPInvocationContext {
+  tenant_id: string;
+  user_id: string;
+  session_id: string;
+  selected_business_agent: string;
+  trace_id: string;
+}</pre>
+            </div>
+            <p style="color: rgba(255,255,255,0.74); margin-top: 16px; font-size: 0.92em; line-height: 1.8;">
+                在实现上可以把这两层先写在同一个进程里，但在架构表达上建议继续拆开：
+                <strong>MCP Client</strong> 是协议角色，<strong>MCP Adapter</strong> 是平台适配层。
+            </p>
+            <p style="color: rgba(255,255,255,0.74); margin-top: 12px; font-size: 0.92em; line-height: 1.8;">
+                如果后续需要把平台能力向外暴露为标准协议，也可以在此基础上继续扩展为平台侧 MCP Server；
+                但当前推荐优先落地的是 <strong>“LangGraph Agent 作为 MCP Client 消费外部 MCP Server”</strong> 的模式。
+            </p>
         </div>
         <div class="extension-section">
             <div class="section-title">HostOps Runtime 分层方案（Python LangGraph + HostOps API + Pi/自研 Runtime）</div>
