@@ -824,7 +824,7 @@
                         <div class="sub-modules">
                             <div class="sub-module">
                                 <div class="module-title">LLM Planner</div>
-                                <div class="module-desc">Task Analyzer<br/>Plan Generator<br/>ReAct Reasoning</div>
+                                <div class="module-desc">Task Analyzer<br/>Structured Planner<br/>Plan Validator</div>
                             </div>
                             <div class="sub-module">
                                 <div class="module-title">Graph Executor</div>
@@ -832,7 +832,7 @@
                             </div>
                             <div class="sub-module">
                                 <div class="module-title">Multi-Agent</div>
-                                <div class="module-desc">Main Agent<br/>Sub Agent Pool<br/>Result Aggregator</div>
+                                <div class="module-desc">Main Agent Coordinator<br/>Sub Agent Contract<br/>Result Aggregator</div>
                             </div>
                         </div>
                     </div>
@@ -919,6 +919,50 @@
                 Checkpoint Store 保存的是一次执行过程中的短期运行态与断点恢复快照；Memory Service 保存的是跨会话、可召回的长期记忆与 compaction 写回结果。
                 前者解决执行连续性，后者解决知识连续性。
             </p>
+            <div style="margin-top: 24px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div class="section-title" style="font-size: 1.25em; margin-bottom: 14px;">Multi-Agent 协作模式（Phase 2）</div>
+                <p style="color: rgba(255,255,255,0.82); line-height: 1.8; margin-bottom: 14px;">
+                    Multi-Agent 在这里被定义为 <strong>可选扩展能力</strong>，不是所有项目的默认执行模式。MVP 阶段仍然建议优先采用
+                    <strong>single agent + shared tools</strong>；只有当一个业务请求必须拆给多个专业 Agent 协同时，才启用 Main Agent 协调模式。
+                </p>
+                <p style="color: rgba(255,255,255,0.74); line-height: 1.8; margin-bottom: 18px;">
+                    第一版推荐采用<strong>星型拓扑</strong>：<strong>Main Agent</strong> 作为唯一协调者，负责分派、聚合和冲突裁决；
+                    <strong>Sub Agent</strong> 不直接互相通信，只通过 Main Agent 回传结果。这样可以保证 trace、权限、审计和 retry 逻辑都留在单一控制面。
+                </p>
+                <div style="display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 24px;">
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 18px;">
+                        <div style="color: #ffd700; font-weight: 600; margin-bottom: 10px;">推荐协作协议</div>
+                        <pre style="background: #1e1e1e; color: #d4d4d4; padding: 16px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.7;">interface SubAgentCall {
+  call_id: string;
+  target_agent: string;
+  goal: string;
+  input_payload: Record&lt;string, unknown&gt;;
+  allowed_tools?: string[];
+  timeout_ms: number;
+  stream: boolean;
+}
+
+interface SubAgentResult {
+  call_id: string;
+  target_agent: string;
+  status: "success" | "partial" | "failed";
+  confidence?: number;
+  evidence_refs?: string[];
+  output_payload: Record&lt;string, unknown&gt;;
+  events?: Array&lt;"agent_started" | "partial_result" | "agent_completed"&gt;;
+}</pre>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 18px;">
+                        <div style="color: #ffd700; font-weight: 600; margin-bottom: 10px;">默认治理规则</div>
+                        <div style="color: rgba(255,255,255,0.78); line-height: 1.85; font-size: 0.92em;">
+                            <strong>1. 通信边界：</strong>Sub Agent 之间不直连，避免形成不可解释的 agent-to-agent 黑盒。<br/>
+                            <strong>2. 结果聚合：</strong>Result Aggregator 负责去重、字段合并、证据拼接，并可按事件流输出阶段性结果。<br/>
+                            <strong>3. 冲突裁决：</strong>优先看领域优先级，其次看证据新鲜度与 confidence；仍无法决策时进入人工复核或返回带保留意见的答复。<br/>
+                            <strong>4. 典型场景：</strong>例如 Legal Agent 主控下并行调用 RAG Agent 做法条检索、OCR Agent 做材料识别，再由主 Agent 统一生成最终法律结论。
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="data-flow" style="margin-top: 22px;">
                 <h3> 渠道接入标准链路</h3>
                 <div class="flow-steps">
@@ -1378,6 +1422,69 @@ package/
                 这些业务 Agent 是 Agent Router 的候选目标。Router 会基于请求意图、租户配置、权限范围和可用工具，选出一个
                 <strong>Selected Business Agent</strong>，随后再进入该 Agent 内部的 LLM Planner 与 Graph 执行流程。
             </p>
+            <div style="margin-bottom: 28px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
+                <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 14px; font-weight: 600;">
+                    BaseBusinessAgent 契约（Template Method + Shared Services）
+                </div>
+                <p style="color: rgba(255,255,255,0.8); line-height: 1.8; margin-bottom: 14px;">
+                    为了避免 8 个 Business Agent 重复实现 Memory 加载、权限校验、Guardrail 和输出包装，推荐由
+                    <strong>BaseBusinessAgent</strong> 固定执行六段式骨架流程，业务 Agent 只通过 hook 覆盖领域差异。
+                    通用能力应尽量下沉到共享服务，而不是散落在每个 Agent 的自定义代码里。
+                </p>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 18px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.7;">class BaseBusinessAgent:
+    def handle(self, request: AgentRequest) -&gt; AgentResponse:
+        normalized = self.request_adapter(request)
+        context = self.context_memory_adapter(normalized)
+        plan_input = self.build_plan_input(normalized, context)
+        plan = self.plan_and_validate(plan_input)
+        execution = self.skill_orchestrator(plan, context)
+        checked = self.guardrail(execution, context)
+        return self.response_adapter(checked, context)
+
+    # business hooks
+    def manifest(self) -&gt; AgentManifest: ...
+    def allowed_tools(self) -&gt; list[str]: ...
+    def response_schema(self) -&gt; type[BaseModel]: ...
+    def domain_prompt(self) -&gt; str: ...
+    def post_process(self, result: AgentResult) -&gt; AgentResult: ...</pre>
+                <table style="width: 100%; border-collapse: collapse; color: white; margin-top: 18px; font-size: 0.9em;">
+                    <tr style="background: rgba(236,72,153,0.22);">
+                        <th style="padding: 12px; text-align: left;">Hook / Contract</th>
+                        <th style="padding: 12px; text-align: left;">职责</th>
+                        <th style="padding: 12px; text-align: left;">默认实现 / 约束</th>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"><code>manifest()</code></td>
+                        <td style="padding: 12px;">声明 agent_id、领域描述、默认路由标签、审批等级</td>
+                        <td style="padding: 12px;">Agent Registry 读取 manifest，Router 只面向标准契约</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"><code>allowed_tools()</code></td>
+                        <td style="padding: 12px;">定义当前业务 Agent 可见的工具白名单与并发预算</td>
+                        <td style="padding: 12px;">Tool Registry 与 PlanValidator 共同执行越权拦截</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"><code>domain_prompt()</code></td>
+                        <td style="padding: 12px;">注入领域目标、推理边界、答复风格与引用要求</td>
+                        <td style="padding: 12px;">只扩展 planner 输入，不改六步主流程</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"><code>response_schema()</code></td>
+                        <td style="padding: 12px;">定义最终输出结构，例如 citation-heavy answer、OCR JSON、legal memo</td>
+                        <td style="padding: 12px;">由 Response Adapter 做统一 schema 校验与错误包装</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"><code>post_process()</code></td>
+                        <td style="padding: 12px;">补充领域后处理，例如引用规范化、免责声明插入、格式润色</td>
+                        <td style="padding: 12px;">必须是纯函数式后处理，不应重新触发工具执行</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 12px;"><code>AgentContext / AgentResult</code></td>
+                        <td style="padding: 12px;">统一在各阶段之间传递用户、租户、memory、tool trace、guardrail 结果</td>
+                        <td style="padding: 12px;">所有共享中间态都进入标准对象，避免每个 Agent 自定义字段漂移</td>
+                    </tr>
+                </table>
+            </div>
 
             <!-- Agent 注册流程 -->
             <div class="register-flow">
@@ -2294,17 +2401,18 @@ Next Graph Invocation uses new strategy</pre>
 │                               │                    │
 │                               ▼                    │
 │  ┌──────────────┐     ┌──────────────┐           │
-│  │Tool Registry │───│Plan Generator│           │
-│  └──────┬───────┘     └──────┬───────┘           │
+│  │Tool Registry │───│Structured     │           │
+│  └──────┬───────┘     │Plan Generator│           │
+│         │             └──────┬───────┘           │
 │         │                     │                    │
 │         │                     ▼                    │
 │         │            ┌──────────────┐              │
-│         └───────────│ReAct Engine │              │
+│         └───────────│PlanValidator │              │
 │                      └──────┬───────┘              │
 │                             │                      │
 │                             ▼                      │
 │                      ┌──────────────┐              │
-│                      │Execution Plan│              │
+│                      │Validated Plan│              │
 │                      └──────────────┘              │
 └─────────────────────────────────────────────────────┘
          │                    │                    │
@@ -2355,12 +2463,17 @@ Next Graph Invocation uses new strategy</pre>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> LLM Gateway</td>
                         <td style="padding: 12px;">─  输出</td>
-                        <td style="padding: 12px;">发送规划请求、接收 LLM 生成的计划 JSON</td>
+                        <td style="padding: 12px;">发送 structured output 请求、接收符合 ExecutionPlan schema 的计划候选</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <td style="padding: 12px;"> PlanValidator</td>
+                        <td style="padding: 12px;"> ─  双向</td>
+                        <td style="padding: 12px;">对 Planner 产物做 schema、工具白名单、依赖 DAG、并发预算与参数合法性校验，失败时把错误原因回传给 Planner 修复</td>
                     </tr>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> Graph Executor</td>
                         <td style="padding: 12px;">─  输出</td>
-                        <td style="padding: 12px;">传递执行计划、接收执行结果</td>
+                        <td style="padding: 12px;">接收 validated plan、执行任务图并在失败时触发 replan</td>
                     </tr>
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
                         <td style="padding: 12px;"> Local Skills</td>
@@ -2393,7 +2506,36 @@ Next Graph Invocation uses new strategy</pre>
             <!-- LLM Planner Prompt 示例 -->
             <div style="margin-top: 25px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
                 <div style="color: #ffd700; font-size: 1.1em; margin-bottom: 15px; font-weight: 600;">
-                     LLM Planner Prompt 示例
+                     LLM Planner 结构化输出与验证门
+                </div>
+                <p style="color: rgba(255,255,255,0.8); margin-bottom: 14px; line-height: 1.8;">
+                    不建议让 Planner 直接输出“自由 JSON”。更稳妥的做法是让模型按固定 schema 生成
+                    <strong>structured output</strong>，随后进入独立的 <strong>PlanValidator</strong> 节点做执行前校验。
+                    这样模型负责“规划意图”，平台负责“计划合法性”。
+                </p>
+                <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.6;">class PlanTask(BaseModel):
+    id: str
+    tool: str
+    params: dict[str, Any]
+    depends_on: list[str] = []
+    parallel_group: str | None = None
+
+class ExecutionPlan(BaseModel):
+    reasoning_summary: str
+    agent_scope: str
+    tasks: list[PlanTask]
+
+planner = planner_llm.with_structured_output(ExecutionPlan)
+plan = planner.invoke(planner_input)
+validated_plan = PlanValidator.validate(
+    plan=plan,
+    allowed_tools=current_agent.allowed_tools(),
+    tool_registry=tool_registry,
+    max_tasks=8,
+)</pre>
+                <div style="color: rgba(255,255,255,0.78); line-height: 1.8; margin: 14px 0 18px 0; font-size: 0.92em;">
+                    <strong>PlanValidator</strong> 至少检查五件事：工具是否存在、参数是否满足 schema、是否越过当前 Agent 的工具边界、
+                    <code>depends_on</code> 是否形成合法 DAG、任务数与并行度是否超预算。校验失败时，Planner 根据错误原因重试修复，而不是把非法计划直接交给 Executor。
                 </div>
                 <pre style="background: #1e1e1e; color: #d4d4d4; padding: 20px; border-radius: 8px; overflow-x: auto; font-size: 0.8em; line-height: 1.6;">
 你是 SensePedia Core 中的 LLM Planner。
@@ -2401,6 +2543,7 @@ Next Graph Invocation uses new strategy</pre>
 你不负责选择业务 Agent。
 当前请求已经经过 Agent Router，并且已经确定了 Selected Business Agent。
 你的职责是在当前业务 Agent 的上下文内完成任务拆解、工具选择与执行规划。
+你必须严格按照 ExecutionPlan schema 返回结构化结果，不要输出自由文本 JSON。
 
 ## 可用工具
 - wisdom-vault-orchestrator: 综合检索知识库
@@ -2429,17 +2572,20 @@ Next Graph Invocation uses new strategy</pre>
 2. 在当前 Selected Business Agent 的边界内规划需要调用的工具及顺序
 3. 判断是否需要读取 Memory Service、调用 Knowledge Infrastructure 或访问 HostOps API
 4. 识别可并行执行的任务
-5. 输出 JSON 格式的执行计划
+5. 输出符合 ExecutionPlan schema 的结构化执行计划
+6. 限制任务数量，优先生成 3-5 步的滚动计划；当信息不足时留给 Executor 在失败后触发 replan
 
-请按以下格式输出：
-{
-    "reasoning": "你的分析过程...",
-    "agent_scope": "{selected_business_agent}",
-    "tasks": [
-        {"id": "task1", "tool": "tool_name", "params": {}, "depends_on": []},
-        {"id": "task2", "tool": "tool_name", "params": {}, "depends_on": ["task1"]}
-    ]
-}</pre>
+ExecutionPlan schema:
+- reasoning_summary: string
+- agent_scope: string
+- tasks: PlanTask[]
+
+PlanTask schema:
+- id: string
+- tool: string
+- params: object
+- depends_on: string[]
+- parallel_group: string | null</pre>
             </div>
         </div>
         <div class="extension-section">

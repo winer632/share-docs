@@ -3,6 +3,7 @@ sequenceDiagram
     participant BA as "Business Agent"
     participant P as "LLM Planner"
     participant LLM as "LLM Gateway"
+    participant PV as "PlanValidator"
     participant E as "Graph Executor"
     participant CP as "Checkpoint Store"
     participant TR as "Tool Registry"
@@ -12,9 +13,27 @@ sequenceDiagram
     participant OB as "Observability"
 
     BA->>P: Plan request (query + context)
-    P->>LLM: Create plan (tasks + deps + parallel hints)
-    LLM-->>P: Plan JSON
-    P-->>E: Dispatch plan + initial state
+    P->>LLM: Request structured plan (ExecutionPlan schema)
+    LLM-->>P: Structured plan candidate
+    P->>PV: Validate(plan + agent scope + limits)
+    PV->>TR: Check tool existence + schema + auth scope
+    TR-->>PV: Tool metadata
+    alt Valid plan
+        PV-->>P: Approved plan
+        P-->>E: Dispatch validated plan + initial state
+    else Invalid plan
+        PV-->>P: Validation errors
+        P->>LLM: Repair plan with validation feedback
+        LLM-->>P: Repaired structured plan
+        P->>PV: Re-validate plan
+        alt Repaired plan valid
+            PV-->>P: Approved repaired plan
+            P-->>E: Dispatch validated plan + initial state
+        else Still invalid
+            PV-->>P: Fail closed / ask clarification
+            P-->>BA: Return planning error or clarification request
+        end
+    end
 
     E->>CP: Load checkpoint(thread_id)
     alt Resume available
@@ -45,8 +64,14 @@ sequenceDiagram
                 TX-->>E: Output / final error
             else Need re-plan
                 PR-->>E: Replan required
-                E->>LLM: Ask for revised plan (include failure)
-                LLM-->>E: Revised plan
+                E->>P: Ask for revised plan (include failure)
+                P->>LLM: Request revised structured plan
+                LLM-->>P: Revised plan candidate
+                P->>PV: Validate revised plan
+                PV->>TR: Re-check tool binding + deps
+                TR-->>PV: Tool metadata
+                PV-->>P: Approved revised plan
+                P-->>E: Revised validated plan
             end
         end
 
@@ -57,4 +82,3 @@ sequenceDiagram
 
     E-->>BA: Final state + answer payload
     BA-->>OB: Emit summary metrics (success/fallback rate)
-
