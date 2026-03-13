@@ -920,14 +920,15 @@
                 前者解决执行连续性，后者解决知识连续性。
             </p>
             <div style="margin-top: 24px; background: rgba(0,0,0,0.3); border-radius: 12px; padding: 25px;">
-                <div class="section-title" style="font-size: 1.25em; margin-bottom: 14px;">Multi-Agent 协作模式（Phase 2）</div>
+                <div class="section-title" style="font-size: 1.25em; margin-bottom: 14px;">Multi-Agent 协作模式（MVP 最小版）</div>
                 <p style="color: rgba(255,255,255,0.82); line-height: 1.8; margin-bottom: 14px;">
-                    Multi-Agent 在这里被定义为 <strong>可选扩展能力</strong>，不是所有项目的默认执行模式。MVP 阶段仍然建议优先采用
-                    <strong>single agent + shared tools</strong>；只有当一个业务请求必须拆给多个专业 Agent 协同时，才启用 Main Agent 协调模式。
+                    Multi-Agent 在这里被定义为 <strong>按需启用的运行时能力</strong>，不是所有项目的默认执行模式。MVP 阶段仍然以
+                    <strong>single agent</strong> 主链路优先；只有当一个业务请求必须拆给多个专业 Agent 协同时，才启用 Main Agent 协调模式。
                 </p>
                 <p style="color: rgba(255,255,255,0.74); line-height: 1.8; margin-bottom: 18px;">
-                    第一版推荐采用<strong>星型拓扑</strong>：<strong>Main Agent</strong> 作为唯一协调者，负责分派、聚合和冲突裁决；
-                    <strong>Sub Agent</strong> 不直接互相通信，只通过 Main Agent 回传结果。这样可以保证 trace、权限、审计和 retry 逻辑都留在单一控制面。
+                    MVP 第一版采用<strong>星型拓扑最小版</strong>：<strong>Main Agent</strong> 作为唯一协调者，负责分派、聚合和冲突裁决；
+                    <strong>Sub Agent</strong> 不直接互相通信，只通过 Main Agent 回传结果。这样可以保证 trace、权限、审计和 retry 逻辑都留在单一控制面，
+                    同时不把所有请求都强制升级为多 Agent 执行。
                 </p>
                 <div style="display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 24px;">
                     <div style="background: rgba(255,255,255,0.06); border-radius: 10px; padding: 18px;">
