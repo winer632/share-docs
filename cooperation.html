@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>合作机会总结 — SensePedia + 小浣熊</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+    :root {
+      --bg: #0F172A;
+      --surface: rgba(255,255,255,0.06);
+      --surface-hover: rgba(255,255,255,0.10);
+      --ink: #F1F5F9;
+      --ink-secondary: rgba(241,245,249,0.75);
+      --ink-faint: rgba(241,245,249,0.4);
+      --accent-blue: #3B82F6;
+      --accent-blue-glow: rgba(59,130,246,0.25);
+      --accent-teal: #14B8A6;
+      --accent-teal-glow: rgba(20,184,166,0.25);
+      --accent-amber: #F59E0B;
+      --accent-amber-glow: rgba(245,158,11,0.25);
+      --accent-purple: #8B5CF6;
+      --accent-purple-glow: rgba(139,92,246,0.25);
+      --accent-green: #22C55E;
+      --accent-green-glow: rgba(34,197,94,0.25);
+      --accent-red: #EF4444;
+      --font-display: 'Newsreader', 'Noto Serif CJK SC', 'PingFang SC', Georgia, serif;
+      --font-body: 'DM Sans', 'PingFang SC', 'Noto Sans CJK SC', -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; font-size: 16px; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      line-height: 1.7;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Background glow */
+    body::before {
+      content: '';
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 800px; height: 600px;
+      background: radial-gradient(ellipse, var(--accent-blue-glow) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 0 2rem;
+      position: relative; z-index: 1;
+    }
+
+    /* Header */
+    .page-header {
+      text-align: center;
+      padding: 5rem 0 3rem;
+    }
+    .page-header-kicker {
+      font-size: 0.75rem; font-weight: 600;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--accent-blue);
+      margin-bottom: 1.5rem;
+    }
+    .page-header h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      font-weight: 500; line-height: 1.2;
+      letter-spacing: -0.02em;
+      margin-bottom: 1.25rem;
+    }
+    .page-header h1 .hl-blue { color: var(--accent-blue); }
+    .page-header h1 .hl-amber { color: var(--accent-amber); }
+    .page-header h1 .hl-teal { color: var(--accent-teal); }
+    .page-header-sub {
+      font-size: 1.0625rem; line-height: 1.6;
+      color: var(--ink-secondary);
+      max-width: 52ch; margin: 0 auto;
+    }
+
+    /* Core formula */
+    .formula-section {
+      padding: 2.5rem 0 3rem;
+    }
+    .formula-box {
+      background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(20,184,166,0.08));
+      border: 1px solid rgba(59,130,246,0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .formula-box::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-teal), var(--accent-amber));
+    }
+    .formula-label {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 1.5rem;
+    }
+    .formula-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .formula-item {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      min-width: 160px;
+      transition: all 0.3s ease;
+    }
+    .formula-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .formula-item-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .formula-item-name {
+      font-weight: 700;
+      font-size: 0.9375rem;
+      margin-bottom: 0.25rem;
+    }
+    .formula-item-desc {
+      font-size: 0.75rem;
+      color: var(--ink-secondary);
+    }
+    .formula-item-blue { border-color: rgba(59,130,246,0.3); }
+    .formula-item-blue .formula-item-name { color: var(--accent-blue); }
+    .formula-item-amber { border-color: rgba(245,158,11,0.3); }
+    .formula-item-amber .formula-item-name { color: var(--accent-amber); }
+    .formula-item-teal { border-color: rgba(20,184,166,0.3); }
+    .formula-item-teal .formula-item-name { color: var(--accent-teal); }
+    .formula-item-green { border-color: rgba(34,197,94,0.3); }
+    .formula-item-green .formula-item-name { color: var(--accent-green); }
+
+    .formula-op {
+      font-family: var(--font-display);
+      font-size: 1.75rem; font-weight: 300;
+      color: var(--ink-faint);
+    }
+
+    .formula-result {
+      margin-top: 2rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .formula-result-text {
+      font-family: var(--font-display);
+      font-size: 1.25rem; font-weight: 500;
+      color: var(--accent-green);
+      line-height: 1.5;
+    }
+
+    /* Value cards */
+    .value-section {
+      padding: 2rem 0;
+    }
+    .value-section-title {
+      font-size: 0.75rem; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--ink-faint);
+      margin-bottom: 1.5rem;
+      text-align: center;
+    }
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.25rem;
+    }
+    @media (max-width: 768px) {
+      .value-grid { grid-template-columns: 1fr; }
+    }
+    .value-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .value-card::before {
+      content: '';
+      position: absolute; top: 0; left: 0;
+      width: 3px; height: 100%;
+    }
+    .value-card:hover {
+      background: var(--surface-hover);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+    }
+    .value-card-icon {
+      width: 40px; height: 40px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+    }
+    .value-card h3 {
+      font-size: 1rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    .value-card p {
+      font-size: 0.8125rem; line-height: 1.7;
+      color: var(--ink-secondary);
+    }
+
+    .vc-blue::before { background: var(--accent-blue); }
+    .vc-blue .value-card-icon { background: var(--accent-blue-glow); }
+    .vc-blue h3 { color: var(--accent-blue); }
+
+    .vc-amber::before { background: var(--accent-amber); }
+    .vc-amber .value-card-icon { background: var(--accent-amber-glow); }
+    .vc-amber h3 { color: var(--accent-amber); }
+
+    .vc-teal::before { background: var(--accent-teal); }
+    .vc-teal .value-card-icon { background: var(--accent-teal-glow); }
+    .vc-teal h3 { color: var(--accent-teal); }
+
+    .vc-purple::before { background: var(--accent-purple); }
+    .vc-purple .value-card-icon { background: var(--accent-purple-glow); }
+    .vc-purple h3 { color: var(--accent-purple); }
+
+    .vc-green::before { background: var(--accent-green); }
+    .vc-green .value-card-icon { background: var(--accent-green-glow); }
+    .vc-green h3 { color: var(--accent-green); }
+
+    .vc-red::before { background: var(--accent-red); }
+    .vc-red .value-card-icon { background: rgba(239,68,68,0.25); }
+    .vc-red h3 { color: var(--accent-red); }
+
+    /* Scenario section */
+    .scenario-section {
+      padding: 2rem 0 3rem;
+    }
+    .scenario-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    @media (max-width: 640px) {
+      .scenario-grid { grid-template-columns: 1fr; }
+    }
+    .scenario-card {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 1.75rem;
+      transition: all 0.3s ease;
+    }
+    .scenario-card:hover {
+      background: var(--surface-hover);
+      transform: translateY(-2px);
+    }
+    .scenario-num {
+      font-family: var(--font-display);
+      font-size: 2rem; font-weight: 300;
+      color: rgba(255,255,255,0.1);
+      margin-bottom: 0.5rem;
+    }
+    .scenario-card h4 {
+      font-size: 0.9375rem; font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--accent-teal);
+    }
+    .scenario-card p {
+      font-size: 0.8125rem; line-height: 1.7;
+      color: var(--ink-secondary);
+    }
+    .scenario-tag {
+      display: inline-block;
+      margin-top: 0.75rem;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-size: 0.6875rem; font-weight: 600;
+      letter-spacing: 0.04em;
+    }
+    .tag-mvp { background: var(--accent-green-glow); color: var(--accent-green); }
+    .tag-v2 { background: var(--accent-blue-glow); color: var(--accent-blue); }
+
+    /* Action section */
+    .action-section {
+      padding: 2rem 0 4rem;
+    }
+    .action-box {
+      background: linear-gradient(135deg, rgba(34,197,94,0.08), rgba(59,130,246,0.08));
+      border: 1px solid rgba(34,197,94,0.2);
+      border-radius: 20px;
+      padding: 2.5rem;
+      text-align: center;
+    }
+    .action-box h2 {
+      font-family: var(--font-display);
+      font-size: 1.5rem; font-weight: 500;
+      margin-bottom: 1rem;
+      color: var(--accent-green);
+    }
+    .action-box p {
+      font-size: 0.9375rem; line-height: 1.8;
+      color: var(--ink-secondary);
+      max-width: 50ch; margin: 0 auto;
+    }
+    .action-steps {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+    .action-step {
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      min-width: 180px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+    .action-step:hover {
+      transform: translateY(-3px);
+      border-color: rgba(34,197,94,0.3);
+    }
+    .action-step-num {
+      font-family: var(--font-display);
+      font-size: 1.75rem; font-weight: 300;
+      color: var(--accent-green);
+      margin-bottom: 0.25rem;
+    }
+    .action-step-text {
+      font-size: 0.8125rem; font-weight: 600;
+      color: var(--ink-secondary);
+    }
+
+    /* Footer */
+    .page-footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--ink-faint);
+      font-size: 0.8125rem;
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+
+    /* Animations */
+    .fade-up {
+      animation: fadeUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    .delay-1 { animation-delay: 0.1s; }
+    .delay-2 { animation-delay: 0.2s; }
+    .delay-3 { animation-delay: 0.3s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 768px) {
+      .container { padding: 0 1.25rem; }
+      .page-header { padding: 3rem 0 2rem; }
+      .formula-row { gap: 0.75rem; }
+      .formula-item { min-width: 120px; padding: 0.75rem 1rem; }
+      .formula-op { font-size: 1.25rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Header -->
+  <header class="page-header fade-up">
+    <div class="page-header-kicker">Cooperation Opportunity</div>
+    <h1>
+      <span class="hl-blue">SensePedia</span> +
+      <span class="hl-amber">小浣熊</span> +
+      <span class="hl-teal">国产大模型</span>
+    </h1>
+    <p class="page-header-sub">
+      面向政企客户的完整 Agent 解决方案：编排能力 + 行业 Skill + 合规模型 = 端到端交付
+    </p>
+  </header>
+
+  <!-- Core Formula -->
+  <section class="formula-section fade-up delay-1">
+    <div class="formula-box">
+      <div class="formula-label">核心公式</div>
+      <div class="formula-row">
+        <div class="formula-item formula-item-blue">
+          <div class="formula-item-icon">&#9881;</div>
+          <div class="formula-item-name">SensePedia</div>
+          <div class="formula-item-desc">编排 &middot; 渠道 &middot; 安全 &middot; 运维</div>
+        </div>
+        <div class="formula-op">+</div>
+        <div class="formula-item formula-item-amber">
+          <div class="formula-item-icon">&#129437;</div>
+          <div class="formula-item-name">小浣熊 Skill</div>
+          <div class="formula-item-desc">数据分析 &middot; 可视化 &middot; 代码执行</div>
+        </div>
+        <div class="formula-op">+</div>
+        <div class="formula-item formula-item-teal">
+          <div class="formula-item-icon">&#129302;</div>
+          <div class="formula-item-name">国产大模型</div>
+          <div class="formula-item-desc">合规 &middot; 备案 &middot; 数据不出境</div>
+        </div>
+        <div class="formula-op">=</div>
+        <div class="formula-item formula-item-green">
+          <div class="formula-item-icon">&#127919;</div>
+          <div class="formula-item-name">完整 Agent 方案</div>
+          <div class="formula-item-desc">面向政企客户端到端交付</div>
+        </div>
+      </div>
+      <div class="formula-result">
+        <div class="formula-result-text">
+          三方各司其职、能力互补、合规可控
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- What each party brings -->
+  <section class="value-section fade-up delay-2">
+    <div class="value-section-title">各方贡献什么价值</div>
+    <div class="value-grid">
+      <div class="value-card vc-blue">
+        <div class="value-card-icon">&#9881;</div>
+        <h3>SensePedia 提供</h3>
+        <p>
+          <strong>Agent 编排引擎</strong>（LangGraph 图状态机，可审计、可回溯）<br>
+          <strong>多渠道接入</strong>（Web、飞书、Telegram，插件化扩展）<br>
+          <strong>企业级基础设施</strong>（多租户、权限管理、审计日志、监控告警）<br>
+          <strong>安全合规框架</strong>（工具审批、用户隔离、等保适配）
+        </p>
+      </div>
+
+      <div class="value-card vc-amber">
+        <div class="value-card-icon">&#129437;</div>
+        <h3>小浣熊 提供</h3>
+        <p>
+          <strong>数据分析能力</strong>（表格分析、趋势预测、数据清洗）<br>
+          <strong>数据可视化</strong>（图表生成、多维度展示）<br>
+          <strong>代码执行沙箱</strong>（远端安全执行，结果回传）<br>
+          <strong>OCR 与文档处理</strong>（文件解析、内容提取）
+        </p>
+      </div>
+
+      <div class="value-card vc-teal">
+        <div class="value-card-icon">&#129302;</div>
+        <h3>国产大模型 提供</h3>
+        <p>
+          <strong>符合备案要求的推理能力</strong><br>
+          <strong>数据全链路境内处理</strong>，不出境<br>
+          <strong>可私有化部署</strong>，满足等保要求<br>
+          <strong>中文理解和生成能力优化</strong>
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Target scenarios -->
+  <section class="scenario-section">
+    <div class="value-section-title">目标落地场景</div>
+    <div class="scenario-grid">
+      <div class="scenario-card">
+        <div class="scenario-num">01</div>
+        <h4>政府数据分析助手</h4>
+        <p>政务人员在飞书/内部系统中上传统计数据，Agent 自动调用小浣熊进行分析并生成可视化报告。全链路数据不出境，符合等保要求。</p>
+        <span class="scenario-tag tag-mvp">MVP</span>
+      </div>
+
+      <div class="scenario-card">
+        <div class="scenario-num">02</div>
+        <h4>企业智能客服 + 数据查询</h4>
+        <p>客户通过 Web / 飞书咨询业务问题。RAG Agent 检索知识库回答常规问题，涉及数据分析的请求自动路由到小浣熊处理。</p>
+        <span class="scenario-tag tag-mvp">MVP</span>
+      </div>
+
+      <div class="scenario-card">
+        <div class="scenario-num">03</div>
+        <h4>法律合同智能审查</h4>
+        <p>Legal Agent 主控，OCR Agent 识别扫描件，RAG Agent 检索法条，小浣熊分析合同金额数据。多 Agent 协作，结果统一汇总。</p>
+        <span class="scenario-tag tag-v2">V2</span>
+      </div>
+
+      <div class="scenario-card">
+        <div class="scenario-num">04</div>
+        <h4>运营数据自动报表</h4>
+        <p>定时任务自动拉取业务数据，调用小浣熊生成分析图表，通过飞书 Bot 推送日报/周报到管理层群组。从数据到决策一键完成。</p>
+        <span class="scenario-tag tag-v2">V2</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 差异化优势 -->
+  <section class="value-section">
+    <div class="value-section-title">相比纯开源方案的差异化优势</div>
+    <div class="value-grid">
+      <div class="value-card vc-green">
+        <div class="value-card-icon">&#10003;</div>
+        <h3>合规可交付</h3>
+        <p>全链路数据不出境 + 国产模型备案 + 等保适配 + 商业合同 SLA。满足政企客户的硬性准入条件。</p>
+      </div>
+
+      <div class="value-card vc-purple">
+        <div class="value-card-icon">&#128200;</div>
+        <h3>可审计可回溯</h3>
+        <p>LangGraph 编排每步有 checkpoint + Trace Store 全链路追踪 + LangFuse 可观测性。客户可以看到 Agent 的每一步决策。</p>
+      </div>
+
+      <div class="value-card vc-red">
+        <div class="value-card-icon">&#128737;</div>
+        <h3>企业级安全</h3>
+        <p>多租户隔离 + 工具审批工作流 + 用户 Quota 控制 + 熔断限流。不是"加一层安全"，是全栈安全设计。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Next Steps -->
+  <section class="action-section fade-up delay-3">
+    <div class="action-box">
+      <h2>下一步行动建议</h2>
+      <p>
+        建议两个事业群联合推进以下工作，快速验证合作模式并形成可交付的产品方案。
+      </p>
+      <div class="action-steps">
+        <div class="action-step">
+          <div class="action-step-num">1</div>
+          <div class="action-step-text">与小浣熊团队确认<br>API 对接规范</div>
+        </div>
+        <div class="action-step">
+          <div class="action-step-num">2</div>
+          <div class="action-step-text">SensePedia 完成<br>Skill 注册集成</div>
+        </div>
+        <div class="action-step">
+          <div class="action-step-num">3</div>
+          <div class="action-step-text">选取 1 个政企客户<br>做 MVP 验证</div>
+        </div>
+        <div class="action-step">
+          <div class="action-step-num">4</div>
+          <div class="action-step-text">形成标准化方案<br>可复制推广</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="page-footer">
+  <p>SensePedia Agent Platform &middot; Cooperation Opportunity &middot; 2026 &middot; 商汤科技</p>
+</footer>
+
+</body>
+</html>
