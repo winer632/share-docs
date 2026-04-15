@@ -141,11 +141,10 @@
 
   /* Jeff directive block */
   .jeff{
-    display:grid;grid-template-columns:1.35fr 1fr;gap:0;
     border:1px solid var(--line);border-radius:10px;overflow:hidden;
     background:#fdfcf8;
   }
-  .jeff-left{padding:18px 22px;border-right:1px dashed var(--line);}
+  .jeff-left{padding:18px 22px;}
   .jeff-tag{
     display:inline-flex;align-items:center;gap:8px;
     font-family:var(--mono);font-size:11px;letter-spacing:.08em;
@@ -156,26 +155,6 @@
   .jeff-left h3{font-size:16px;margin:0 0 8px;font-weight:650;letter-spacing:.01em;}
   .jeff-left p{font-size:13.5px;line-height:1.7;color:#2d333c;margin:0;}
   .jeff-left p b{color:var(--accent);font-weight:650;}
-  .jeff-right{
-    padding:18px 22px;background:#fbfaf6;
-    display:flex;flex-direction:column;gap:10px;justify-content:center;
-  }
-  .jeff-label{
-    font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted);
-    text-transform:uppercase;
-  }
-  .jeff-pilot{font-size:13px;line-height:1.65;color:#2d333c;margin:0;}
-  .jeff-pilot b{color:var(--ink);font-weight:650;}
-  .jeff-kpi{
-    display:flex;align-items:center;gap:12px;
-    border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;
-  }
-  .jeff-kpi .kpi-num{
-    font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);
-    line-height:1;letter-spacing:-.01em;
-  }
-  .jeff-kpi .kpi-txt{font-size:12px;color:var(--muted);line-height:1.5;}
-
   /* Closing */
   .foot{
     border-top:1px solid var(--line);padding:18px 44px 22px;
@@ -190,8 +169,7 @@
   }
 
   @media (max-width:980px){
-    .obs,.thesis,.plan,.jeff{grid-template-columns:1fr;}
-    .jeff-left{border-right:none;border-bottom:1px dashed var(--line);}
+    .obs,.thesis,.plan{grid-template-columns:1fr;}
     .head{padding:20px 22px;}
     .body{padding:20px 22px;}
     .foot{padding:16px 22px;}
@@ -269,14 +247,6 @@
             <span class="jeff-tag">Jeff · 售后维护降本抓手</span>
             <h3>过去靠武汉建 COE 来降本，现在能否让 AI 来做 COE？</h3>
             <p>Jeff 希望把 Agent 技术用作<b>售后维护业务提效降本</b>的主抓手。以前售后降本的标准动作，是把 COE 搬到武汉这样的低成本地区；现在的命题变成——<b>能不能直接用 AI 技术搭一个 Agent COE？</b></p>
-          </div>
-          <div class="jeff-right">
-            <div class="jeff-label">建议试点</div>
-            <p class="jeff-pilot">武汉 COE 自己下场，开发一套<b>售后 Agent 系统</b>：分配不同角色的 Agent，自动与客户收集问题信息、自动排查、简单问题自动解决。</p>
-            <div class="jeff-kpi">
-              <div class="kpi-num">2 人</div>
-              <div class="kpi-txt">承接原先整个 COE 的业务量</div>
-            </div>
           </div>
         </div>
       </div>
