@@ -1,0 +1,328 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AI 原生组织 · 我的观点</title>
+<style>
+  :root{
+    --bg:#f6f5f1;
+    --ink:#111418;
+    --muted:#5b6472;
+    --line:#dcd8cf;
+    --card:#ffffff;
+    --accent:#c65a2c;        /* 砖橘 */
+    --accent-soft:#fbe9de;
+    --blue:#1b3a5b;
+    --blue-soft:#e6edf4;
+    --mono:"SF Mono","JetBrains Mono",Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",Inter,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased;}
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .slide{
+    width:min(1400px,100%);
+    background:var(--card);
+    border:1px solid var(--line);
+    border-radius:14px;
+    box-shadow:0 24px 60px rgba(17,20,24,.06),0 2px 6px rgba(17,20,24,.04);
+    overflow:hidden;
+  }
+
+  /* === Header === */
+  .head{
+    display:flex;align-items:flex-end;justify-content:space-between;gap:24px;
+    padding:28px 44px 22px;
+    border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg,#fbfaf6 0%,#ffffff 100%);
+  }
+  .eyebrow{
+    font-family:var(--mono);font-size:11px;letter-spacing:.18em;color:var(--muted);
+    text-transform:uppercase;margin-bottom:8px;
+  }
+  .title{
+    font-size:30px;font-weight:700;line-height:1.25;letter-spacing:-.01em;margin:0;
+  }
+  .title em{font-style:normal;color:var(--accent);}
+  .meta{
+    text-align:right;font-size:12px;color:var(--muted);line-height:1.6;white-space:nowrap;
+  }
+  .meta b{color:var(--ink);font-weight:600;}
+
+  /* === Body grid === */
+  .body{padding:26px 44px 20px;display:grid;gap:22px;}
+
+  /* Section 1: two-camp observation */
+  .obs{
+    display:grid;grid-template-columns:1fr 1fr;gap:18px;
+  }
+  .camp{
+    border:1px solid var(--line);border-radius:10px;padding:18px 20px;background:#fdfcf8;
+    position:relative;
+  }
+  .camp .tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    padding:3px 10px;border-radius:999px;
+    background:var(--blue-soft);color:var(--blue);
+    margin-bottom:10px;
+  }
+  .camp.dev .tag{background:var(--accent-soft);color:var(--accent);}
+  .camp h3{font-size:16px;margin:0 0 8px;font-weight:650;letter-spacing:.01em;}
+  .camp p{font-size:13.5px;line-height:1.7;color:#2d333c;margin:0;}
+  .camp .quote{
+    margin-top:10px;padding-left:10px;border-left:2px solid var(--line);
+    font-size:12px;color:var(--muted);line-height:1.6;
+  }
+
+  .obs-head{
+    display:flex;align-items:baseline;gap:10px;margin-bottom:6px;
+  }
+  .obs-head h2{
+    font-size:13px;font-weight:650;letter-spacing:.08em;margin:0;color:var(--muted);
+    text-transform:uppercase;font-family:var(--mono);
+  }
+  .obs-head .rule{flex:1;height:1px;background:var(--line);}
+
+  /* Section 2: core thesis band */
+  .thesis{
+    border:1px solid var(--ink);border-radius:10px;padding:18px 22px;
+    background:var(--ink);color:#fbfaf6;
+    display:grid;grid-template-columns:1.1fr 1fr;gap:22px;align-items:center;
+  }
+  .thesis .lede{font-size:18px;line-height:1.55;font-weight:500;}
+  .thesis .lede strong{color:#f5a97b;font-weight:700;}
+  .thesis .gap{
+    font-size:12.5px;line-height:1.7;color:#c8cbd0;
+    border-left:1px solid #3a3f46;padding-left:18px;
+  }
+  .thesis .gap b{color:#fbfaf6;}
+  .thesis .gap ul{margin:6px 0 0;padding-left:16px;}
+  .thesis .gap li{margin:2px 0;}
+
+  /* Section 3: tiered plan */
+  .plan-head{
+    display:flex;align-items:baseline;gap:10px;margin-bottom:6px;
+  }
+  .plan-head h2{
+    font-size:13px;font-weight:650;letter-spacing:.08em;margin:0;color:var(--muted);
+    text-transform:uppercase;font-family:var(--mono);
+  }
+  .plan-head .rule{flex:1;height:1px;background:var(--line);}
+  .plan-head .hint{font-size:12px;color:var(--muted);font-family:var(--mono);}
+
+  .plan{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .tier{
+    border:1px solid var(--line);border-radius:10px;padding:16px 18px;
+    background:#fdfcf8;display:flex;flex-direction:column;gap:8px;
+    position:relative;overflow:hidden;
+  }
+  .tier::before{
+    content:"";position:absolute;left:0;top:0;width:4px;height:100%;background:var(--accent);
+    opacity:.9;
+  }
+  .tier.mid::before{background:#e0a04e;}
+  .tier.low::before{background:#8a9aa7;}
+  .tier .num{
+    font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.12em;
+  }
+  .tier .scene{font-size:14.5px;font-weight:650;line-height:1.35;}
+  .tier .pack{
+    font-family:var(--mono);font-size:13px;font-weight:600;color:var(--ink);
+    background:#fff;border:1px solid var(--line);border-radius:6px;
+    padding:6px 10px;align-self:flex-start;
+  }
+  .tier .why{font-size:12.5px;color:#2d333c;line-height:1.65;margin:0;}
+  .tier .cost{
+    font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.04em;
+    border-top:1px dashed var(--line);padding-top:8px;margin-top:2px;
+  }
+
+  /* Jeff directive block */
+  .jeff{
+    display:grid;grid-template-columns:1.35fr 1fr;gap:0;
+    border:1px solid var(--line);border-radius:10px;overflow:hidden;
+    background:#fdfcf8;
+  }
+  .jeff-left{padding:18px 22px;border-right:1px dashed var(--line);}
+  .jeff-tag{
+    display:inline-flex;align-items:center;gap:8px;
+    font-family:var(--mono);font-size:11px;letter-spacing:.08em;
+    padding:3px 10px;border-radius:999px;
+    background:var(--accent-soft);color:var(--accent);
+    margin-bottom:10px;
+  }
+  .jeff-left h3{font-size:16px;margin:0 0 8px;font-weight:650;letter-spacing:.01em;}
+  .jeff-left p{font-size:13.5px;line-height:1.7;color:#2d333c;margin:0;}
+  .jeff-left p b{color:var(--accent);font-weight:650;}
+  .jeff-right{
+    padding:18px 22px;background:#fbfaf6;
+    display:flex;flex-direction:column;gap:10px;justify-content:center;
+  }
+  .jeff-label{
+    font-family:var(--mono);font-size:11px;letter-spacing:.12em;color:var(--muted);
+    text-transform:uppercase;
+  }
+  .jeff-pilot{font-size:13px;line-height:1.65;color:#2d333c;margin:0;}
+  .jeff-pilot b{color:var(--ink);font-weight:650;}
+  .jeff-kpi{
+    display:flex;align-items:center;gap:12px;
+    border-top:1px dashed var(--line);padding-top:10px;margin-top:2px;
+  }
+  .jeff-kpi .kpi-num{
+    font-family:var(--mono);font-size:24px;font-weight:700;color:var(--accent);
+    line-height:1;letter-spacing:-.01em;
+  }
+  .jeff-kpi .kpi-txt{font-size:12px;color:var(--muted);line-height:1.5;}
+
+  /* Closing */
+  .foot{
+    border-top:1px solid var(--line);padding:18px 44px 22px;
+    display:flex;align-items:center;justify-content:space-between;gap:24px;
+    background:#fbfaf6;
+  }
+  .bottom-line{font-size:15px;color:var(--ink);line-height:1.55;max-width:900px;}
+  .bottom-line b{color:var(--accent);font-weight:700;}
+  .sig{
+    font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:.08em;
+    text-align:right;white-space:nowrap;
+  }
+
+  @media (max-width:980px){
+    .obs,.thesis,.plan,.jeff{grid-template-columns:1fr;}
+    .jeff-left{border-right:none;border-bottom:1px dashed var(--line);}
+    .head{padding:20px 22px;}
+    .body{padding:20px 22px;}
+    .foot{padding:16px 22px;}
+    .title{font-size:22px;}
+  }
+  @media print{
+    body{padding:0;background:#fff;}
+    .slide{border:none;box-shadow:none;border-radius:0;}
+  }
+</style>
+</head>
+<body>
+  <section class="slide">
+
+    <header class="head">
+      <div>
+        <div class="eyebrow">AI 原生组织 · 访谈复盘 · 我的观点</div>
+        <h1 class="title">先看清 Agent 的<em>工具属性</em>，再用配发<em>套餐</em>的方式，把组织的交付密度拉起来。</h1>
+      </div>
+      <div class="meta">
+        访谈样本：<b>产研 / 销售 / 售前 / 售后 / 战略运营</b><br>
+        复盘日期：<b>2026-04-14</b>
+      </div>
+    </header>
+
+    <div class="body">
+
+      <!-- 观察：两种期待 -->
+      <div>
+        <div class="obs-head">
+          <h2>观察 · 两种完全不同的期待</h2>
+          <div class="rule"></div>
+        </div>
+        <div class="obs">
+          <div class="camp">
+            <span class="tag">销售 / 战略运营</span>
+            <h3>想要一套「更好用的智能 IT 系统」</h3>
+            <p>把被 CRM 录入、合同流转、翻译校对、文档生成这些流程困住的时间释放出来。AI 是助手，负责把已经存在的流程跑得更轻。</p>
+            <div class="quote">"理想状态：通过自然语言指令由 AI 自动完成 CRM 更新 / 翻译 / 校对。"<br>—— sales lead 访谈</div>
+          </div>
+          <div class="camp dev">
+            <span class="tag">产研 / 售前售后（领导层）</span>
+            <h3>想要一支「AI Agent 开发 & 交付团队」</h3>
+            <p>自主接需求、自主完成项目、像人类研发团队一样交付产物；或在客户现场无需研发支持独立完成部署调试。AI 是生产要素，要替人扛交付。</p>
+            <div class="quote">"让 PM Agent 自动拆解，协调其他角色 Agent 协作 …… 完整代码 + 部署验证 + 齐全文档。"<br>—— 产品访谈</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 核心判断 -->
+      <div class="thesis">
+        <div class="lede">
+          <strong>Agent 开发团队</strong>在SensePedia Agent Platform项目中<strong>已经探索出来了一些经验</strong>，它的主体属性——和工业革命的汽车、信息革命的电脑一样——<strong>仍然是工具</strong>。<br>
+          不能对着 Agent 许个愿，它就自动交付。得有人驱动。
+        </div>
+        <div class="gap">
+          <b>Agent 相对于人，缺的三样东西：</b>
+          <ul>
+            <li>主动思考 & 提问（不会停下来问"这个需求是不是有问题"）</li>
+            <li>长程任务规划（多轮后目标漂移，从主线滑向细节）</li>
+            <li>偏差识别与纠偏（错误输入 → 错误输出 → 下一轮输入，一夜空转）</li>
+          </ul>
+          <div style="margin-top:8px;font-size:11.5px;color:#9aa0a8;">↑ SensePedia Agent Platform 开发过程已经踩过这个坑。</div>
+        </div>
+      </div>
+
+      <!-- Jeff 的定向命题 -->
+      <div>
+        <div class="obs-head">
+          <h2>Jeff 的定向命题 · 从「地理 COE」到「Agent COE」</h2>
+          <div class="rule"></div>
+        </div>
+        <div class="jeff">
+          <div class="jeff-left">
+            <span class="jeff-tag">Jeff · 售后维护降本抓手</span>
+            <h3>过去靠武汉建 COE 来降本，现在能否让 AI 来做 COE？</h3>
+            <p>Jeff 希望把 Agent 技术用作<b>售后维护业务提效降本</b>的主抓手。以前售后降本的标准动作，是把 COE 搬到武汉这样的低成本地区；现在的命题变成——<b>能不能直接用 AI 技术搭一个 Agent COE？</b></p>
+          </div>
+          <div class="jeff-right">
+            <div class="jeff-label">建议试点</div>
+            <p class="jeff-pilot">武汉 COE 自己下场，开发一套<b>售后 Agent 系统</b>：分配不同角色的 Agent，自动与客户收集问题信息、自动排查、简单问题自动解决。</p>
+            <div class="jeff-kpi">
+              <div class="kpi-num">2 人</div>
+              <div class="kpi-txt">承接原先整个 COE 的业务量</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 行动方案：按项目分层配发套餐 -->
+      <div>
+        <div class="plan-head">
+          <h2>务实方案 · 按项目阶段配发 AI 工具套餐</h2>
+          <div class="rule"></div>
+          <span class="hint">管理动作：立项即配套 · 随阶段降档</span>
+        </div>
+        <div class="plan">
+          <div class="tier">
+            <div class="num">TIER 01 · 高强度探索</div>
+            <div class="scene">0 → 1 全新产品开发</div>
+            <div class="pack">Claude Code Max · 20×</div>
+            <p class="why">MVP 期需求不稳定、架构频繁重写、Bug 高发。给够算力才能让研发敢于"用 AI 写一整块再扔掉重来"。</p>
+            <div class="cost">参考：访谈中欣鑫 MVP 期 ≈ 3000 元/人·月</div>
+          </div>
+          <div class="tier mid">
+            <div class="num">TIER 02 · 稳定迭代</div>
+            <div class="scene">基于标品的定制化开发</div>
+            <div class="pack">Claude Code Max · 5×</div>
+            <p class="why">骨架已有，主要是客户化组件、前端 Demo、测试用例、集成文档。5 倍套餐已被访谈验证"足够"。</p>
+            <div class="cost">参考：访谈共识 5× 套餐覆盖稳定期</div>
+          </div>
+          <div class="tier low">
+            <div class="num">TIER 03 · 结构化运维</div>
+            <div class="scene">成熟产品售后支持</div>
+            <div class="pack">Codex Plus</div>
+            <p class="why">重复性高、规则明确：日志分析、工单归类、客户邮件解析、部署脚本。便宜的模型跑标准化任务更划算。</p>
+            <div class="cost">承接 Jeff 命题：武汉 COE 作为 Agent COE 试点田 · 参考朱梅售后 3 Agent 场景</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="foot">
+      <div class="bottom-line">
+        <b>底层逻辑：</b>不赌 Agent 自主交付的极限，先把组织里「人 × AI 工具」的使用密度拉满。
+        这比等一支完美的 AI 研发团队，更快变成事业群能交付的商机。
+      </div>
+      <div class="sig">— 待对齐 / 待决策 —</div>
+    </footer>
+
+  </section>
+</body>
+</html>
