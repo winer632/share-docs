@@ -1,0 +1,1568 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>亚太业务事业群 Agent 管理平台 — 高层技术方案 (v0.1)</title>
+<style>
+  /* ============================================================
+     设计系统：融合 Anthropic 暖色典雅 + OpenAI 极简 + DeepMind 学术严谨
+     ============================================================ */
+  :root {
+    /* Palette — warm research-paper系 */
+    --bg:          #faf9f5;
+    --surface:     #ffffff;
+    --panel:       #f4f1e8;
+    --panel-2:     #efeadd;
+
+    --ink:         #1a1915;
+    --ink-2:       #3a372f;
+    --text:        #2f2c26;
+    --text-muted:  #7a766d;
+    --text-soft:   #a5a095;
+
+    --line:        #e2dccc;
+    --line-soft:   #ede8d9;
+
+    --accent:      #bb4a2c;         /* Claude coral primary */
+    --accent-soft: #e6cbb9;
+    --accent-bg:   #fbede3;
+
+    --indigo:      #4e4a78;
+    --indigo-bg:   #ece9f5;
+
+    --success:     #4a7c59;
+    --warn:        #a07422;
+    --danger:      #9e3d2d;
+
+    /* Type ramp */
+    --serif:   "Tiempos Text", "Iowan Old Style", "Charter", "Source Serif Pro", Georgia, "PingFang SC", "Songti SC", "STSong", serif;
+    --sans:    "Inter", -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Segoe UI", sans-serif;
+    --mono:    "JetBrains Mono", "SF Mono", "Menlo", "Consolas", "Liberation Mono", monospace;
+
+    --fs-base: 16px;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: var(--sans);
+    font-size: var(--fs-base);
+    line-height: 1.65;
+    color: var(--text);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* ==================== Layout ==================== */
+  .shell {
+    display: grid;
+    grid-template-columns: 260px minmax(0, 1fr);
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  aside.toc {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 40px 26px 40px 34px;
+    border-right: 1px solid var(--line);
+    font-size: 13px;
+    background: transparent;
+  }
+  main.paper {
+    padding: 64px 80px 120px;
+    max-width: 860px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* ==================== Sidebar TOC ==================== */
+  .toc-brand {
+    font-family: var(--serif);
+    font-style: italic;
+    color: var(--accent);
+    font-size: 15px;
+    letter-spacing: .2px;
+    margin-bottom: 22px;
+    display: block;
+    line-height: 1.3;
+  }
+  .toc-brand small {
+    display: block;
+    color: var(--text-muted);
+    font-style: normal;
+    font-family: var(--sans);
+    font-size: 11.5px;
+    letter-spacing: .3px;
+    margin-top: 2px;
+  }
+  .toc h4 {
+    margin: 20px 0 8px;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+  .toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    counter-reset: toc;
+  }
+  .toc ol li {
+    counter-increment: toc;
+    margin: 0;
+  }
+  .toc ol li a {
+    display: block;
+    padding: 5px 0 5px 22px;
+    color: var(--text-muted);
+    text-decoration: none;
+    position: relative;
+    border-left: 1.5px solid transparent;
+    transition: color .15s ease, border-color .15s ease;
+  }
+  .toc ol li a::before {
+    content: counter(toc, decimal-leading-zero);
+    position: absolute;
+    left: 0;
+    top: 5px;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-soft);
+  }
+  .toc ol li a:hover {
+    color: var(--accent);
+    border-left-color: var(--accent-soft);
+  }
+  .toc ol li a.active {
+    color: var(--accent);
+    border-left-color: var(--accent);
+    font-weight: 500;
+  }
+  .toc ol.sub {
+    margin-left: 22px;
+    margin-top: 2px;
+    counter-reset: none;
+  }
+  .toc ol.sub li a::before { content: ""; }
+  .toc ol.sub li a {
+    padding: 3px 0 3px 10px;
+    font-size: 12.5px;
+    color: var(--text-soft);
+    border-left: 1px solid var(--line-soft);
+  }
+  .toc-meta {
+    margin-top: 32px;
+    padding-top: 18px;
+    border-top: 1px solid var(--line);
+    font-size: 11.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  /* ==================== Typography ==================== */
+  h1, h2, h3, h4 {
+    font-family: var(--serif);
+    color: var(--ink);
+    font-weight: 600;
+    line-height: 1.25;
+    letter-spacing: -0.01em;
+  }
+  h1 {
+    font-size: 44px;
+    letter-spacing: -0.02em;
+    margin: 0 0 14px;
+    font-weight: 500;
+  }
+  h2 {
+    font-size: 28px;
+    margin: 72px 0 22px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line);
+    position: relative;
+  }
+  h2 .sec-num {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-right: 14px;
+    letter-spacing: .5px;
+    display: inline-block;
+    vertical-align: middle;
+    transform: translateY(-3px);
+  }
+  h3 {
+    font-size: 20px;
+    margin: 40px 0 14px;
+    color: var(--ink-2);
+    font-weight: 600;
+  }
+  h4 {
+    font-size: 16px;
+    margin: 26px 0 10px;
+    color: var(--ink-2);
+    font-weight: 600;
+    font-family: var(--sans);
+    letter-spacing: 0;
+  }
+  p { margin: 0 0 14px; }
+  strong { color: var(--ink); font-weight: 600; }
+  em { color: var(--ink-2); }
+
+  a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  a:hover { border-bottom-color: var(--accent); }
+
+  ul, ol { padding-left: 24px; margin: 10px 0 18px; }
+  li { margin: 4px 0; }
+  li > ul, li > ol { margin: 4px 0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--panel);
+    padding: 1px 6px;
+    border-radius: 3px;
+    color: #7a3420;
+    letter-spacing: -0.01em;
+  }
+  pre {
+    margin: 14px 0 18px;
+    padding: 16px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--ink);
+  }
+  pre code { background: transparent; padding: 0; color: inherit; font-size: inherit; }
+
+  blockquote {
+    margin: 18px 0;
+    padding: 12px 20px;
+    border-left: 3px solid var(--accent);
+    background: var(--accent-bg);
+    color: var(--ink-2);
+    font-style: normal;
+    border-radius: 0 4px 4px 0;
+  }
+  blockquote p:last-child { margin: 0; }
+
+  /* ==================== Hero ==================== */
+  .hero {
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+  .hero .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    margin-bottom: 22px;
+    display: inline-block;
+  }
+  .hero h1 { margin-bottom: 20px; }
+  .hero .lede {
+    font-family: var(--serif);
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--ink-2);
+    max-width: 640px;
+    font-weight: 400;
+    margin-bottom: 34px;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 22px;
+    padding: 18px 0 0;
+    border-top: 1px solid var(--line);
+  }
+  .meta-grid .cell {
+    font-size: 13px;
+  }
+  .meta-grid .cell .lbl {
+    display: block;
+    color: var(--text-soft);
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .meta-grid .cell .val {
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .badge-status {
+    display: inline-block;
+    padding: 2px 9px;
+    font-size: 11.5px;
+    border-radius: 3px;
+    background: var(--warn);
+    color: #fff;
+    font-weight: 500;
+    letter-spacing: .3px;
+  }
+
+  /* ==================== Abstract ==================== */
+  .abstract {
+    background: var(--panel);
+    border-left: 3px solid var(--ink);
+    padding: 24px 28px;
+    margin: 40px 0 48px;
+    border-radius: 0 4px 4px 0;
+  }
+  .abstract .kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+  .abstract h3 {
+    margin: 0 0 12px;
+    font-size: 17px;
+    font-family: var(--serif);
+    color: var(--ink);
+  }
+  .abstract ul { margin: 0; padding-left: 18px; }
+  .abstract li { margin: 6px 0; color: var(--ink-2); font-size: 14.5px; }
+
+  /* ==================== Decision Cards Grid ==================== */
+  .decision-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin: 30px 0 50px;
+  }
+  .dec-card {
+    padding: 18px 20px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    position: relative;
+    transition: border-color .15s ease, transform .15s ease;
+  }
+  .dec-card:hover {
+    border-color: var(--accent-soft);
+  }
+  .dec-card .dec-id {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  .dec-card h4 {
+    margin: 6px 0 8px;
+    font-size: 15px;
+    font-family: var(--sans);
+    color: var(--ink);
+    line-height: 1.35;
+  }
+  .dec-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.55;
+  }
+
+  /* ==================== Tables ==================== */
+  .table-wrap {
+    margin: 18px 0 24px;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+    border-top: 1.5px solid var(--ink);
+    border-bottom: 1.5px solid var(--ink);
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 12px 10px 0;
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 12.5px;
+    letter-spacing: .2px;
+    border-bottom: 1px solid var(--ink);
+    background: transparent;
+    vertical-align: bottom;
+  }
+  tbody td {
+    padding: 10px 12px 10px 0;
+    border-bottom: 1px solid var(--line);
+    color: var(--text);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--panel); }
+  td code, th code { font-size: 0.9em; }
+
+  /* ==================== Callouts ==================== */
+  .callout {
+    margin: 20px 0;
+    padding: 18px 22px;
+    border-radius: 6px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    font-size: 14px;
+    position: relative;
+  }
+  .callout .co-kicker {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 8px;
+    display: inline-block;
+  }
+  .callout.decision  { border-left: 3px solid var(--accent);    background: var(--accent-bg); }
+  .callout.decision .co-kicker { color: var(--accent); }
+  .callout.note      { border-left: 3px solid var(--indigo);   background: var(--indigo-bg); }
+  .callout.note .co-kicker { color: var(--indigo); }
+  .callout.warn      { border-left: 3px solid var(--warn);     background: #f9f1de; }
+  .callout.warn .co-kicker { color: var(--warn); }
+  .callout.danger    { border-left: 3px solid var(--danger);   background: #f7e6e1; }
+  .callout.danger .co-kicker { color: var(--danger); }
+
+  .callout h4 { margin: 0 0 6px; font-family: var(--sans); font-size: 15px; color: var(--ink); }
+  .callout p:last-child { margin-bottom: 0; }
+
+  /* ==================== Architecture Visual ==================== */
+  .arch {
+    margin: 30px 0 40px;
+    padding: 24px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+  }
+  .arch-layer {
+    padding: 16px 18px;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+  }
+  .arch-layer.l1 { border-left: 4px solid #b9842b; background: #fbf3df; }
+  .arch-layer.l2 { border-left: 4px solid var(--indigo); background: var(--indigo-bg); }
+  .arch-layer.l3 { border-left: 4px solid var(--success); background: #e9f1ea; }
+  .arch-layer.l4 { border-left: 4px solid var(--accent); background: var(--accent-bg); }
+  .arch-layer h4 {
+    margin: 0 0 4px;
+    font-size: 13.5px;
+    font-family: var(--sans);
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .arch-layer .num {
+    font-family: var(--mono);
+    color: var(--text-soft);
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .arch-layer .sub {
+    color: var(--text-muted);
+    font-size: 12px;
+    margin-bottom: 10px;
+  }
+  .arch-grid {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .arch-grid.g3 { grid-template-columns: repeat(3, 1fr); }
+  .arch-grid.g4 { grid-template-columns: repeat(4, 1fr); }
+  .arch-grid.g6 { grid-template-columns: repeat(6, 1fr); }
+  .arch-node {
+    padding: 10px 12px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    font-size: 12px;
+  }
+  .arch-node .n-name {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 12.5px;
+    margin-bottom: 3px;
+  }
+  .arch-node .n-desc {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    line-height: 1.45;
+  }
+  .arch-flow {
+    text-align: center;
+    color: var(--text-soft);
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    margin: 4px 0;
+  }
+
+  /* ==================== Stat/Metric Panels ==================== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin: 24px 0 32px;
+  }
+  .stat {
+    padding: 18px 18px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    text-align: left;
+  }
+  .stat .num {
+    font-family: var(--serif);
+    font-size: 32px;
+    color: var(--ink);
+    line-height: 1.1;
+    font-weight: 500;
+  }
+  .stat .num .unit {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-left: 3px;
+  }
+  .stat .lbl {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.4;
+  }
+
+  /* ==================== Timeline ==================== */
+  .timeline {
+    margin: 22px 0 30px;
+    border-left: 2px solid var(--line);
+    padding-left: 22px;
+  }
+  .tl-item {
+    position: relative;
+    padding: 10px 0 12px;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .tl-item:last-child { border-bottom: none; }
+  .tl-item::before {
+    content: "";
+    position: absolute;
+    left: -28px;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 2px solid var(--accent);
+  }
+  .tl-item .tl-week {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--accent);
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  .tl-item .tl-title {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14px;
+    margin: 2px 0 4px;
+  }
+  .tl-item .tl-desc {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+  .tl-item .tl-tag {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 7px;
+    font-size: 10.5px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    color: var(--text-muted);
+  }
+
+  /* ==================== Key-value list ==================== */
+  dl.kv {
+    margin: 14px 0 22px;
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    gap: 10px 20px;
+  }
+  dl.kv dt {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .6px;
+    font-weight: 500;
+    padding-top: 1px;
+  }
+  dl.kv dd {
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+  }
+
+  /* ==================== Section tag badges ==================== */
+  .pill {
+    display: inline-block;
+    padding: 1px 8px;
+    font-size: 11px;
+    border-radius: 3px;
+    font-weight: 500;
+    letter-spacing: .2px;
+    vertical-align: baseline;
+    margin-left: 6px;
+  }
+  .pill.mvp    { background: var(--accent);   color: #fff; }
+  .pill.p2     { background: var(--indigo);   color: #fff; }
+  .pill.done   { background: var(--success);  color: #fff; }
+  .pill.open   { background: var(--warn);     color: #fff; }
+
+  /* ==================== Footnote / Citation ==================== */
+  .refs {
+    margin-top: 60px;
+    padding-top: 22px;
+    border-top: 1px solid var(--line);
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+  .refs h3 {
+    font-size: 14px;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .refs ol {
+    padding-left: 22px;
+  }
+  .refs li { margin: 3px 0; }
+  .refs code { font-size: 11.5px; background: transparent; padding: 0; color: var(--ink-2); }
+
+  /* ==================== Footer ==================== */
+  footer.colophon {
+    margin-top: 80px;
+    padding-top: 30px;
+    border-top: 1px solid var(--line);
+    font-size: 12px;
+    color: var(--text-soft);
+    font-family: var(--sans);
+    text-align: left;
+    line-height: 1.6;
+  }
+  footer.colophon strong { color: var(--text-muted); font-weight: 500; }
+
+  /* ==================== Small utilities ==================== */
+  .hr-soft { border: none; border-top: 1px solid var(--line-soft); margin: 30px 0; }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .note-inline {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ==================== Responsive ==================== */
+  @media (max-width: 1024px) {
+    .shell { grid-template-columns: 1fr; }
+    aside.toc { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--line); padding: 24px 28px; }
+    main.paper { padding: 40px 28px 80px; }
+    .meta-grid { grid-template-columns: repeat(2, 1fr); }
+    .decision-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .arch-grid.g4, .arch-grid.g6 { grid-template-columns: repeat(2, 1fr); }
+    .two-col { grid-template-columns: 1fr; }
+  }
+
+  /* ==================== Print ==================== */
+  @media print {
+    .shell { grid-template-columns: 1fr; max-width: 100%; }
+    aside.toc { display: none; }
+    main.paper { padding: 0; max-width: 100%; }
+    h2 { page-break-after: avoid; }
+    .dec-card, .callout, .arch-layer, .stat, pre { page-break-inside: avoid; }
+    body { font-size: 11pt; }
+    .decision-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ==================================================================== -->
+  <!-- Sidebar Table of Contents                                            -->
+  <!-- ==================================================================== -->
+  <aside class="toc">
+    <span class="toc-brand">
+      事业群 Agent 管理平台
+      <small>Technical Proposal · v0.1 Draft</small>
+    </span>
+
+    <h4>目录 / Contents</h4>
+    <ol>
+      <li><a href="#sec-abstract">摘要</a></li>
+      <li><a href="#sec-decisions">决策速览</a></li>
+      <li><a href="#sec-1">需求溯源</a></li>
+      <li><a href="#sec-2">六个关键设计决策</a>
+        <ol class="sub">
+          <li><a href="#d01">D01 复用 agent-platform</a></li>
+          <li><a href="#d02">D02 OpenClaw 统一出口</a></li>
+          <li><a href="#d03">D03 L1 + L2 监控</a></li>
+          <li><a href="#d04">D04 星形编排</a></li>
+          <li><a href="#d05">D05 HITL 三段式</a></li>
+          <li><a href="#d06">D06 Enablement-First</a></li>
+        </ol>
+      </li>
+      <li><a href="#sec-3">架构</a></li>
+      <li><a href="#sec-4">数据模型</a></li>
+      <li><a href="#sec-5">Phase 1 MVP</a></li>
+      <li><a href="#sec-6">风险与缓解</a></li>
+      <li><a href="#sec-7">待议问题</a></li>
+      <li><a href="#sec-8">基础设施</a></li>
+      <li><a href="#sec-9">战略对齐</a></li>
+      <li><a href="#sec-10">下一步</a></li>
+      <li><a href="#sec-appendix">附录</a></li>
+    </ol>
+
+    <div class="toc-meta">
+      <strong>作者</strong>&nbsp;王欣鑫<br/>
+      <strong>日期</strong>&nbsp;2026-04-17<br/>
+      <strong>版本</strong>&nbsp;v0.1 Draft<br/>
+      <strong>状态</strong>&nbsp;待评审
+    </div>
+  </aside>
+
+  <!-- ==================================================================== -->
+  <!-- Main Content                                                         -->
+  <!-- ==================================================================== -->
+  <main class="paper">
+
+    <!-- ================ HERO ================ -->
+    <header class="hero">
+      <span class="eyebrow">Technical Proposal · High-Level Design</span>
+      <h1>亚太业务事业群 Agent 管理平台</h1>
+      <p class="lede">
+        面向 SenseTime ABG 六大业务部门的统一 Agent 注册、观测、计量与编排平台。
+        以 Enablement-First 哲学为纲，复用 <code>agent-platform</code> 底座，
+        用最小改动完成事业群级别多租户生产化，为"Agent COE"叙事提供可量化基础。
+      </p>
+
+      <div class="meta-grid">
+        <div class="cell"><span class="lbl">文档编号</span><span class="val">Spec-2026-04-17-01</span></div>
+        <div class="cell"><span class="lbl">日期</span><span class="val">April 17, 2026</span></div>
+        <div class="cell"><span class="lbl">作者</span><span class="val">王欣鑫 · Wang Xinxin</span></div>
+        <div class="cell"><span class="lbl">状态</span><span class="badge-status">待评审</span></div>
+      </div>
+    </header>
+
+    <!-- ================ ABSTRACT ================ -->
+    <section id="sec-abstract" class="abstract">
+      <div class="kicker">Abstract · 摘要</div>
+      <h3>一页纸结论</h3>
+      <ul>
+        <li><strong>底层逻辑</strong>：这不是"新建一个平台"，而是将既有 <code>agent-platform</code> MVP 升级为事业群级多租户平台。既有项目已覆盖 <strong>~90%</strong> 的底座能力（AgentRegistry、Dispatcher、LLM Gateway、OpenClaw 观测、Planner 编排、Gate 门控、多租户字段）。</li>
+        <li><strong>顶层设计</strong>：平台定位 = <strong>Enablement-First + Gate-on-Demand</strong>。先做有用、不烦人的服务面（注册 + 监控 + 计量 + 共享中台），再按业务风险分级逐步启用控制面（Gate）。</li>
+        <li><strong>Phase 1 MVP 范围</strong>（4–6 周）：事业群多租户化 + OpenClaw 观测量产化 + 1–2 个试点部门业务 Agent 接入 + Token 看板 + HITL Gate 基础版。</li>
+        <li><strong>基础设施</strong>：短期跑在开发服务器；中期迁移至 <strong>4 × A100 80G 专用服务器</strong>（见 §8）。</li>
+        <li><strong>两个待议问题</strong>（需下次会议拉通）：(i) Phase 1 试点部门优先级；(ii) "长期协作编排"的真实业务场景枚举。</li>
+      </ul>
+    </section>
+
+    <!-- ================ QUICK STATS ================ -->
+    <div class="stats">
+      <div class="stat"><div class="num">~90<span class="unit">%</span></div><div class="lbl">底座能力已在 <code>agent-platform</code> 实现</div></div>
+      <div class="stat"><div class="num">6<span class="unit">部门</span></div><div class="lbl">销售 · 售前 · 售后 · 产品研发 · 财务 · 战略运营</div></div>
+      <div class="stat"><div class="num">4–6<span class="unit">周</span></div><div class="lbl">Phase 1 MVP 交付周期</div></div>
+      <div class="stat"><div class="num">4 × A100<span class="unit">80G</span></div><div class="lbl">专用服务器（中期迁移目标）</div></div>
+    </div>
+
+    <!-- ================ DECISION CARDS ================ -->
+    <section id="sec-decisions">
+      <h2><span class="sec-num">§ 00</span>决策速览 · Decisions at a Glance</h2>
+      <p>方案收敛到六个彼此正交的决策。每个决策都可以独立评审与迭代，下游章节展开证据链。</p>
+
+      <div class="decision-grid">
+        <a class="dec-card" href="#d01" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D01</div>
+          <h4>复用 agent-platform，不另起炉灶</h4>
+          <p>既有底座已含 Registry / Dispatcher / Planner / OpenClaw 观测 / Gate / 多租户字段。工作量 = 扩展打磨，不是重写。</p>
+        </a>
+        <a class="dec-card" href="#d02" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D02</div>
+          <h4>OpenClaw 作为事业群 LLM 统一出口</h4>
+          <p>依赖 OpenClaw <code>sessions.usage</code> 计量 token；内置 LLM Gateway 保留作平台内部 RAG/embedding 使用。</p>
+        </a>
+        <a class="dec-card" href="#d03" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D03</div>
+          <h4>MVP 只做 L1 心跳 + L2 就绪</h4>
+          <p>复用 OpenClaw <code>/healthz</code> + <code>/readyz</code>；SLO (L3) 延后到 Phase 2 有基线数据后再定阈值。</p>
+        </a>
+        <a class="dec-card" href="#d04" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D04</div>
+          <h4>星形拓扑 + Planner，不引入工作流引擎</h4>
+          <p>复用 MainAgentDispatcher + ExecutionCoordinator；Agent 间不直连，避免 N×N 依赖爆炸。</p>
+        </a>
+        <a class="dec-card" href="#d05" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D05</div>
+          <h4>严肃业务 Human-in-the-Loop 三段式</h4>
+          <p>Agent 起草 → 人类审核 Gate → Agent 执行。严肃业务零 Agent 自主闭环，对齐 SensePedia 经验教训。</p>
+        </a>
+        <a class="dec-card" href="#d06" style="text-decoration:none;border-bottom:none;">
+          <div class="dec-id">DECISION D06</div>
+          <h4>Enablement-First，Gate-on-Demand</h4>
+          <p>MVP 无否决权；Phase 2 针对高风险动作（合同 / 外发 / 生产部署）按需启用 Gate。</p>
+        </a>
+      </div>
+    </section>
+
+    <!-- ================ § 1 需求溯源 ================ -->
+    <section id="sec-1">
+      <h2><span class="sec-num">§ 01</span>需求溯源</h2>
+
+      <h3>1.1 Jeff 的两层要求</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:80px">层级</th><th>主体</th><th>交付物</th><th style="width:100px">时间线</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>执行层</td>
+              <td>六大业务部门（销售 / 售前 / 售后 / 产品研发 / 财务 / 战略运营）</td>
+              <td>各自业务流的业务 Agent</td>
+              <td>并行开发</td>
+            </tr>
+            <tr>
+              <td>平台层<br/><span class="note-inline">（本文档）</span></td>
+              <td>亚太业务事业群 Agent 管理平台</td>
+              <td><strong>短期</strong>：Agent 注册表 + 在线状态监控 + Token 消耗看板<br/><strong>长期</strong>：跨 Agent 协调与编排</td>
+              <td>分阶段</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>1.2 本文档回答的问题</h3>
+      <ol>
+        <li>Jeff 的需求是否合理、是否可实现？→ <strong>合理且可行</strong>。短期 90% 可行；长期 40% 可行，风险主要在业务流成熟度而非技术。</li>
+        <li>平台该做成什么形态？→ 见 §3 架构。</li>
+        <li>如何不重复造轮？→ 见 §2 决策 D01（复用 <code>agent-platform</code>）。</li>
+        <li>如何落地？→ 见 §5 Phase 1 范围。</li>
+      </ol>
+
+      <h3>1.3 载入的前期研究</h3>
+      <ul>
+        <li><code>Initiative/AI-native-organization.html</code> — AI-native 组织战略（Agent-as-Tool、分层配给）</li>
+        <li><code>Initiative/codex-vs-claude-agent-teams.html</code> — 多 Agent 框架对比</li>
+        <li><code>Initiative/claude-code-pricing-research.html</code> — LLM 计价链路分析</li>
+        <li><code>Initiative/Mark访谈总结.docx</code> / <code>04-09_Peter访谈_Plaud生成.docx</code> / 其它访谈记录 — 业务部门诉求</li>
+        <li><code>dev_agent/agent-platform/</code> — 既有平台底座（重度复用）</li>
+      </ul>
+    </section>
+
+    <!-- ================ § 2 六个关键设计决策 ================ -->
+    <section id="sec-2">
+      <h2><span class="sec-num">§ 02</span>六个关键设计决策</h2>
+      <p>决策之间彼此正交，任一决策的变更都不应强制其它五个重新评审。每个决策给出 <em>事实 → 方案对比 → 结论 → 拒绝项</em>。</p>
+
+      <!-- D01 -->
+      <section id="d01">
+        <h3>D01 · 复用 <code>agent-platform</code> 底座，不另起炉灶</h3>
+        <p><strong>事实</strong>：<code>dev_agent/agent-platform/</code> 项目已包含：</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th style="width:38%">能力</th><th>位置</th><th style="width:100px">状态</th></tr></thead>
+            <tbody>
+              <tr><td>AgentRegistry + AgentLoader（<code>AGENT.yaml</code> 自动发现）</td><td><code>services/platform-api/app/domain/agents/</code></td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>Dispatcher + DynamicAgentClient</td><td><code>services/platform-api/app/domain/router/</code></td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>LLM Gateway（Provider 适配）</td><td><code>services/llm-gateway/</code></td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>Planner + ToolRegistry + ExecutionCoordinator</td><td><code>services/platform-api/app/domain/planner/</code></td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>MainAgentDispatcher（星形多 Agent 编排）</td><td><code>sp_contracts/multi_agent.py</code> + planner</td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>Memory / Skill / MCP 共享服务</td><td><code>services/platform-api/app/api/</code></td><td><span class="pill done">已实现</span></td></tr>
+              <tr><td>OpenClaw 观测层（4 张表 + 直连 + Sidecar 双方案）</td><td><code>docs/analysis/openclaw-*.md</code></td><td><span class="pill open">已设计</span></td></tr>
+              <tr><td>多租户 <code>tenant_id</code> 字段</td><td>数据模型层</td><td><span class="pill done">已预留</span></td></tr>
+              <tr><td>CLAUDE.md 团队编排协议（ORCH/BE/AIE/QA/OPS）</td><td><code>CLAUDE.md</code> + <code>.coord/</code></td><td><span class="pill done">已落地</span></td></tr>
+              <tr><td>Gate 门控（<code>design/merge/deploy/rollback</code>）</td><td><code>.coord/approvals/</code></td><td><span class="pill done">已落地</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout decision">
+          <div class="co-kicker">Decision</div>
+          <p><strong>亚太业务事业群 Agent 管理平台的底座 = <code>agent-platform</code> 的生产化 + 多租户化。</strong> 重点工作是扩展与打磨，不是重写。</p>
+        </div>
+
+        <h4>被拒绝的方案</h4>
+        <ul>
+          <li>从零新建平台（工作量翻 5 倍，能力不如现有）</li>
+          <li>用 Coze / Dify / FastGPT 作为基座（闭源 / 多租户控制面不足 / 企业级 Gate 缺失 / 与 OpenClaw 协议对接成本高）</li>
+        </ul>
+      </section>
+
+      <!-- D02 -->
+      <section id="d02">
+        <h3>D02 · LLM 调用统一走 OpenClaw 作为事业群出口</h3>
+        <p>各部门 Agent 最终都要调 Claude / Qwen / DeepSeek 等 LLM，Token 成本必须事业群级可视化。三种方案对比：</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方案</th><th>调用链</th><th>复杂度</th><th>Token 计量点</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><strong>A</strong> · OpenClaw 直接出口 <span class="pill mvp">推荐</span></td>
+                <td>部门 Agent → OpenClaw → Provider</td>
+                <td>低（1–2 周对接）</td>
+                <td>OpenClaw <code>sessions.usage</code></td>
+              </tr>
+              <tr>
+                <td>B · agent-platform LLM Gateway 出口</td>
+                <td>部门 Agent → LLM Gateway → Provider</td>
+                <td>中（4–6 周）</td>
+                <td>Gateway 请求日志</td>
+              </tr>
+              <tr>
+                <td>C · 双层串联</td>
+                <td>Agent → OpenClaw → LLM Gateway → Provider</td>
+                <td>高（6–8 周）</td>
+                <td>双处记账</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout decision">
+          <div class="co-kicker">Decision</div>
+          <p><strong>选择 A。</strong> 既有 <code>agent-platform/services/llm-gateway/</code> 保留用于平台内部需求（RAG embedding / 重试缓存层），不强迫各部门走。</p>
+        </div>
+
+        <div class="callout warn">
+          <div class="co-kicker">Fallback</div>
+          <p>如果某 provider 的 <code>sessions.usage</code> 字段不完整（前期研究已预警），Phase 2 启用"本地 JSONL 读 token" helper 兜底（详见 <code>openclaw-observability-implementation-plan.md</code> 附录）。</p>
+        </div>
+      </section>
+
+      <!-- D03 -->
+      <section id="d03">
+        <h3>D03 · 在线状态监控 MVP 只做 L1 + L2</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>层级</th><th>指标</th><th>工程复杂度</th><th>OpenClaw 现成接口</th><th>MVP</th></tr></thead>
+            <tbody>
+              <tr><td><strong>L1</strong> 进程存活</td><td><code>/healthz</code> + <code>last_heartbeat_at</code></td><td>1 天</td><td>✅ <code>/healthz</code> + <code>last-heartbeat</code></td><td><span class="pill mvp">必须</span></td></tr>
+              <tr><td><strong>L2</strong> 能接活</td><td><code>/readyz</code> + <code>presence_status</code></td><td>2 天</td><td>✅ <code>/readyz</code> + <code>system-presence</code></td><td><span class="pill mvp">必须</span></td></tr>
+              <tr><td><strong>L3</strong> SLO</td><td>p99 / 错误率 / 成功率</td><td>2–3 周</td><td>❌ 需自建</td><td><span class="pill p2">Phase 2</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout note">
+          <div class="co-kicker">Rationale</div>
+          <p>没有基线数据的 SLO 是拍脑袋。MVP 先拿 L1 + L2 把看板立起来，1 个试点 Agent 跑满 4 周后再定 SLO 阈值。</p>
+        </div>
+
+        <h4>D03.1 &nbsp;L1 vs L2 的区别与联系</h4>
+        <p><strong>一句话区分</strong>：L1 回答"人还在吗"，L2 回答"人能干活吗"。L1 是进程级硬检查（只看自己），L2 是业务级软检查（看依赖链）。</p>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>维度</th><th>L1 进程存活 · Liveness</th><th>L2 能接活 · Readiness</th></tr></thead>
+            <tbody>
+              <tr><td>核心问题</td><td>"这个 Agent 进程还活着吗？"</td><td>"这个 Agent 现在能正确服务请求吗？"</td></tr>
+              <tr><td>检查对象</td><td>只看进程自己</td><td>进程 + 所有下游依赖</td></tr>
+              <tr><td>对应端点</td><td><code>GET /healthz</code></td><td><code>GET /readyz</code></td></tr>
+              <tr><td>响应动作</td><td>挂 → <strong>重启</strong></td><td>挂 → <strong>LB 摘流，不杀进程</strong>（等依赖恢复）</td></tr>
+              <tr><td>K8s 原语</td><td><code>livenessProbe</code></td><td><code>readinessProbe</code></td></tr>
+              <tr><td>输出颗粒度</td><td>粗（活/死）</td><td>细（每依赖一项 check）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>真值表 — 平台状态聚合规则</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>L1</th><th>L2</th><th>聚合状态</th><th>平台动作</th></tr></thead>
+            <tbody>
+              <tr><td>✅</td><td>✅</td><td><strong>online</strong></td><td>正常接流量</td></tr>
+              <tr><td>✅</td><td>❌</td><td><strong>degraded</strong></td><td>不发新流量，等依赖恢复，<strong>不重启</strong></td></tr>
+              <tr><td>❌</td><td>❌</td><td><strong>offline</strong></td><td>触发重启（systemd/docker）</td></tr>
+              <tr><td>❌</td><td>✅</td><td>不可能</td><td>探针实现 bug，排查</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>销售 Agent 业务场景示例</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>场景</th><th style="width:40px">L1</th><th style="width:40px">L2</th><th>看板状态</th><th>处置</th></tr></thead>
+            <tbody>
+              <tr><td>正常运行</td><td>✅</td><td>✅</td><td>🟢 online</td><td>无需干预</td></tr>
+              <tr><td>Milvus 集合被误删</td><td>✅</td><td>❌</td><td>🟡 degraded</td><td>告警 → 修 Milvus，<strong>不重启 Agent</strong></td></tr>
+              <tr><td>LLM Gateway 超时</td><td>✅</td><td>❌</td><td>🟡 degraded</td><td>告警 → 查 Gateway</td></tr>
+              <tr><td>Agent OOM killed</td><td>❌</td><td>❌</td><td>🔴 offline</td><td>systemd 自动重启</td></tr>
+              <tr><td>配置缺 <code>SP_JWT_SECRET</code></td><td>✅</td><td>❌</td><td>🟡 degraded</td><td>补配置 → 重启</td></tr>
+              <tr><td>Agent 进程死锁</td><td>❌</td><td>❌</td><td>🔴 offline</td><td>重启</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout note">
+          <div class="co-kicker">Key Insight</div>
+          <p>绝大多数 Agent 故障不是进程死了，而是依赖挂了。只做 L1 会导致"假绿"——看板一片绿、用户却一直报错，一次性击碎同事对平台的信任。<strong>L2 才是用户实际体验的 Agent 可用性。</strong></p>
+        </div>
+      </section>
+
+      <!-- D04 -->
+      <section id="d04">
+        <h3>D04 · 编排路径：复用星形拓扑 + Planner</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>路径</th><th>技术栈</th><th>复用 agent-platform</th><th>推荐</th></tr></thead>
+            <tbody>
+              <tr><td>A2A 消息协议（Agent 间直调）</td><td>MCP / ACP over HTTP/gRPC</td><td>❌ 需新写协议栈，N×N 依赖爆炸</td><td>❌</td></tr>
+              <tr><td>独立工作流引擎</td><td>Airflow / Temporal / Argo</td><td>❌ 并行维护两套控制面</td><td>❌</td></tr>
+              <tr><td><strong>星形拓扑 + Planner（现有）</strong></td><td>Planner + MainAgentDispatcher + ExecutionCoordinator + ToolRegistry</td><td>✅ 直接复用</td><td>✅</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <p><strong>星形拓扑核心约束</strong>（源自 <code>agent-integration-spec.md §9</code>）：</p>
+        <ul>
+          <li>Sub-Agent 不直接互相通信</li>
+          <li>所有跨 Agent 调用由 Main Agent / Planner 统一调度</li>
+          <li>避免依赖图爆炸，便于审计和回滚</li>
+        </ul>
+
+        <h4>演进路径</h4>
+        <ol>
+          <li><strong>短期</strong>：各部门 Agent 按 <code>AGENT.yaml</code> 接入 → <code>AgentLoader</code> 自动注册 → Dispatcher 独立调用。</li>
+          <li><strong>中期</strong>：启用 <code>MainAgentDispatcher</code>，做跨部门 Agent 星形协同（例：销售 Main Agent 调 <code>rag-query</code> + <code>presales-agent</code>）。</li>
+          <li><strong>长期</strong>：复杂业务流用 <code>Planner + ExecutionCoordinator</code> 做 DAG 编排。</li>
+        </ol>
+      </section>
+
+      <!-- D05 -->
+      <section id="d05">
+        <h3>D05 · 严肃业务 Human-in-the-Loop 三段式</h3>
+
+        <div class="callout danger">
+          <div class="co-kicker">Lesson Learned</div>
+          <p><code>AI-native-organization.html</code> 已定调 <strong>Agent-as-Tool，不自治</strong>。SensePedia 回溯证明 Agent 在缺乏监督时系统性失败——缺主动思考、缺长程规划、漂移。</p>
+        </div>
+
+        <h4>HITL 三段式</h4>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>阶段</th><th>负责</th><th>平台角色</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Draft</strong> 初稿 / 检索 / 分析</td><td>Agent 自主执行（80% 体力活）</td><td>无阻断，全量计量</td></tr>
+              <tr><td><strong>Review Gate</strong> 关键决策点</td><td><strong>人类必审</strong>：发邮件 / 签合同 / 审批单 / 发布内容 / 部署生产 / 客户外发</td><td><strong>强制 Gate</strong>，未审不得出</td></tr>
+              <tr><td><strong>Execute</strong> 动作执行</td><td>Agent 执行已批准动作</td><td>审计留痕（复用 <code>.coord/approvals/</code>）</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h4>为什么让同事觉得 Agent 真实有帮助</h4>
+        <ul>
+          <li>同事保留最终决策权 → 心理安全 → 愿意用</li>
+          <li>Agent 承担 80% 体力活（写初稿 / 查资料 / 填表 / 起草方案）→ 真实省时间</li>
+          <li>错了有 Gate 拦住 → 不会塌房 → 不会因一次事故永久否定 Agent</li>
+          <li>复用 <code>merge_gate / deploy_gate / rollback_gate</code> 机制天然支持</li>
+        </ul>
+
+        <h4>严肃业务红线</h4>
+        <div class="two-col">
+          <div>
+            <div class="callout danger" style="margin:0;">
+              <div class="co-kicker">Never — Agent 自主闭环</div>
+              <ul style="margin:0;">
+                <li>合同签署</li>
+                <li>财务付款</li>
+                <li>战略决策</li>
+                <li>外部邮件发送</li>
+                <li>生产环境部署</li>
+              </ul>
+            </div>
+          </div>
+          <div>
+            <div class="callout" style="margin:0;border-left:3px solid var(--success);background:#eff5f0;">
+              <div class="co-kicker" style="color:var(--success);">Yes — AI 起草 + 人类审核</div>
+              <ul style="margin:0;">
+                <li>内部客服话术初稿</li>
+                <li>售前方案起草</li>
+                <li>代码 PR 起草</li>
+                <li>财务对账异常提示</li>
+                <li>战略数据摘要</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- D06 -->
+      <section id="d06">
+        <h3>D06 · 平台定位：Enablement-First + Gate-on-Demand</h3>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>维度</th><th>控制面（Gatekeeper）</th><th>服务面（Enablement） <span class="pill mvp">MVP 选此</span></th></tr></thead>
+            <tbody>
+              <tr><td>权力模型</td><td>有否决权，Agent 必须申请</td><td>无否决权，提供能力供选择</td></tr>
+              <tr><td>类比</td><td>K8s control plane / 合规审批 / 海关</td><td>Prometheus + Service Registry / 自助加油站</td></tr>
+              <tr><td>典型能力</td><td>Gate 审批 / 配额强制 / RBAC / kill switch</td><td>注册表 / 监控看板 / 日志 / token 计量 / 共享工具库</td></tr>
+              <tr><td>组织含义</td><td>平台团队强势 → 易和业务撕</td><td>平台团队是服务商 → 易协作、易拉通</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="callout decision">
+          <div class="co-kicker">MVP Decision</div>
+          <p><strong>先服务面，不做控制面。</strong> Day 1 上：注册表、Token 看板、OpenClaw 状态监控、共享 Memory / RAG（纯服务面）。Phase 2 加：针对"高风险动作"（外发 / 合同 / 生产部署）按需启用 Gate。</p>
+        </div>
+
+        <blockquote>
+          <p>底层逻辑：一上来就强势控制，各部门会说"我自己做"，平台就废了。先做有用、不烦人的，再逐步拿权 —— 因为信任所以简单。</p>
+        </blockquote>
+      </section>
+    </section>
+
+    <!-- ================ § 3 架构 ================ -->
+    <section id="sec-3">
+      <h2><span class="sec-num">§ 03</span>架构</h2>
+
+      <h3>3.1 逻辑分层</h3>
+      <p>整体架构分四层，上下通过标准 API / Manifest 接口，不引入额外 RPC 协议。</p>
+
+      <div class="arch">
+        <div class="arch-layer l1">
+          <h4><span class="num">LAYER 01</span>事业群管理层 <span class="pill" style="background:var(--warn);color:#fff;">Audience</span></h4>
+          <div class="sub">Jeff · 平台运营 · 各部门 Tech Lead</div>
+          <div class="arch-grid g3">
+            <div class="arch-node"><div class="n-name">OpenClaw 实例监控看板</div><div class="n-desc">L1 + L2 在线状态</div></div>
+            <div class="arch-node"><div class="n-name">Token 消耗报表</div><div class="n-desc">按部门 / Agent / 日聚合</div></div>
+            <div class="arch-node"><div class="n-name">Gate 审批台</div><div class="n-desc">Phase 2 HITL 审批队列</div></div>
+          </div>
+        </div>
+        <div class="arch-flow">↓ &nbsp; API / UI 调用 &nbsp; ↓</div>
+
+        <div class="arch-layer l2">
+          <h4><span class="num">LAYER 02</span>平台控制面 + 服务面 <span class="pill done">已实现 90%</span></h4>
+          <div class="sub">复用 agent-platform 底座 · 多租户化升级</div>
+          <div class="arch-grid g4">
+            <div class="arch-node"><div class="n-name">AgentRegistry</div><div class="n-desc">AGENT.yaml 自动发现</div></div>
+            <div class="arch-node"><div class="n-name">Dispatcher + Router</div><div class="n-desc">DynamicAgentClient 统一入口</div></div>
+            <div class="arch-node"><div class="n-name">Planner + MainAgentDispatcher</div><div class="n-desc">星形编排（Phase 2+）</div></div>
+            <div class="arch-node"><div class="n-name">ToolRegistry</div><div class="n-desc">HostOps / Skill / MCP 派发</div></div>
+          </div>
+          <div class="arch-grid g3" style="margin-top:10px;">
+            <div class="arch-node" style="border-left:3px solid var(--accent);"><div class="n-name">OpenClaw Observability</div><div class="n-desc">4 张表 · 直连 + Sidecar 双方案</div></div>
+            <div class="arch-node" style="border-left:3px solid var(--accent);"><div class="n-name">Token Meter</div><div class="n-desc">按 tenant / Agent / 日聚合</div></div>
+            <div class="arch-node" style="border-left:3px dashed var(--indigo);"><div class="n-name">Gate (按需)</div><div class="n-desc">design / merge / deploy / rollback</div></div>
+          </div>
+          <div class="arch-node" style="margin-top:10px;">
+            <div class="n-name">共享中台 · Shared Backbone</div>
+            <div class="n-desc">Memory · RAG / Knowledge · Skill Marketplace · MCP Servers · LLM Gateway（平台内部专用）</div>
+          </div>
+        </div>
+        <div class="arch-flow">↓ &nbsp; AGENT.yaml 接入规范 &nbsp; ↓</div>
+
+        <div class="arch-layer l3">
+          <h4><span class="num">LAYER 03</span>业务 Agent 层 <span class="pill mvp">Phase 1 试点 1–2</span></h4>
+          <div class="sub">6 个部门并行开发 · 统一跑在 OpenClaw runtime 之上</div>
+          <div class="arch-grid g6">
+            <div class="arch-node"><div class="n-name">销售 Agent</div><div class="n-desc">客户画像 / 话术 / 报价</div></div>
+            <div class="arch-node"><div class="n-name">售前 Agent</div><div class="n-desc">方案起草 / POC / RFP</div></div>
+            <div class="arch-node"><div class="n-name">售后 Agent</div><div class="n-desc">工单 / 诊断 / 话术</div></div>
+            <div class="arch-node"><div class="n-name">产品研发 Agent</div><div class="n-desc">PR / Review / 文档</div></div>
+            <div class="arch-node"><div class="n-name">财务 Agent</div><div class="n-desc">对账 / 审核 / 摘要</div></div>
+            <div class="arch-node"><div class="n-name">战略运营 Agent</div><div class="n-desc">看板 / 复盘 / 决策辅助</div></div>
+          </div>
+        </div>
+        <div class="arch-flow">↓ &nbsp; LLM / 工具 / 知识调用 &nbsp; ↓</div>
+
+        <div class="arch-layer l4">
+          <h4><span class="num">LAYER 04</span>执行层 · OpenClaw Runtime <span class="pill" style="background:var(--accent);color:#fff;">Token 真源</span></h4>
+          <div class="sub">事业群统一 LLM 调用出口 · Token 采集点</div>
+          <div class="arch-grid g4">
+            <div class="arch-node"><div class="n-name">agents.list / presence</div><div class="n-desc">配置 Agent 目录 + 活跃度</div></div>
+            <div class="arch-node"><div class="n-name">sessions.usage</div><div class="n-desc">按 session/agent/日 token 计量</div></div>
+            <div class="arch-node"><div class="n-name">healthz / readyz</div><div class="n-desc">L1 + L2 探针</div></div>
+            <div class="arch-node"><div class="n-name">Provider 出口</div><div class="n-desc">Anthropic / Bedrock / Vertex / vLLM</div></div>
+          </div>
+        </div>
+      </div>
+
+      <h3>3.2 复用 vs 新增 — 工作量拆解</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>能力模块</th><th>复用</th><th>小改 &lt;1w</th><th>中改 1–2w</th><th>大改 &gt;2w</th><th>新增</th></tr></thead>
+          <tbody>
+            <tr><td>AgentRegistry + AgentLoader</td><td>✅</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Dispatcher / DynamicAgentClient</td><td></td><td>✅ 多租户上下文</td><td></td><td></td><td></td></tr>
+            <tr><td>LLM Gateway（平台内部用）</td><td>✅</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>Planner / MainAgentDispatcher</td><td>✅</td><td></td><td></td><td></td><td></td></tr>
+            <tr><td>OpenClaw 观测 4 张表 + Collector</td><td></td><td></td><td>✅ 量产化</td><td></td><td></td></tr>
+            <tr><td>OpenClaw Sidecar（跨网络推送 · 机房 ↛ 办公必选）</td><td></td><td></td><td></td><td>✅ Phase 1 必选</td><td></td></tr>
+            <tr><td>多租户化（tenant 切分 + RBAC）</td><td></td><td></td><td></td><td>✅</td><td></td></tr>
+            <tr><td>事业群级 Token 看板前端</td><td></td><td></td><td>✅</td><td></td><td></td></tr>
+            <tr><td>HITL Gate UI</td><td></td><td></td><td></td><td></td><td>✅</td></tr>
+            <tr><td>部门优先级 / 场景枚举</td><td></td><td></td><td></td><td></td><td>📋 待议</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>3.3 多租户模型</h3>
+      <dl class="kv">
+        <dt>tenant_id</dt><dd>部门标识 · <code>sales / presales / aftersales / product-rd / finance / strategy-ops</code></dd>
+        <dt>字段状态</dt><dd><code>agent-platform</code> 既有 <code>installed_agents / openclaw_instances</code> 表已预留</dd>
+        <dt>RBAC</dt><dd>部门 Tech Lead 可见本部门全量；平台团队可见全量；Jeff / 事业群管理层见汇总看板</dd>
+        <dt>数据隔离</dt><dd>MVP 行级过滤；Phase 2 评估是否需要 schema 级隔离</dd>
+      </dl>
+    </section>
+
+    <!-- ================ § 4 数据模型 ================ -->
+    <section id="sec-4">
+      <h2><span class="sec-num">§ 04</span>数据模型</h2>
+
+      <h3>4.1 复用 <code>agent-platform</code> 既有表</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>表</th><th>用途</th><th>需要改</th></tr></thead>
+          <tbody>
+            <tr><td><code>installed_agents</code></td><td>平台内部 Agent 注册</td><td>扩 <code>tenant_id / department</code></td></tr>
+            <tr><td><code>agent_events</code></td><td>Agent 生命周期事件</td><td>无需改</td></tr>
+            <tr><td><code>openclaw_instances</code></td><td>OpenClaw 网关实例</td><td>已预留 <code>tenant_id</code>，启用即可</td></tr>
+            <tr><td><code>openclaw_instance_heartbeats</code></td><td>心跳 + 就绪快照</td><td>无需改</td></tr>
+            <tr><td><code>openclaw_agents</code></td><td>实例下的配置 Agent</td><td>无需改</td></tr>
+            <tr><td><code>openclaw_agent_daily_usage</code></td><td>按日 Token 聚合</td><td>无需改</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>4.2 新增表（Phase 1 MVP）</h3>
+<pre><code>-- 部门维度元数据
+CREATE TABLE departments (
+  department_id VARCHAR(64) PRIMARY KEY,   -- e.g. 'sales'
+  display_name  VARCHAR(128) NOT NULL,     -- e.g. '销售部'
+  owner         VARCHAR(128) NULL,         -- 部门 Tech Lead
+  agent_count   INT NOT NULL DEFAULT 0,
+  daily_token_budget   BIGINT NULL,         -- 可选，软限额
+  created_at DATETIME NOT NULL,
+  updated_at DATETIME NOT NULL
+);
+
+-- HITL 审批任务（Phase 2 正式启用，Phase 1 保留 schema）
+CREATE TABLE agent_approvals (
+  approval_id   VARCHAR(64) PRIMARY KEY,
+  tenant_id     VARCHAR(64) NOT NULL,
+  agent_id      VARCHAR(128) NOT NULL,
+  action_type   VARCHAR(64) NOT NULL,      -- 'send_email' / 'sign_contract' / ...
+  payload_json  JSON NOT NULL,
+  requested_by  VARCHAR(128) NOT NULL,
+  status        VARCHAR(32) NOT NULL DEFAULT 'pending',
+  reviewer_id   VARCHAR(128) NULL,
+  reviewed_at   DATETIME NULL,
+  created_at    DATETIME NOT NULL,
+  KEY idx_approvals_tenant_status (tenant_id, status),
+  KEY idx_approvals_agent (agent_id)
+);</code></pre>
+
+      <h3>4.3 数据流向</h3>
+<pre><code>部门 Agent → OpenClaw 执行 → OpenClaw 记录 sessions.usage
+                                      │
+                                      ▼
+                      Collector 拉取 / Sidecar 推送
+                                      │
+                                      ▼
+         agent-platform: openclaw_instance_heartbeats
+                         openclaw_agents
+                         openclaw_agent_daily_usage
+                                      │
+                                      ▼
+          Token 看板 API (/v1/openclaw/usage/daily)
+                                      │
+                                      ▼
+                前端（按部门 / 按 Agent / 按日聚合）</code></pre>
+    </section>
+
+    <!-- ================ § 5 Phase 1 MVP ================ -->
+    <section id="sec-5">
+      <h2><span class="sec-num">§ 05</span>Phase 1 MVP 范围与里程碑</h2>
+
+      <h3>5.1 范围边界</h3>
+      <div class="two-col">
+        <div>
+          <div class="callout" style="margin:0;border-left:3px solid var(--success);background:#eff5f0;">
+            <div class="co-kicker" style="color:var(--success);">In Scope</div>
+            <ol style="margin:4px 0 0;">
+              <li><code>agent-platform</code> 多租户化（<code>tenant_id</code> 贯通 + 部门 RBAC）</li>
+              <li>OpenClaw 观测层量产化（4 张表 + Collector + 前端 3 页）</li>
+              <li>OpenClaw Sidecar（跨网络推送链路）—— <strong>网络拓扑决定必选</strong>：agent-platform 在机房网络，各部门 OpenClaw 在办公网络；机房 ↛ 办公（Collector 拉取不可达），办公 → 机房（Sidecar 推送可达）</li>
+              <li>1–2 个试点部门按 <code>AGENT.yaml</code> 接入</li>
+              <li>事业群级 Token 看板</li>
+              <li>HITL Gate 基础版（schema + 审批 API，暂不强制）</li>
+            </ol>
+          </div>
+        </div>
+        <div>
+          <div class="callout" style="margin:0;border-left:3px solid var(--text-soft);background:var(--panel);">
+            <div class="co-kicker" style="color:var(--text-muted);">Out of Scope</div>
+            <ul style="margin:4px 0 0;">
+              <li>SLO / L3 质量监控</li>
+              <li>跨部门 Agent 星形协同实际编排</li>
+              <li>强制 Gate 拦截</li>
+              <li>本地 JSONL token fallback</li>
+              <li>业务中台扩展（知识库 / MCP 市场）</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <h3>5.2 里程碑 — 6 周交付</h3>
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-week">W1 · Week 1</div>
+          <div class="tl-title">决策拉通 + 基建就绪 <span class="tl-tag">Gate 0</span></div>
+          <div class="tl-desc">本文档评审通过 / 专用机申请立项 / 试点部门确定 → Jeff 批准 + 部门接入计划书</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">W2 · Week 2</div>
+          <div class="tl-title">多租户改造</div>
+          <div class="tl-desc"><code>tenant_id</code> 贯通核心模型；RBAC 中间件落地 · 单元测试 + 冒烟通过</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">W3 · Week 3</div>
+          <div class="tl-title">OpenClaw 观测量产</div>
+          <div class="tl-desc">Sidecar 推送 + 4 张表端到端打通 · 1 个 OpenClaw 实例端到端打通</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">W4 · Week 4</div>
+          <div class="tl-title">Token 看板前端</div>
+          <div class="tl-desc">3 个页面（实例列表 / 详情 / usage）· UAT 可用</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">W5 · Week 5</div>
+          <div class="tl-title">试点 Agent 接入</div>
+          <div class="tl-desc">1–2 个业务 Agent 通过 <code>AGENT.yaml</code> 接入 · Dispatcher 可调用 + Token 计量正确</div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-week">W6 · Week 6</div>
+          <div class="tl-title">HITL Gate 基础版 + 整体验收 <span class="tl-tag">Final Gate</span></div>
+          <div class="tl-desc"><code>agent_approvals</code> schema + 审批 API · Demo 给 Jeff + 试点部门</div>
+        </div>
+      </div>
+
+      <h3>5.3 资源需求</h3>
+      <dl class="kv">
+        <dt>人力</dt><dd>王欣鑫 + Claude Code MAX 20x + Codex plus + 试点部门对接人（每部门 0.5 人）</dd>
+        <dt>机器</dt><dd>短期：开发服务器；中期：4 × A100 80G（见 §8）</dd>
+        <dt>外部依赖</dt><dd>OpenClaw 企业版授权 · token 额度 · Anthropic Console / Bedrock 账号</dd>
+      </dl>
+    </section>
+
+    <!-- ================ § 6 风险 ================ -->
+    <section id="sec-6">
+      <h2><span class="sec-num">§ 06</span>风险与缓解</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>风险</th><th style="width:80px">级别</th><th>缓解</th></tr></thead>
+          <tbody>
+            <tr><td>OpenClaw <code>sessions.usage</code> 字段不稳定</td><td>中</td><td>Phase 2 启用本地 JSONL fallback（方案已设计）</td></tr>
+            <tr><td>各部门 Agent 开发节奏不一致</td><td>高</td><td>Phase 1 只锁 1–2 个部门，其它 Phase 2 接入</td></tr>
+            <tr><td>专用 A100 机器排期延后</td><td>中</td><td>开发服务器先跑 MVP，迁移在 Phase 1 末期切入</td></tr>
+            <tr><td>HITL Gate 被业务绕过（"走捷径"）</td><td>高</td><td>Phase 2 启用强制 Gate + 审计；Phase 1 先建文化</td></tr>
+            <tr><td>跨部门 Agent 依赖图未明确</td><td>中</td><td>见 §7 第 2 待议问题；MVP 不做跨部门编排</td></tr>
+            <tr><td>CLAUDE.md 协议与事业群协作习惯冲突</td><td>低</td><td>协议层与业务层解耦；仅约束平台团队内部</td></tr>
+            <tr><td>Jeff 战略变更（要求 Agent 自主闭环）</td><td>中</td><td>决策 D05 已对齐前期研究；变更需重新评估</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ================ § 7 待议问题 ================ -->
+    <section id="sec-7">
+      <h2><span class="sec-num">§ 07</span>待议问题 · Open Questions</h2>
+
+      <div class="callout warn">
+        <div class="co-kicker">Q1 · 试点部门优先级</div>
+        <h4>Phase 1 优先落地哪 1–2 个部门？</h4>
+        <p><strong>当前建议</strong>（按前期研究结论）：<em>销售 + 售前</em> 双部门，知识库飞轮抓手最明确。</p>
+        <p><strong>需下次会议拉齐</strong>：是否同意？若不同意替代方案？部门侧是否有对接人？</p>
+      </div>
+
+      <div class="callout warn">
+        <div class="co-kicker">Q2 · 长期协作编排的真实业务场景</div>
+        <h4>"跨 Agent 编排"到底要解决哪些场景？</h4>
+        <p><strong>假设示例</strong>（需验证是否真实发生）：</p>
+        <ul>
+          <li>销售 Agent 拉客户需求 → 售前 Agent 起草方案 → 产品研发 Agent 查 POC</li>
+          <li>售后 Agent 识别故障模式 → 产品研发 Agent 进 bug 列表 → 战略运营 Agent 汇总复盘</li>
+          <li>财务 Agent 预警异常 → 销售 Agent 核对合同 → 战略运营 Agent 评估风险</li>
+        </ul>
+        <p><strong>意义</strong>：若真实场景不足 3 个，长期编排能力不建造。</p>
+      </div>
+    </section>
+
+    <!-- ================ § 8 基础设施 ================ -->
+    <section id="sec-8">
+      <h2><span class="sec-num">§ 08</span>基础设施与资源规划</h2>
+
+      <h3>8.1 当前状态</h3>
+      <dl class="kv">
+        <dt>运行位置</dt><dd><code>agent-platform</code> 跑在开发服务器（端口 2222）</dd>
+        <dt>部署规范</dt><dd><code>deploy/scripts/deploy-*.sh</code>（参见 <code>CLAUDE.md §8</code>）</dd>
+        <dt>中间件</dt><dd>MariaDB · Milvus · MinIO · RabbitMQ</dd>
+      </dl>
+
+      <h3>8.2 中期规划：4 × A100 80G 专用服务器</h3>
+      <div class="two-col">
+        <div>
+          <h4>用途</h4>
+          <ul>
+            <li>本地部署 LLM 模型（qwen3.5-27b）、embedding 模型（bge-m3）、uniparse 的 OCR 模型、reranker 模型（Qwen/Qwen3-Reranker-4B）</li>
+            <li>承载 agent-platform 生产实例</li>
+            <li>事业群多租户容量余量</li>
+          </ul>
+        </div>
+        <div>
+          <h4>待确认事项</h4>
+          <ul>
+            <li>专用机采购 / 到位时间</li>
+            <li>运维归属（平台团队 / 事业群 IT / 共管）</li>
+            <li>故障应急预案</li>
+            <li>与现有开发机的数据迁移方案</li>
+          </ul>
+        </div>
+      </div>
+      <p><strong>迁移时机</strong>：Phase 1 MVP 末期（W5–W6）做迁移演练；Phase 2 正式切生产。</p>
+    </section>
+
+    <!-- ================ § 9 战略对齐 ================ -->
+    <section id="sec-9">
+      <h2><span class="sec-num">§ 09</span>与战略大图的关系</h2>
+
+      <h3>9.1 对齐 AI-Native 组织战略</h3>
+      <ul>
+        <li>✅ <strong>Agent-as-Tool</strong>：平台默认 HITL，不鼓励 Agent 自主</li>
+        <li>✅ <strong>分层配给</strong>：Token 看板使 "Tier 01/02/03" 配给决策可量化</li>
+        <li>✅ <strong>飞轮抓手</strong>：销售 + 售前知识库飞轮通过共享 RAG / Memory 中台放大</li>
+      </ul>
+
+      <h3>9.2 对齐 Jeff 的 "Agent COE" 叙事</h3>
+      <ul>
+        <li>✅ Token 可视化 = 降本量化的必要条件</li>
+        <li>✅ HITL Gate = "Agent 做体力活、人类做决策" 的组织保障</li>
+        <li>✅ 多租户 = 跨部门成本分摊与 ROI 核算的基础</li>
+      </ul>
+
+      <h3>9.3 与多 Agent 框架对比研究衔接</h3>
+      <ul>
+        <li>本平台采用 <strong>CLAUDE.md 协议</strong>（TeamCreate / TaskCreate / Gate）作为平台团队内部协作规范</li>
+        <li>业务部门 Agent 不强制用 CLAUDE.md 协议；只要遵循 <code>AGENT.yaml</code> 接入规范即可</li>
+      </ul>
+    </section>
+
+    <!-- ================ § 10 下一步 ================ -->
+    <section id="sec-10">
+      <h2><span class="sec-num">§ 10</span>下一步</h2>
+      <ol>
+        <li><strong>本文档评审</strong>：Jeff + 平台团队 + 各部门 Tech Lead 一轮评审</li>
+        <li><strong>会上确定</strong>（见 §7 两个待议问题）：试点部门 · 长期编排场景</li>
+        <li><strong>评审通过后</strong>：拆 Phase 1 实施计划（按里程碑细化到任务级 Task Prompt）</li>
+        <li><strong>Phase 1 启动</strong>：按 §5.2 里程碑执行</li>
+      </ol>
+    </section>
+
+    <!-- ================ 附录 ================ -->
+    <section id="sec-appendix">
+      <h2><span class="sec-num">APPX</span>附录 · Appendices</h2>
+
+      <h3>附录 A · 术语表</h3>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th style="width:180px">术语</th><th>含义</th></tr></thead>
+          <tbody>
+            <tr><td>事业群</td><td>SenseTime ABG（Advanced Business Group）</td></tr>
+            <tr><td>OpenClaw</td><td>事业群选定的 Agent 运行时 / LLM 网关</td></tr>
+            <tr><td><code>agent-platform</code></td><td>既有平台项目（<code>dev_agent/agent-platform/</code>），本平台的底座</td></tr>
+            <tr><td>AGENT.yaml</td><td>Agent 接入规范的 manifest 文件</td></tr>
+            <tr><td>HITL</td><td>Human-in-the-Loop，人在回路</td></tr>
+            <tr><td>Gate</td><td>门控审批机制（design / merge / deploy / rollback）</td></tr>
+            <tr><td>Tenant</td><td>租户，MVP 中等价于部门</td></tr>
+            <tr><td>ORCH</td><td>Orchestrator，主会话 Agent（CLAUDE.md 协议中的 Team Lead）</td></tr>
+            <tr><td>MainAgentDispatcher</td><td>星形拓扑中的 Main Agent，负责派发 sub-agent 调用</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3>附录 B · 关键文件索引</h3>
+      <ol class="refs" style="border:none;padding:0;margin:0;">
+        <li><code>dev_agent/agent-platform/</code> — 本平台底座代码</li>
+        <li><code>dev_agent/agent-platform/docs/agent-integration-spec.md</code> — Agent 接入规范</li>
+        <li><code>dev_agent/agent-platform/docs/analysis/openclaw-observability-implementation-plan.md</code> — OpenClaw 直连观测方案</li>
+        <li><code>dev_agent/agent-platform/docs/analysis/openclaw-sidecar-plan.md</code> — OpenClaw Sidecar 方案</li>
+        <li><code>dev_agent/agent-platform/CLAUDE.md</code> — 平台团队协作协议</li>
+        <li><code>Initiative/AI-native-organization.html</code> — AI-Native 组织战略</li>
+        <li><code>Initiative/codex-vs-claude-agent-teams.html</code> — 多 Agent 框架对比研究</li>
+        <li><code>Initiative/claude-code-pricing-research.html</code> — LLM 计价研究</li>
+      </ol>
+    </section>
+
+    <!-- ================ Colophon ================ -->
+    <footer class="colophon">
+      <strong>亚太业务事业群 Agent 管理平台 · 高层技术方案 · v0.1 Draft</strong><br/>
+      Document compiled 2026-04-17 · Author 王欣鑫 · SenseTime ABG<br/>
+      Typography · Tiempos / Iowan Old Style (headings) · Inter / PingFang SC (body) · JetBrains Mono (code)<br/>
+    </footer>
+
+  </main>
+</div>
+
+<script>
+  // Sidebar TOC: highlight the active section in view
+  (function(){
+    var links = document.querySelectorAll('aside.toc ol li a[href^="#"]');
+    var map = {};
+    links.forEach(function(a){
+      var id = a.getAttribute('href').slice(1);
+      var el = document.getElementById(id);
+      if (el) map[id] = a;
+    });
+    function onScroll(){
+      var y = window.scrollY + 120;
+      var current = null;
+      Object.keys(map).forEach(function(id){
+        var el = document.getElementById(id);
+        if (el && el.offsetTop <= y) current = id;
+      });
+      links.forEach(function(a){ a.classList.remove('active'); });
+      if (current && map[current]) map[current].classList.add('active');
+    }
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+
+</body>
+</html>
