@@ -782,7 +782,7 @@
       <div class="kicker">Abstract · 摘要</div>
       <h3>一页纸结论</h3>
       <ul>
-        <li><strong>底层逻辑</strong>：这不是"新建一个平台"，而是将既有 <code>agent-platform</code> MVP 升级为事业群级多租户平台。既有项目已覆盖 <strong>~90%</strong> 的底座能力（AgentRegistry、Dispatcher、LLM Gateway、OpenClaw 观测、Planner 编排、Gate 门控、多租户字段）。</li>
+        <li><strong>底层逻辑</strong>：这不是"新建一个平台"，而是将既有 <code>agent-platform</code> MVP 升级为事业群级多租户平台。既有项目已覆盖 <strong>~70%</strong> 的底座能力（AgentRegistry、Dispatcher、LLM Gateway、OpenClaw 观测、Planner 编排、Gate 门控、多租户字段）。</li>
         <li><strong>顶层设计</strong>：平台定位 = <strong>Enablement-First + Gate-on-Demand</strong>。先做有用、不烦人的服务面（注册 + 监控 + 计量 + 共享中台），再按业务风险分级逐步启用控制面（Gate）。</li>
         <li><strong>Phase 1 MVP 范围</strong>（4–6 周）：事业群多租户化 + OpenClaw 观测量产化 + 1–2 个试点部门业务 Agent 接入 + Token 看板 + HITL Gate 基础版。</li>
         <li><strong>基础设施</strong>：短期跑在开发服务器；中期迁移至 <strong>4 × A100 80G 专用服务器</strong>（见 §8）。</li>
@@ -792,7 +792,7 @@
 
     <!-- ================ QUICK STATS ================ -->
     <div class="stats">
-      <div class="stat"><div class="num">~90<span class="unit">%</span></div><div class="lbl">底座能力已在 <code>agent-platform</code> 实现</div></div>
+      <div class="stat"><div class="num">~70<span class="unit">%</span></div><div class="lbl">底座能力已在 <code>agent-platform</code> 实现</div></div>
       <div class="stat"><div class="num">6<span class="unit">部门</span></div><div class="lbl">销售 · 售前 · 售后 · 产品研发 · 财务 · 战略运营</div></div>
       <div class="stat"><div class="num">4–6<span class="unit">周</span></div><div class="lbl">Phase 1 MVP 交付周期</div></div>
       <div class="stat"><div class="num">4 × A100<span class="unit">80G</span></div><div class="lbl">专用服务器（中期迁移目标）</div></div>
@@ -1167,7 +1167,7 @@
         <div class="arch-flow">↓ &nbsp; API / UI 调用 &nbsp; ↓</div>
 
         <div class="arch-layer l2">
-          <h4><span class="num">LAYER 02</span>平台控制面 + 服务面 <span class="pill done">已实现 90%</span></h4>
+          <h4><span class="num">LAYER 02</span>平台控制面 + 服务面 <span class="pill done">已实现 70%</span></h4>
           <div class="sub">复用 agent-platform 底座 · 多租户化升级</div>
           <div class="arch-grid g4">
             <div class="arch-node"><div class="n-name">AgentRegistry</div><div class="n-desc">AGENT.yaml 自动发现</div></div>
