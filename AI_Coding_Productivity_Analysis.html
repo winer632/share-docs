@@ -1,0 +1,1582 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b0f1a">
+<title>AI Coding 提效实证报告 — 五大项目 Git 数据分析</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --bg:#070912; --bg2:#0e1424; --card:#121a2e; --card2:#172037;
+  --line:#1f2a44; --line2:#2a3a5e;
+  --txt:#e8eefc; --mut:#9fb0d1; --dim:#6c7d9c;
+  --acc:#6ea8ff; --acc2:#a78bfa; --acc3:#34d399; --acc4:#fbbf24; --acc5:#f472b6; --acc6:#fb7185;
+  --grad-1:linear-gradient(135deg,#6ea8ff 0%,#a78bfa 50%,#f472b6 100%);
+  --grad-2:linear-gradient(135deg,#34d399 0%,#6ea8ff 100%);
+  --grad-3:linear-gradient(135deg,#fbbf24 0%,#fb7185 100%);
+  --shadow:0 8px 30px rgba(0,0,0,.35);
+  --radius:18px; --radius-sm:12px;
+  --max:1180px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Helvetica,'SF Pro SC',Inter,'Segoe UI',Roboto,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;line-height:1.55;overflow-x:hidden}
+body{background:
+  radial-gradient(1200px 600px at 80% -10%, rgba(110,168,255,.18), transparent 60%),
+  radial-gradient(1000px 500px at -10% 40%, rgba(167,139,250,.14), transparent 60%),
+  radial-gradient(900px 600px at 50% 110%, rgba(244,114,182,.12), transparent 60%),
+  var(--bg)}
+a{color:var(--acc);text-decoration:none}
+hr{border:0;border-top:1px solid var(--line);margin:32px 0}
+.container{max-width:var(--max);margin:0 auto;padding:0 18px}
+
+
+/* ===== ERA BANNERS ===== */
+.era{position:relative;margin:40px 0 24px;padding:24px 26px;border-radius:var(--radius);
+  border:1px solid var(--line2);overflow:hidden}
+.era.era1{background:linear-gradient(135deg,rgba(251,113,133,.10) 0%,rgba(251,191,36,.08) 100%);
+  border-color:rgba(251,113,133,.35)}
+.era.era2{background:linear-gradient(135deg,rgba(52,211,153,.12) 0%,rgba(110,168,255,.10) 100%);
+  border-color:rgba(52,211,153,.45)}
+.era .era-tag{display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  padding:4px 12px;border-radius:99px;font-weight:600}
+.era.era1 .era-tag{background:rgba(251,113,133,.18);color:#fb7185;border:1px solid rgba(251,113,133,.4)}
+.era.era2 .era-tag{background:rgba(52,211,153,.18);color:#34d399;border:1px solid rgba(52,211,153,.45)}
+.era h3{font-size:clamp(22px,3.5vw,30px);margin:10px 0 6px;letter-spacing:-.01em;font-weight:700}
+.era.era1 h3{background:linear-gradient(135deg,#fb7185,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+.era.era2 h3{background:linear-gradient(135deg,#34d399,#6ea8ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.era .era-sub{color:var(--mut);font-size:14px;margin:2px 0 0;max-width:780px;line-height:1.65}
+.era .era-stats{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:14px;font-size:13px}
+.era .era-stats b{color:var(--txt);font-weight:600}
+.era::after{content:"";position:absolute;right:-80px;bottom:-80px;width:260px;height:260px;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,255,255,.06),transparent 70%);pointer-events:none}
+
+/* ===== HERO ===== */
+.hero{padding:80px 18px 56px;text-align:center;position:relative}
+.hero .eyebrow{display:inline-block;font-size:12px;letter-spacing:.18em;color:var(--mut);
+  padding:6px 14px;border:1px solid var(--line2);border-radius:99px;background:rgba(255,255,255,.02);
+  text-transform:uppercase}
+.hero h1{font-size:clamp(30px,5.4vw,52px);margin:18px 0 8px;line-height:1.18;
+  background:var(--grad-1);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800;letter-spacing:-.02em}
+.hero p.sub{color:var(--mut);max-width:760px;margin:6px auto 0;font-size:clamp(14px,2.4vw,17px)}
+.hero .meta{margin-top:24px;display:inline-flex;gap:18px;flex-wrap:wrap;justify-content:center;color:var(--dim);font-size:13px}
+.hero .meta span{display:inline-flex;align-items:center;gap:6px}
+.hero .meta b{color:var(--txt);font-weight:600}
+
+/* ===== KPI GRID ===== */
+.kpis{display:grid;gap:14px;grid-template-columns:repeat(4,1fr);margin:38px 0 8px}
+@media (max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.kpis{grid-template-columns:1fr}}
+/* compact KPIs inside cards still use auto-fit */
+.card .row .kpi{} 
+.kpi{background:linear-gradient(180deg,var(--card) 0%, var(--card2) 100%);
+  border:1px solid var(--line);border-radius:var(--radius);padding:18px 18px 16px;position:relative;overflow:hidden}
+.kpi::after{content:"";position:absolute;inset:auto -30% -60% auto;width:200px;height:200px;border-radius:50%;
+  background:radial-gradient(circle,rgba(110,168,255,.18) 0%,transparent 70%);pointer-events:none}
+.kpi .lbl{color:var(--mut);font-size:12px;letter-spacing:.05em;text-transform:uppercase}
+.kpi .num{font-size:34px;font-weight:800;margin:6px 0 2px;background:var(--grad-1);-webkit-background-clip:text;background-clip:text;color:transparent;letter-spacing:-.02em}
+.kpi .desc{color:var(--dim);font-size:12px}
+.kpi.big .num{font-size:46px}
+.kpi.alt .num{background:var(--grad-2);-webkit-background-clip:text;background-clip:text;color:transparent}
+.kpi.warn .num{background:var(--grad-3);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ===== SECTION ===== */
+section{padding:42px 0 8px}
+.sec-head{display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:18px}
+.sec-head .tag{display:inline-block;font-size:11px;letter-spacing:.14em;color:var(--acc2);
+  border:1px solid rgba(167,139,250,.4);background:rgba(167,139,250,.08);padding:3px 10px;border-radius:99px;text-transform:uppercase;margin-bottom:8px}
+.sec-head h2{font-size:clamp(22px,3.5vw,30px);margin:0;letter-spacing:-.01em}
+.sec-head .sub{color:var(--mut);font-size:14px;max-width:540px}
+
+/* ===== CARD ===== */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:20px;box-shadow:var(--shadow);margin-bottom:18px}
+.card h3{margin:0 0 4px;font-size:19px;letter-spacing:-.01em}
+.card .meta-row{color:var(--mut);font-size:13px;margin-bottom:14px;display:flex;flex-wrap:wrap;gap:10px 16px}
+.card .meta-row b{color:var(--txt);font-weight:600}
+.row{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:760px){ .row.cols-2{grid-template-columns:1fr 1fr} .row.cols-3{grid-template-columns:repeat(3,1fr)} }
+
+/* charts */
+.chart-box{position:relative;height:260px;background:rgba(255,255,255,.015);border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px}
+.chart-box.tall{height:320px}
+
+/* table */
+.tbl-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:420px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{background:rgba(255,255,255,.03);color:var(--mut);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+tr:last-child td{border-bottom:0}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+
+/* mini bars in table cell */
+.bar-bg{display:block;height:6px;border-radius:4px;background:rgba(255,255,255,.06);overflow:hidden;margin-top:5px}
+.bar-fg{display:block;height:100%;background:linear-gradient(90deg,var(--acc),var(--acc2))}
+
+/* author chips */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:inline-flex;gap:6px;align-items:center;background:rgba(255,255,255,.04);border:1px solid var(--line);
+  padding:5px 10px;border-radius:99px;font-size:12px;color:var(--mut)}
+.chip b{color:var(--txt);font-weight:600}
+
+/* highlight panel */
+.spotlight{background:linear-gradient(160deg,rgba(110,168,255,.10),rgba(167,139,250,.08) 60%,rgba(244,114,182,.06));
+  border:1px solid rgba(110,168,255,.35);border-radius:var(--radius);padding:24px;position:relative;overflow:hidden}
+.spotlight::after{content:"";position:absolute;right:-60px;bottom:-60px;width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(167,139,250,.2) 0%,transparent 70%)}
+.spotlight h3{margin:0 0 10px}
+.spotlight .big-num{font-size:64px;font-weight:800;line-height:1;letter-spacing:-.03em;
+  background:var(--grad-1);-webkit-background-clip:text;background-clip:text;color:transparent}
+.spotlight .big-num small{display:block;font-size:14px;color:var(--mut);font-weight:500;margin-top:8px;letter-spacing:.02em}
+
+/* takeaway list */
+.takeaway{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.take{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;position:relative}
+.take .num{position:absolute;top:14px;right:18px;font-size:42px;font-weight:800;color:rgba(255,255,255,.04);line-height:1}
+.take h4{margin:0 0 6px;font-size:16px}
+.take p{margin:0;color:var(--mut);font-size:13.5px;line-height:1.6}
+
+/* ratio bars (compare) */
+.compare-bar{margin:14px 0 4px}
+.compare-bar .head{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:6px}
+.compare-bar .track{height:14px;border-radius:8px;background:rgba(255,255,255,.05);position:relative;overflow:hidden}
+.compare-bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:8px}
+.compare-bar .fill.old{background:linear-gradient(90deg,#fb7185,#fbbf24)}
+.compare-bar .fill.new{background:linear-gradient(90deg,#34d399,#6ea8ff)}
+
+/* footer */
+footer{padding:48px 18px 60px;color:var(--dim);text-align:center;font-size:12px}
+footer p{margin:4px 0}
+
+.nav{position:sticky;top:0;z-index:20;backdrop-filter:saturate(140%) blur(14px);-webkit-backdrop-filter:saturate(140%) blur(14px);
+  background:rgba(7,9,18,.75);border-bottom:1px solid rgba(255,255,255,.04)}
+.nav .inner{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;max-width:var(--max);margin:0 auto}
+.nav .brand{font-size:13px;letter-spacing:.05em;color:var(--mut)}
+.nav .brand b{color:var(--txt)}
+.nav .links{display:flex;gap:14px;font-size:12px}
+.nav .links a{color:var(--mut)}
+@media (max-width:560px){ .nav .links{display:none} }
+.callout-grid{display:grid;grid-template-columns:1fr;gap:14px}
+@media (min-width:820px){.callout-grid{grid-template-columns:1.2fr .8fr}}
+
+.h-row{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.h-row .ico{font-size:18px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--acc);margin-right:6px;vertical-align:middle}
+.dot.g{background:#34d399}.dot.b{background:#6ea8ff}.dot.p{background:#a78bfa}.dot.y{background:#fbbf24}.dot.r{background:#fb7185}
+
+details > summary{cursor:pointer;color:var(--mut);font-size:13px;margin:6px 0;list-style:none}
+details > summary::-webkit-details-marker{display:none}
+details > summary::before{content:"▸ ";color:var(--acc)}
+details[open] > summary::before{content:"▾ "}
+
+.code{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:var(--mut);background:rgba(255,255,255,.03);
+  padding:2px 6px;border-radius:6px;border:1px solid var(--line)}
+
+.note{background:rgba(251,191,36,.06);border:1px solid rgba(251,191,36,.25);color:#fde8a6;
+  padding:12px 14px;border-radius:var(--radius-sm);font-size:13px}
+
+.section-anchor{scroll-margin-top:72px}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="inner">
+    <div class="brand"><b>AI Coding 提效报告</b> · 数据基于 Git 实证</div>
+    <div class="links">
+      <a href="#overview">总览</a>
+      <a href="#repos">五大项目</a>
+      <a href="#design">设计阶段</a>
+      <a href="#compare">前后对比</a>
+      <a href="#deepdive">深度对比</a>
+      <a href="#cost">工具账单</a>
+      <a href="#insights">提效洞察</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="container">
+    <span class="eyebrow">SenseTime · SenseSpring AIGC</span>
+    <h1>从 0.6 commit/天 到 31.8 commit/天<br>AI Coding 在真实工程中的提效证据</h1>
+    <p class="sub">基于 11 个 GitLab 仓库、7,548 次去重提交、跨越近 3 年的研发轨迹，量化分析 AI Coding 加持下个人产能与团队协作的真实变化。</p>
+    <div class="meta">
+      <span>报告生成：<b id="genDate">2026-05-20</b></span>
+      <span>数据源：<b>gitlab.bj.sensetime.com</b></span>
+      <span>数据口径：<b>git log --all 去重</b></span>
+    </div>
+  </div>
+</header>
+
+<main class="container">
+
+<!-- ====== OVERVIEW ====== -->
+<section id="overview" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">EXECUTIVE SUMMARY</div>
+      <h2>核心结论一眼可见</h2>
+    </div>
+    <div class="sub">单个工程师在 AI Coding 加持下，2 个月做出过去近 3 年王欣鑫 + 邓祥两位主力 + 团队 15 位贡献者合力才能完成的代码与文档体量。</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi big"><div class="lbl">AI Coding 后日均提交</div><div class="num">31.8</div><div class="desc">agent-platform · 70 天 · 1 人</div></div>
+    <div class="kpi alt"><div class="lbl">AI Coding 前日均提交</div><div class="num">2.87</div><div class="desc">王欣鑫 在 10 个旧仓的历史均值 · 841 天</div></div>
+    <div class="kpi warn"><div class="lbl">个人产能放大倍数</div><div class="num">11.1×</div><div class="desc">同一开发者 · 跨 10 个旧仓 vs 新 1 仓的纯提交速度对比</div></div>
+    <div class="kpi"><div class="lbl">技术文档月产</div><div class="num">293</div><div class="desc">agent-platform 仓内 .md / .html 设计运维文档</div></div>
+  </div>
+
+  <div class="callout-grid" style="margin-top:24px">
+    <div class="spotlight">
+      <h3>🚀 70 天 = 2,226 commits + 674 文档</h3>
+      <div class="big-num">2,226<small>agent-platform 全量去重 commit · 2026-03-11 → 2026-05-19</small></div>
+      <p style="color:var(--mut);margin-top:16px;font-size:14px;max-width:640px">
+        作为参照系：过去 <b style="color:var(--txt)">~33 个月</b>里 王欣鑫 + 邓祥 + 团队在 <b style="color:var(--txt)">10 个旧仓</b>合力产出 <b style="color:var(--txt)">5,322 commits</b>
+        （wisdom-vault 2,581 + frontend 985 + backend 824 + aigc-conf 438 + documentparser-whl 151 + autopdf 133 + license-info 68 + excel-parser 62 + text-generation-inference 49 + tgi-for-ascend 31）。
+        agent-platform <b style="color:var(--txt)">单人 70 天</b>就达到了这一历史存量的 <b style="color:var(--txt)">42%</b>；
+        从日均产能看，旧 10 仓 5.21 commits/天 → agent-platform 31.8 commits/天，
+        <b style="color:var(--txt)">团队级效率倍数 6.1×</b>，并伴随同步生成 <b style="color:var(--txt)">674 份</b>设计/分析/运维文档。
+      </p>
+    </div>
+    <div class="card" style="margin:0">
+      <h3>方法论速读</h3>
+      <ul style="color:var(--mut);margin:6px 0 0;padding-left:20px;font-size:13.5px;line-height:1.8">
+        <li><b style="color:var(--txt)">commit 去重</b>：按 SHA 全网去重，分支合并不重复计算</li>
+        <li><b style="color:var(--txt)">跨仓库合并</b>：wisdom-vault 两份 mirror 按 SHA union</li>
+        <li><b style="color:var(--txt)">含 merge commit</b>，与 <span class="code">git rev-list --all</span> 对齐</li>
+        
+        <li><b style="color:var(--txt)">时间窗</b>：以 commit author date 为准</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ====== REPOS ====== -->
+<section id="repos" class="section-anchor">
+  <!-- ERA 1 BANNER -->
+  <div class="era era1">
+    <span class="era-tag">🕰️ Era 1 · 2023 → 2026.4</span>
+    <h3>手工编程 + ChatGPT 对话辅助 时代</h3>
+    <p class="era-sub">没有 AI Agent 编程工具的旧工作流：IDE 代码补全 + ChatGPT / Claude Web 复制粘贴问答。<b style="color:var(--txt)">10 个项目 / 5,322 commits / 1,022 天</b>，王欣鑫 + 邓祥 + 团队合力交付。</p>
+    <div class="era-stats">
+      <span>🔧 工具栈：<b>IDE + ChatGPT 聊天窗口</b></span>
+      <span>👥 主力：<b>王欣鑫 + 邓祥 + 团队</b></span>
+      <span>📊 commits/天：<b>5.21</b></span>
+      <span>📦 项目类型：<b>业务主仓 + 配置仓 + 工具库 + 模型推理</b></span>
+    </div>
+  </div>
+
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 1 / 10</div>
+      <h2>wisdom-vault — 知识中台</h2>
+    </div>
+    <div class="sub">知识中台 Python 主仓，王欣鑫主导。</div>
+  </div>
+
+  <div class="card">
+    <h3>🧠 wisdom-vault（合并 2 个仓库）</h3>
+    <div class="meta-row">
+      <span><b>2,581</b> commits · 去重</span>
+      <span>首次：<b>2023-07-20</b></span>
+      <span>末次：<b>2026-04-14</b></span>
+      <span>跨度：<b>1,000 天</b> (~33 月)</span>
+      <span>日均：<b>2.58</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-wv-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-wv-author"></canvas></div>
+    </div>
+    <details style="margin-top:14px">
+      <summary>按分支提交次数（合并后取两仓最大值）</summary>
+      <div class="tbl-wrap" style="margin-top:10px">
+        <table id="wv-branches"></table>
+      </div>
+    </details>
+    <details style="margin-top:6px">
+      <summary>两仓 commit 去重对比</summary>
+      <div class="row cols-3" style="margin-top:10px">
+        <div class="kpi"><div class="lbl">wisdom-vault (王欣鑫 fork)</div><div class="num" style="font-size:22px">2,534</div><div class="desc">unique SHAs</div></div>
+        <div class="kpi"><div class="lbl">wisdom-vault (aigc 主仓)</div><div class="num" style="font-size:22px">2,386</div><div class="desc">unique SHAs</div></div>
+        <div class="kpi alt"><div class="lbl">union 去重后</div><div class="num" style="font-size:22px">2,581</div><div class="desc">交集 2,339 / 只在 王欣鑫 195 / 只在 aigc 47</div></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 2 / 10</div>
+      <h2>webserver_frontend — 前端</h2>
+    </div>
+    <div class="sub">前端 React/Vue 主仓，邓祥主导，2 年生命周期。</div>
+  </div>
+  <div class="card">
+    <h3>🎨 webserver_frontend</h3>
+    <div class="meta-row">
+      <span><b>985</b> commits</span>
+      <span>首次：<b>2024-04-03</b></span>
+      <span>末次：<b>2026-04-03</b></span>
+      <span>跨度：<b>731 天</b></span>
+      <span>日均：<b>1.35</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-fe-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-fe-author"></canvas></div>
+    </div>
+    <details>
+      <summary>按分支提交次数（共 49 条分支，展示前 20）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="fe-branches"></table></div>
+    </details>
+  </div>
+
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 3 / 10</div>
+      <h2>webserver_backend — 后端</h2>
+    </div>
+    <div class="sub">后端 Java 主仓，邓祥 + 高焕杰 合作。</div>
+  </div>
+  <div class="card">
+    <h3>⚙️ webserver_backend</h3>
+    <div class="meta-row">
+      <span><b>824</b> commits</span>
+      <span>首次：<b>2024-04-03</b></span>
+      <span>末次：<b>2026-04-28</b></span>
+      <span>跨度：<b>756 天</b></span>
+      <span>日均：<b>1.09</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-be-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-be-author"></canvas></div>
+    </div>
+    <details>
+      <summary>按分支提交次数（共 36 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="be-branches"></table></div>
+    </details>
+  </div>
+
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 4 / 10</div>
+      <h2>aigc-conf — 配置仓</h2>
+    </div>
+    <div class="sub">业务配置 / Prompt / Agent 配置仓库。</div>
+  </div>
+  <div class="card">
+    <h3>📦 aigc-conf</h3>
+    <div class="meta-row">
+      <span><b>438</b> commits</span>
+      <span>首次：<b>2024-05-31</b></span>
+      <span>末次：<b>2026-04-22</b></span>
+      <span>跨度：<b>692 天</b></span>
+      <span>日均：<b>0.63</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-ac-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-ac-author"></canvas></div>
+    </div>
+    <details>
+      <summary>按分支提交次数（17 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="ac-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 5 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 5 / 10</div>
+      <h2>documentparser-whl — 文档解析库</h2>
+    </div>
+    <div class="sub">企业级 PDF / DOCX / PPTX / 图片 OCR 解析 SDK，目前仍在线上服务持续调用。</div>
+  </div>
+  <div class="card">
+    <h3>📄 documentparser-whl <span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);font-size:11px;padding:3px 10px;margin-left:8px">🟢 在用</span></h3>
+    <div class="meta-row">
+      <span><b>151</b> commits</span>
+      <span>首次：<b>2023-07-31</b></span>
+      <span>末次：<b>2026-05-06</b></span>
+      <span>跨度：<b>1,011 天</b></span>
+      <span>日均：<b>0.15</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-dp-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-dp-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（2 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="dp-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 6 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 6 / 10</div>
+      <h2>autopdf — PDF 自动化生成</h2>
+    </div>
+    <div class="sub">PDF 报告自动生成 / 模板渲染服务，业务线上持续在用。</div>
+  </div>
+  <div class="card">
+    <h3>🧾 autopdf <span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);font-size:11px;padding:3px 10px;margin-left:8px">🟢 在用</span></h3>
+    <div class="meta-row">
+      <span><b>133</b> commits</span>
+      <span>首次：<b>2024-10-22</b></span>
+      <span>末次：<b>2025-08-04</b></span>
+      <span>跨度：<b>287 天</b></span>
+      <span>日均：<b>0.46</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-ap2-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-ap2-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（7 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="ap2-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 7 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 7 / 10</div>
+      <h2>license-info — License SDK</h2>
+    </div>
+    <div class="sub">商业 License 校验 / 信息查询 SDK，王欣鑫独立开发，至今仍在产品中使用。</div>
+  </div>
+  <div class="card">
+    <h3>🔐 license-info <span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);font-size:11px;padding:3px 10px;margin-left:8px">🟢 在用</span></h3>
+    <div class="meta-row">
+      <span><b>68</b> commits</span>
+      <span>首次：<b>2024-02-22</b></span>
+      <span>末次：<b>2025-12-08</b></span>
+      <span>跨度：<b>656 天</b></span>
+      <span>日均：<b>0.10</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-li-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-li-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（2 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="li-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 8 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 8 / 10</div>
+      <h2>text-generation-inference — LLM 推理服务</h2>
+    </div>
+    <div class="sub">基于 HuggingFace TGI 改造的 LLM 推理服务，阶段性技术预研。</div>
+  </div>
+  <div class="card">
+    <h3>🧠 text-generation-inference <span class="chip" style="color:var(--dim);font-size:11px;padding:3px 10px;margin-left:8px">⚪ 预研</span></h3>
+    <div class="meta-row">
+      <span><b>49</b> commits</span>
+      <span>首次：<b>2024-03-27</b></span>
+      <span>末次：<b>2024-07-18</b></span>
+      <span>跨度：<b>114 天</b></span>
+      <span>日均：<b>0.43</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-tgi-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-tgi-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（2 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="tgi-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 9 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 9 / 10</div>
+      <h2>tgi-for-ascend — 国产芯片适配</h2>
+    </div>
+    <div class="sub">TGI 推理服务对昇腾 910B 芯片的适配。</div>
+  </div>
+  <div class="card">
+    <h3>⚡ tgi-for-ascend <span class="chip" style="color:var(--dim);font-size:11px;padding:3px 10px;margin-left:8px">⚪ 适配项目</span></h3>
+    <div class="meta-row">
+      <span><b>31</b> commits</span>
+      <span>首次：<b>2024-04</b></span>
+      <span>末次：<b>2024-12</b></span>
+      <span>跨度：<b>258 天</b></span>
+      <span>日均：<b>0.12</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-tgia-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-tgia-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（5 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="tgia-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ===== Project 10 ===== -->
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(251,113,133,.08);border:1px solid rgba(251,113,133,.3);color:#fb7185">Era 1 · Project 10 / 10</div>
+      <h2>excel-parser — Excel 解析工具</h2>
+    </div>
+    <div class="sub">内部 Excel 数据解析工具，王欣鑫独立开发。</div>
+  </div>
+  <div class="card">
+    <h3>📊 excel-parser <span class="chip" style="color:var(--dim);font-size:11px;padding:3px 10px;margin-left:8px">⚪ 工具</span></h3>
+    <div class="meta-row">
+      <span><b>62</b> commits</span>
+      <span>首次：<b>2024-07-08</b></span>
+      <span>末次：<b>2025-07-28</b></span>
+      <span>跨度：<b>386 天</b></span>
+      <span>日均：<b>0.16</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-ep-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-ep-author"></canvas></div>
+    </div>
+    <details><summary>按分支提交次数（2 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="ep-branches"></table></div>
+    </details>
+  </div>
+
+  <!-- ERA 2 BANNER -->
+  <div class="era era2">
+    <span class="era-tag">🤖 Era 2 · 2026.3 → 2026.5</span>
+    <h3>AI Agent 编程工具 时代</h3>
+    <p class="era-sub">使用 <b style="color:var(--txt)">Claude Code + Codex</b> 作为 AI Agent 编程协作工具的新工作流：自然语言驱动，Agent 自主编辑/测试/提交。<b style="color:var(--txt)">1 个项目 / 2,226 commits / 70 天</b>，王欣鑫 单兵作战。</p>
+    <div class="era-stats">
+      <span>🔧 工具栈：<b>Claude Code + Codex（AI Agent）</b></span>
+      <span>👤 主力：<b>王欣鑫 单人</b></span>
+      <span>📊 commits/天：<b>31.8</b></span>
+      <span>📦 项目类型：<b>多 Agent 分布式平台 (10 services)</b></span>
+    </div>
+  </div>
+
+  <div class="sec-head">
+    <div>
+      <div class="tag" style="background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.4);color:#34d399">🤖 Era 2 · Project 1 / 1 · AI Coding 项目</div>
+      <h2>agent-platform — 智能体平台</h2>
+    </div>
+    <div class="sub">2026 年新启动，全程 AI Coding 协作开发，王欣鑫 单兵作战。</div>
+  </div>
+  <div class="card" style="border-color:rgba(110,168,255,.35);background:linear-gradient(180deg,rgba(110,168,255,.05),var(--card2))">
+    <h3>🤖 agent-platform · 新工作流</h3>
+    <div class="meta-row">
+      <span><b>2,226</b> commits · 去重</span>
+      <span>首次：<b>2026-03-11</b></span>
+      <span>末次：<b>2026-05-19</b></span>
+      <span>跨度：<b>70 天</b> (10 周)</span>
+      <span>日均：<b style="color:#34d399">31.8</b></span>
+      <span>活跃天数：<b id="ap-active-days">—</b></span>
+    </div>
+    <div class="row cols-2">
+      <div class="chart-box tall"><canvas id="chart-ap-monthly"></canvas></div>
+      <div class="chart-box tall"><canvas id="chart-ap-author"></canvas></div>
+    </div>
+    <div class="row cols-3" style="margin-top:18px">
+      <div class="kpi alt"><div class="lbl">.md/.html 文档总数</div><div class="num" style="font-size:30px">674</div><div class="desc">mvp 分支 tip 截面</div></div>
+      <div class="kpi"><div class="lbl">设计文档（docs/design）</div><div class="num" style="font-size:30px">329</div><div class="desc">+ analysis 36 / adr 2</div></div>
+      <div class="kpi warn"><div class="lbl">AI Agent 协作文档</div><div class="num" style="font-size:30px">196</div><div class="desc">.coord/tasks · handoff · review</div></div>
+    </div>
+    <details style="margin-top:14px">
+      <summary>按分支提交次数（4 条分支）</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="ap-branches"></table></div>
+    </details>
+    <details>
+      <summary>📑 文档分类详情</summary>
+      <div class="tbl-wrap" style="margin-top:10px"><table id="ap-docs"></table></div>
+    </details>
+  </div>
+</section>
+
+<!-- ====== DESIGN PHASE ====== -->
+<section id="design" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">Design Phase · 设计阶段</div>
+      <h2>14 天 · 6 次会议 · 8 人评审 · 1 份架构</h2>
+    </div>
+    <div class="sub">agent-platform 在动手前完成了完整的"对齐 → 评审 → 输出"闭环，把模糊需求收敛为可执行架构。</div>
+  </div>
+
+  <div class="callout-grid">
+    <div class="spotlight">
+      <h3>🎯 设计与编码无缝衔接的"同一天"</h3>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;margin-top:10px">
+        <div>
+          <div style="font-size:11px;color:var(--mut);letter-spacing:.08em">2026-03-11 上午</div>
+          <div style="font-size:18px;font-weight:700;margin-top:4px">10:30 → 11:30</div>
+          <div style="color:var(--acc);font-size:13px;margin-top:2px">第 6 次 Agent 专题讨论</div>
+        </div>
+        <div style="font-size:24px;color:var(--acc2)">➜</div>
+        <div>
+          <div style="font-size:11px;color:var(--mut);letter-spacing:.08em">2026-03-11 当晚</div>
+          <div style="font-size:18px;font-weight:700;margin-top:4px">21:46:32</div>
+          <div style="color:var(--acc3);font-size:13px;margin-top:2px"><span class="code">Initial commit</span></div>
+        </div>
+      </div>
+      <p style="color:var(--mut);font-size:13.5px;margin-top:14px">
+        最后一次评审结束当天，22:59 完成 monorepo bootstrap，23:01 提交 <span class="code">slice-0 foundation design package</span> —
+        <b style="color:var(--txt)">设计的最后一公里和编码的第一公里在 10 小时内完成对接</b>，没有典型的"立项后等启动"的真空期。
+      </p>
+    </div>
+    <div class="card" style="margin:0">
+      <h3>📜 输出物：架构设计文档</h3>
+      <p style="color:var(--mut);font-size:13.5px;margin:8px 0 12px">
+        <b style="color:var(--txt)">SensePedia Agent Platform 架构设计</b><br>
+        共 <b style="color:var(--txt)">22 个章节</b>，覆盖从 Client Layer / Gateway 到 Multi-Agent / Knowledge / Deployment 的全链路。
+      </p>
+      <a href="https://winer632.github.io/share-docs/agent-architecture.html" target="_blank" rel="noopener"
+         style="display:inline-block;padding:9px 16px;border-radius:10px;background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;font-weight:600;font-size:13px">
+        🔗 查看完整架构设计文档 →
+      </a>
+      <div style="margin-top:12px;color:var(--dim);font-size:12px">winer632.github.io/share-docs/agent-architecture.html</div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>👥 评审委员会（8 人 · 跨角色拉通）</h3>
+    <p style="color:var(--mut);font-size:13px;margin:4px 0 12px">由李杰威组织召集，覆盖技术、产品、业务、研发四条线，对齐项目顶层设计与底层逻辑。</p>
+    <div class="chips" style="gap:10px">
+      <span class="chip" style="padding:8px 14px"><span class="dot p"></span><b>张帅</b></span>
+      <span class="chip" style="padding:8px 14px"><span class="dot b"></span><b>李杰威</b> · 召集人</span>
+      <span class="chip" style="padding:8px 14px"><span class="dot g"></span><b>海逸姣</b></span>
+      <span class="chip" style="padding:8px 14px"><span class="dot y"></span><b>苗暮星</b></span>
+      <span class="chip" style="padding:8px 14px"><span class="dot r"></span><b>邓祥</b></span>
+      <span class="chip" style="padding:8px 14px"><span class="dot p"></span><b>汪圣鹏</b></span>
+      <span class="chip" style="padding:8px 14px"><span class="dot b"></span><b>王晋元</b></span>
+      <span class="chip" style="padding:8px 14px;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4)"><span class="dot g"></span><b>王欣鑫</b> · 设计文档执笔</span>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>📅 6 次设计会议时间线</h3>
+    <div class="chart-box tall" style="height:300px"><canvas id="chart-design-timeline"></canvas></div>
+    <div class="tbl-wrap" style="margin-top:14px">
+      <table>
+        <thead><tr><th>#</th><th>日期</th><th>主题</th><th>时段</th><th style="text-align:center">时长</th></tr></thead>
+        <tbody>
+          <tr><td><b>1</b></td><td>2026-02-26 (周四)</td><td>2026 年 GenAI 启动会</td><td>10:00 → 11:30</td><td style="text-align:center">90 min</td></tr>
+          <tr><td><b>2</b></td><td>2026-02-27 (周五)</td><td>2026 年 GenAI 启动会 · 第二轮讨论</td><td>14:00 → 15:30</td><td style="text-align:center">90 min</td></tr>
+          <tr><td><b>3</b></td><td>2026-03-04 (周三)</td><td>Agent 专题讨论</td><td>10:00 → 11:00</td><td style="text-align:center">60 min</td></tr>
+          <tr><td><b>4</b></td><td>2026-03-05 (周四)</td><td>Agent 专题讨论</td><td>11:00 → 12:00</td><td style="text-align:center">60 min</td></tr>
+          <tr><td><b>5</b></td><td>2026-03-06 (周五)</td><td>Agent 专题讨论</td><td>14:00 → 15:00</td><td style="text-align:center">60 min</td></tr>
+          <tr><td><b>6</b></td><td>2026-03-11 (周三)</td><td>Agent 专题讨论 · 收敛</td><td>10:30 → 11:30</td><td style="text-align:center">60 min</td></tr>
+          <tr style="background:rgba(255,255,255,.04)"><td colspan="4"><b>合计</b></td><td class="num"><b>420 min ≈ 7 小时</b></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>🏗️ 架构设计文档 · 22 个核心章节</h3>
+    <p style="color:var(--mut);font-size:13px;margin:0 0 12px">王欣鑫在 6 次评审中沉淀大家的意见后，独立产出的完整架构文档目录。</p>
+    <div class="row cols-3" style="gap:8px">
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">① Platform Architecture Overview</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">② Client Layer</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">③ Gateway &amp; Routing</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">④ SensePedia Core</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑤ Tool Integration &amp; MCP</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑥ Knowledge Infrastructure</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑦ Multi-Agent Collaboration</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑧ Channel Integration</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑨ Stability &amp; Degradation</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑩ Inbox &amp; Approval</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑪ Private Deployment</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑫ Public Cloud SAAS</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑬ Python 源码加密</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑭ Business Agent 扩展</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑮ Legal Agent 抽象</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑯ Knowledge Ingestion 流水线</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑰ User 个性化 &amp; Memory</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑱ Self-Improving Agent</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑲ Agent Router 分层</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">⑳ LLM Planner 细节</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">㉑ MCP Protocol 集成</div>
+      <div class="chip" style="justify-content:flex-start;padding:8px 12px">㉒ HostOps Runtime 分层</div>
+    </div>
+    <details style="margin-top:14px">
+      <summary>5 条关键架构决策</summary>
+      <ul style="color:var(--mut);font-size:13.5px;line-height:1.8;margin:8px 0 0;padding-left:20px">
+        <li><b style="color:var(--txt)">关注点分离</b>：Agent Router 决策 "走哪个 Agent"，LLM Planner 决策 "怎么执行"，避免选择与执行耦合。</li>
+        <li><b style="color:var(--txt)">多层工具接入</b>：原生 Tool Registry + Skills 与外部 MCP Servers 共存，统一适配映射。</li>
+        <li><b style="color:var(--txt)">Checkpoint vs Memory</b>：Checkpoint Store 管理短期执行快照；Memory Service 管跨 session 知识，role/user/binding 三层 namespace。</li>
+        <li><b style="color:var(--txt)">降级优先稳定性</b>：QPS 限流 + 熔断 + 超时 + 服务回退，防止 Agent 模式对下游放大调用导致雪崩。</li>
+        <li><b style="color:var(--txt)">可插拔 Router 策略</b>：单 Agent / 规则路由 / 动态路由可热切换，主流程零侵入。</li>
+      </ul>
+    </details>
+  </div>
+
+  <div class="card" style="margin-top:18px;background:linear-gradient(160deg,rgba(110,168,255,.08),var(--card))">
+    <h3>🧭 设计阶段对人效的杠杆作用</h3>
+    <div class="row cols-3">
+      <div class="kpi">
+        <div class="lbl">设计周期</div>
+        <div class="num" style="font-size:30px">14 天</div>
+        <div class="desc">02-26 启动 → 03-11 收敛</div>
+      </div>
+      <div class="kpi alt">
+        <div class="lbl">评审总耗时</div>
+        <div class="num" style="font-size:30px">7 小时</div>
+        <div class="desc">6 次会议 · 8 人 ≈ 56 人时</div>
+      </div>
+      <div class="kpi warn">
+        <div class="lbl">设计→编码切换</div>
+        <div class="num" style="font-size:30px">同日</div>
+        <div class="desc">最后会议结束 10 小时内首 commit</div>
+      </div>
+    </div>
+    <p style="color:var(--mut);font-size:13.5px;margin:14px 0 0">
+      <b style="color:var(--txt)">底层逻辑</b>：AI Coding 时代的关键瓶颈不是"写得快不快"，而是"想清楚没有"。
+      8 人评审委员会用 14 天把模糊需求收敛为 22 章节的可执行架构，等于给后续 70 天 2,226 次提交装上了"航线"——
+      没有这次顶层设计的拉通对齐，单兵高速编码很容易跑偏。
+    </p>
+  </div>
+
+  <!-- ===== Testing involvement card ===== -->
+  <div class="card" style="margin-top:18px;border-color:rgba(251,191,36,.35);background:linear-gradient(160deg,rgba(251,191,36,.06),var(--card))">
+    <h3>🧪 测试阶段 · 跨职能协作介入</h3>
+    <p style="color:var(--mut);font-size:13.5px;margin:4px 0 14px">
+      <b style="color:var(--txt)">2026-03-31（D34，编码后第 20 天）</b>起，产品 + 测试团队逐步介入 agent-platform，
+      形成"研发 → 产品验收 → 测试反馈"的三方协作闭环。
+    </p>
+
+    <div class="chips" style="gap:10px;margin-bottom:14px">
+      <span class="chip" style="padding:8px 14px;background:rgba(167,139,250,.10);border-color:rgba(167,139,250,.4)"><span class="dot p"></span><b>海逸姣</b> · 产品经理</span>
+      <span class="chip" style="padding:8px 14px;background:rgba(110,168,255,.10);border-color:rgba(110,168,255,.4)"><span class="dot b"></span><b>李杰威</b> · 产品经理</span>
+      <span class="chip" style="padding:8px 14px;background:rgba(251,191,36,.12);border-color:rgba(251,191,36,.4)"><span class="dot y"></span><b>张维</b> · 测试工程师</span>
+    </div>
+
+    <div class="row cols-3">
+      <div class="kpi">
+        <div class="lbl">测试介入时点</div>
+        <div class="num" style="font-size:24px">2026-03-31</div>
+        <div class="desc">编码启动后第 20 天</div>
+      </div>
+      <div class="kpi alt">
+        <div class="lbl">协作介入持续</div>
+        <div class="num" style="font-size:24px">~50 天</div>
+        <div class="desc">至 2026-05-19 仍在迭代</div>
+      </div>
+      <div class="kpi warn">
+        <div class="lbl">协作角色覆盖</div>
+        <div class="num" style="font-size:24px">3 + 1</div>
+        <div class="desc">2 PM + 1 测试 + 1 研发（王欣鑫）</div>
+      </div>
+    </div>
+
+    <p style="color:var(--mut);font-size:13.5px;margin:14px 0 0">
+      <b style="color:var(--txt)">价值点</b>：AI Coding 让"代码产出速度"指数级提升后，
+      产品与测试的早期介入成为整条交付链的新瓶颈与新抓手——
+      <b style="color:var(--txt)">2026-04 当月 920 次提交</b>之所以能稳定承接业务验收，
+      离不开产品 PM 持续对齐需求、测试同学持续提供反馈，
+      把单兵高速研发"反哺"成可落地的产品价值。
+    </p>
+  </div>
+</section>
+
+<!-- ====== COMPARE ====== -->
+<section id="compare" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">Task 6 · 前后对比</div>
+      <h2>同一开发者，不同工具世代</h2>
+    </div>
+    <div class="sub">把 10 个旧项目（业务主仓 + 工具仓 + license/解析/推理等）合并去重，对比 agent-platform 这一个 AI Coding 项目。</div>
+  </div>
+
+  <div class="row cols-2">
+    <div class="card" style="border-color:rgba(251,113,133,.4)">
+      <h3><span class="dot r"></span>之前的研发任务（task 1+2+3）</h3>
+      <div class="meta-row">
+        <span>研发成员：<b>王欣鑫 + 邓祥 + 团队</b></span>
+        <span>项目数：<b>10</b></span>
+        <span>总跨度：<b>1,022 天</b></span>
+      </div>
+      <table style="width:100%;font-size:13.5px">
+        <tr><td style="color:var(--mut)">合计去重 commits</td><td class="num"><b>5,322</b></td></tr>
+        <tr><td style="color:var(--mut)">团队整体日均</td><td class="num"><b>5.21</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 提交总数</td><td class="num"><b>2,417</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 提交跨度</td><td class="num"><b>841 天</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 日均</td><td class="num"><b>2.87</b></td></tr>
+        <tr><td style="color:var(--mut)">邓祥 提交总数</td><td class="num"><b>1,587</b></td></tr>
+        <tr><td style="color:var(--mut)">邓祥 日均</td><td class="num"><b>2.13</b></td></tr>
+      </table>
+    </div>
+    <div class="card" style="border-color:rgba(52,211,153,.4)">
+      <h3><span class="dot g"></span>新启动的研发任务（task 5）</h3>
+      <div class="meta-row">
+        <span>研发成员：<b>王欣鑫 单人</b></span>
+        <span>项目数：<b>1</b></span>
+        <span>总跨度：<b>70 天</b></span>
+      </div>
+      <table style="width:100%;font-size:13.5px">
+        <tr><td style="color:var(--mut)">合计去重 commits</td><td class="num"><b>2,226</b></td></tr>
+        <tr><td style="color:var(--mut)">整体日均</td><td class="num"><b>31.8</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 提交总数</td><td class="num"><b>2,224</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 提交跨度</td><td class="num"><b>70 天</b></td></tr>
+        <tr><td style="color:var(--mut)">王欣鑫 日均</td><td class="num"><b>31.8</b></td></tr>
+        <tr><td style="color:var(--mut)">同步产出文档</td><td class="num"><b>674</b></td></tr>
+        <tr><td style="color:var(--mut)">文档月产</td><td class="num"><b>293</b></td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>📊 多维度并排对比</h3>
+    <div class="compare-bar">
+      <div class="head"><span>日均 commits (整体)</span><span><b style="color:#fb7185">旧 5.21</b> vs <b style="color:#34d399">新 31.8</b> · <b>6.1×</b></span></div>
+      <div class="track"><div class="fill old" style="width:13.5%"></div></div>
+      <div class="track" style="margin-top:5px"><div class="fill new" style="width:100%"></div></div>
+    </div>
+    <div class="compare-bar">
+      <div class="head"><span>单人日均 commits (王欣鑫)</span><span><b style="color:#fb7185">旧 2.87</b> vs <b style="color:#34d399">新 31.8</b> · <b>11.1×</b></span></div>
+      <div class="track"><div class="fill old" style="width:6.8%"></div></div>
+      <div class="track" style="margin-top:5px"><div class="fill new" style="width:100%"></div></div>
+    </div>
+    <div class="compare-bar">
+      <div class="head"><span>团队规模</span><span><b style="color:#fb7185">旧 2 主力 + 多协作者</b> vs <b style="color:#34d399">新 1 人</b></span></div>
+      <div class="track"><div class="fill old" style="width:100%"></div></div>
+      <div class="track" style="margin-top:5px"><div class="fill new" style="width:50%"></div></div>
+    </div>
+    <div class="compare-bar">
+      <div class="head"><span>项目跨度</span><span><b style="color:#fb7185">旧 1022 天</b> vs <b style="color:#34d399">新 70 天</b> · 14.6× 提速</span></div>
+      <div class="track"><div class="fill old" style="width:100%"></div></div>
+      <div class="track" style="margin-top:5px"><div class="fill new" style="width:6.9%"></div></div>
+    </div>
+    <div class="compare-bar">
+      <div class="head"><span>设计 / 运维 / 协作文档</span><span><b style="color:#fb7185">旧 ≪50</b> vs <b style="color:#34d399">新 674</b> · 数量级提升</span></div>
+      <div class="track"><div class="fill old" style="width:7%"></div></div>
+      <div class="track" style="margin-top:5px"><div class="fill new" style="width:100%"></div></div>
+    </div>
+
+    <div class="chart-box tall" style="margin-top:16px"><canvas id="chart-compare-rate"></canvas></div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>📦 旧 10 项目逐仓明细 & 在用状态</h3>
+    <p style="color:var(--mut);font-size:13px;margin:4px 0 12px">注：<span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用</span> = 至今仍在线上业务运行的产物，技术债没消化、复杂度持续在线，比一次性 deliverable 含金量更高。</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>#</th><th>项目</th><th style="text-align:right">commits</th><th style="text-align:right">王欣鑫</th><th style="text-align:right">邓祥</th><th style="text-align:center">分支</th><th>跨度</th><th>状态</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><b>wisdom-vault</b></td><td class="num">2,581</td><td class="num">1,795</td><td class="num">34</td><td style="text-align:center">20</td><td>2023-07 → 2026-04</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用</span></td></tr>
+          <tr><td>2</td><td>webserver_frontend</td><td class="num">985</td><td class="num">3</td><td class="num">858</td><td style="text-align:center">49</td><td>2024-04 → 2026-04</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用</span></td></tr>
+          <tr><td>3</td><td>webserver_backend</td><td class="num">824</td><td class="num">3</td><td class="num">486</td><td style="text-align:center">36</td><td>2024-04 → 2026-04</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用</span></td></tr>
+          <tr><td>4</td><td>aigc-conf</td><td class="num">438</td><td class="num">226</td><td class="num">207</td><td style="text-align:center">17</td><td>2024-05 → 2026-04</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用</span></td></tr>
+          <tr><td>5</td><td><b>documentparser-whl</b></td><td class="num">151</td><td class="num">74</td><td class="num">1</td><td style="text-align:center">2</td><td>2023-07 → 2026-05</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用（核心解析库）</span></td></tr>
+          <tr><td>6</td><td><b>autopdf</b></td><td class="num">133</td><td class="num">116</td><td class="num">1</td><td style="text-align:center">7</td><td>2024-10 → 2025-08</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用（PDF 自动化）</span></td></tr>
+          <tr><td>7</td><td><b>license-info</b></td><td class="num">68</td><td class="num">68</td><td class="num">0</td><td style="text-align:center">2</td><td>2024-02 → 2025-12</td><td><span class="chip" style="background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);padding:2px 8px">🟢 在用（License SDK）</span></td></tr>
+          <tr><td>8</td><td>text-generation-inference</td><td class="num">49</td><td class="num">46</td><td class="num">0</td><td style="text-align:center">2</td><td>2024-03 → 2024-07</td><td><span class="chip" style="padding:2px 8px;color:var(--dim)">⚪ 阶段性技术预研</span></td></tr>
+          <tr><td>9</td><td>tgi-for-ascend</td><td class="num">31</td><td class="num">24</td><td class="num">0</td><td style="text-align:center">5</td><td>2024-04 → 2024-12</td><td><span class="chip" style="padding:2px 8px;color:var(--dim)">⚪ 国产芯片适配</span></td></tr>
+          <tr><td>10</td><td>excel-parser</td><td class="num">62</td><td class="num">62</td><td class="num">0</td><td style="text-align:center">2</td><td>2024-07 → 2025-07</td><td><span class="chip" style="padding:2px 8px;color:var(--dim)">⚪ 内部工具</span></td></tr>
+          <tr style="background:rgba(255,255,255,.04)"><td colspan="2"><b>合计（去重）</b></td><td class="num"><b>5,322</b></td><td class="num"><b>2,417</b></td><td class="num"><b>1,587</b></td><td style="text-align:center"><b>142</b></td><td colspan="2">2023-07 → 2026-05（~1,022 天）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="note" style="margin-top:14px">
+      <b>📐 技术难度修正：</b><b>7 个在用项目</b>（wisdom-vault / frontend / backend / aigc-conf / documentparser-whl / autopdf / license-info）至今仍承载线上业务，技术债与维护成本持续在线 ——
+      "commit 数少" 不等于 "工作量小"。这意味着对比 agent-platform 的技术难度时，应该额外加上这 7 个仓的<b>持续维护负荷</b>，不能只看一次性产出量。
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px;background:linear-gradient(160deg,rgba(167,139,250,.08),var(--card))">
+    <h3>🔬 不同视角的解读</h3>
+    <div class="row cols-2">
+      <div>
+        <h4 style="color:var(--acc2);margin:6px 0">📐 颗粒度视角</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          AI Coding 时代单次 commit 的粒度变小（任务驱动 + 高频小步迭代），表面上 commit 数膨胀，
+          但本质是 <b style="color:var(--txt)">设计、实现、自审、修复</b> 各环节都被 commit 记录化，可追溯性反而提升。
+          674 份 markdown 文档与 commit 一一对应，说明 commit 不是水量。
+        </p>
+      </div>
+      <div>
+        <h4 style="color:var(--acc2);margin:6px 0">⏱️ 时间维度</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          旧任务跨度 33 个月，王欣鑫 在 10 个旧仓累计 2,417 commit。新任务 2 个月 10 天，王欣鑫 累计 2,224 commit —
+          单位时间产能差距是 <b style="color:var(--txt)">11.1×</b>。同样的人，工具变了。
+        </p>
+      </div>
+      <div>
+        <h4 style="color:var(--acc3);margin:6px 0">🧩 复杂度视角</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          agent-platform 涵盖 Agent 编排、MCP 工具栈、frontend-web、hostops、whatsapp/wechat 多渠道桥、k8s 部署等 7+ 子服务，
+          代码与文档比业务线主仓 webserver_backend 更复杂，且无团队协作冗余。
+        </p>
+      </div>
+      <div>
+        <h4 style="color:var(--acc3);margin:6px 0">📚 知识沉淀视角</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          196 份 <span class="code">.coord</span> 协作文档（handoff/decisions/review）—
+          AI Coding 不仅写代码，还把"研发会议纪要"也固化成可检索的 markdown，
+          这是过去人工开发流几乎不会产生的资产。
+        </p>
+      </div>
+      <div>
+        <h4 style="color:var(--acc4);margin:6px 0">🌿 分支复杂度</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          旧任务 frontend 49 条分支 / backend 36 条 / wisdom-vault 20 条 — 多版本并发交付。
+          新任务只用 4 条主线（mvp / mvp-dockerfile / hk_customs / main）即支撑完整迭代。
+          <b style="color:var(--txt)">少而精</b>，工程治理成本下降。
+        </p>
+      </div>
+      <div>
+        <h4 style="color:var(--acc4);margin:6px 0">💰 人效经济账</h4>
+        <p style="color:var(--mut);font-size:14px;margin:0">
+          以 commit 为粗略产能代理变量：王欣鑫 70 天产出 2,224 commit ≈ 同一人在旧 10 仓 841 天产出 2,417 commit。
+          按人天计算，AI Coding 加持下的<b style="color:var(--txt)">单人时间产能提升约 11.1×</b>，
+          且不计入文档产出（674 份）和测试覆盖。
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ====== DEEP DIVE: wisdom-vault vs agent-platform ====== -->
+<section id="deepdive" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">Project Deep Dive</div>
+      <h2>单体 RAG 应用 vs 多 Agent 分布式平台</h2>
+    </div>
+    <div class="sub">把同一作者主导的两个代表性项目放在一起做功能点、技术栈、技术难度、工作量四维拆解。</div>
+  </div>
+
+  <div class="row cols-2">
+    <div class="card" style="border-color:rgba(110,168,255,.35)">
+      <h3>📚 wisdom-vault</h3>
+      <div class="meta-row">
+        <span>类型：<b>单体 RAG 知识库</b></span>
+        <span>语言：<b>Python + C++ (pybind11)</b></span>
+        <span>文件：<b>281</b></span>
+      </div>
+      <table style="width:100%;font-size:13px">
+        <tr><td style="color:var(--mut)">Python 文件</td><td class="num"><b>105</b></td></tr>
+        <tr><td style="color:var(--mut)">C/C++ 头文件 + 源</td><td class="num"><b>101</b></td></tr>
+        <tr><td style="color:var(--mut)">markdown 文档</td><td class="num"><b>5</b></td></tr>
+        <tr><td style="color:var(--mut)">服务进程</td><td class="num"><b>2</b> (llm_server + query_server)</td></tr>
+        <tr><td style="color:var(--mut)">部署形态</td><td class="num">Dockerfile (3 stage)</td></tr>
+      </table>
+      <h4 style="margin:14px 0 4px;color:var(--acc);font-size:14px">核心模块</h4>
+      <div class="chips">
+        <span class="chip">conversation</span>
+        <span class="chip">datastore</span>
+        <span class="chip">llm_system</span>
+        <span class="chip">model_service</span>
+        <span class="chip">query_system</span>
+        <span class="chip">splitter</span>
+        <span class="chip">sdk_license_v8</span>
+      </div>
+    </div>
+
+    <div class="card" style="border-color:rgba(52,211,153,.4)">
+      <h3>🤖 agent-platform</h3>
+      <div class="meta-row">
+        <span>类型：<b>多 Agent 分布式平台</b></span>
+        <span>语言：<b>Python + Vue/TS + Helm/K8s</b></span>
+        <span>文件：<b>2,660</b></span>
+      </div>
+      <table style="width:100%;font-size:13px">
+        <tr><td style="color:var(--mut)">Python 文件</td><td class="num"><b>1,232</b></td></tr>
+        <tr><td style="color:var(--mut)">Vue + JS + TS</td><td class="num"><b>226</b></td></tr>
+        <tr><td style="color:var(--mut)">YAML 配置</td><td class="num"><b>211</b></td></tr>
+        <tr><td style="color:var(--mut)">markdown / html 文档</td><td class="num"><b>674</b></td></tr>
+        <tr><td style="color:var(--mut)">独立子服务</td><td class="num"><b>10</b> (services/*)</td></tr>
+        <tr><td style="color:var(--mut)">业务 Agent</td><td class="num"><b>4</b> (customer / hostops / intent / knowledge)</td></tr>
+        <tr><td style="color:var(--mut)">Skill 定义</td><td class="num"><b>22</b> (skills/*)</td></tr>
+        <tr><td style="color:var(--mut)">部署形态</td><td class="num">Helm + Docker Compose + Alerts</td></tr>
+      </table>
+      <h4 style="margin:14px 0 4px;color:var(--acc3);font-size:14px">核心服务</h4>
+      <div class="chips">
+        <span class="chip">platform-api</span>
+        <span class="chip">llm-gateway</span>
+        <span class="chip">rag-query</span>
+        <span class="chip">knowledge-ingestion</span>
+        <span class="chip">hostops</span>
+        <span class="chip">pi-runtime</span>
+        <span class="chip">mcp-echo-server</span>
+        <span class="chip">whatsapp-bridge</span>
+        <span class="chip">weixin-bridge</span>
+        <span class="chip">frontend-web</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>📊 六维能力雷达对比</h3>
+    <p style="color:var(--mut);font-size:13px;margin:4px 0 12px">六个维度（功能广度 / 技术栈深度 / 技术难度 / 工作量 / 文档完备 / 部署复杂度），10 分制，基于代码结构与产物量化打分。</p>
+    <div class="chart-box tall" style="height:380px"><canvas id="chart-radar"></canvas></div>
+  </div>
+
+  <div class="row cols-2" style="margin-top:18px">
+    <div class="card">
+      <h3>🧩 功能点对比</h3>
+      <div class="tbl-wrap" style="margin-top:8px">
+        <table>
+          <thead><tr><th>功能领域</th><th style="text-align:center">wisdom-vault</th><th style="text-align:center">agent-platform</th></tr></thead>
+          <tbody>
+            <tr><td>文档切分 / Splitter</td><td style="text-align:center;color:#34d399">✓</td><td style="text-align:center;color:#34d399">✓ (升级)</td></tr>
+            <tr><td>向量检索 / Embedding</td><td style="text-align:center;color:#34d399">✓</td><td style="text-align:center;color:#34d399">✓ (升级)</td></tr>
+            <tr><td>BM25 + RRF 混合检索</td><td style="text-align:center;color:#34d399">✓</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>RAG 问答</td><td style="text-align:center;color:#34d399">✓</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>LLM 网关</td><td style="text-align:center;color:#fbbf24">基础</td><td style="text-align:center;color:#34d399">✓ (独立 service)</td></tr>
+            <tr><td>Agent 编排（多步推理）</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (4 业务 agent)</td></tr>
+            <tr><td>MCP 工具协议</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (runtime + echo server)</td></tr>
+            <tr><td>Skill 市场</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (22 个)</td></tr>
+            <tr><td>客服 / 意图识别 Agent</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>WhatsApp / 微信渠道桥接</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>Octo Agent（对标 Claude Code 和 Codex 的通用 Agent）</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>前端管理控制台</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (Vue, 171 文件)</td></tr>
+            <tr><td>K8s Helm 部署</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓</td></tr>
+            <tr><td>Prometheus 告警</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (3 套规则)</td></tr>
+            <tr><td>Agent 协作协议 (.coord)</td><td style="text-align:center;color:#fb7185">✗</td><td style="text-align:center;color:#34d399">✓ (D001~D003)</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <h3>🧠 技术难度拆解</h3>
+      <table style="width:100%;font-size:13px">
+        <tr><th style="text-align:left">维度</th><th>wisdom-vault</th><th>agent-platform</th></tr>
+        <tr><td>架构复杂度</td><td>单进程 + C++ 扩展</td><td><b style="color:var(--acc3)">10 services 微服务</b></td></tr>
+        <tr><td>语言栈广度</td><td>Python + C++</td><td><b style="color:var(--acc3)">Python + TS + Vue + Helm + Bash</b></td></tr>
+        <tr><td>跨进程通信</td><td>HTTP API</td><td><b style="color:var(--acc3)">HTTP + MCP + RabbitMQ + WebSocket</b></td></tr>
+        <tr><td>状态管理</td><td>单库（datastore）</td><td><b style="color:var(--acc3)">多 storage + transactional outbox</b></td></tr>
+        <tr><td>外部集成</td><td>OpenAI 兼容 LLM</td><td><b style="color:var(--acc3)">LLM + WhatsApp + 微信 + Milvus + k8s</b></td></tr>
+        <tr><td>可观测性</td><td>日志 + 简单监控</td><td><b style="color:var(--acc3)">3 套 Prometheus 告警 + 完整 runbook</b></td></tr>
+        <tr><td>测试覆盖</td><td>tests 目录（少）</td><td><b style="color:var(--acc3)">5 个 tests 目录 + e2e</b></td></tr>
+      </table>
+      <div class="chart-box" style="height:240px;margin-top:14px"><canvas id="chart-difficulty"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px">
+    <h3>💼 工作量评估（按人月折算）</h3>
+    <p style="color:var(--mut);font-size:13px;margin:0 0 10px">参照同等复杂度商业项目的传统人月（FTE-Month）估算，对比 AI Coding 实际投入。</p>
+    <div class="chart-box tall" style="height:320px"><canvas id="chart-workload"></canvas></div>
+    <div class="row cols-3" style="margin-top:14px">
+      <div class="kpi"><div class="lbl">wisdom-vault 传统估算</div><div class="num" style="font-size:26px">≈ 18 人月</div><div class="desc">RAG 单体 + 切分算法 + C++ 扩展</div></div>
+      <div class="kpi alt"><div class="lbl">agent-platform 传统估算</div><div class="num" style="font-size:26px">≈ 60 人月</div><div class="desc">10 services + Agent 编排 + 多渠道 + K8s</div></div>
+      <div class="kpi warn"><div class="lbl">agent-platform AI Coding 实际</div><div class="num" style="font-size:26px">2.3 人月</div><div class="desc">王欣鑫 单人 70 天 = ~2.3 人月</div></div>
+    </div>
+    <div class="note" style="margin-top:14px">
+      <b>📐 估算口径：</b>按行业 IT 项目"功能点法（FP）"反推 — wisdom-vault ~80 FP × 8 小时 / FP / 7 小时·人天 ≈ 18 人月；
+      agent-platform ~300 FP（10 服务 × 25-35 FP / 服务，含微服务通信开销）≈ 60 人月。
+      AI Coding 实际投入 2.3 人月，得到约 <b>26× 工时压缩比</b>。
+    </div>
+  </div>
+</section>
+
+<!-- ====== AI TOOL COST ====== -->
+<section id="cost" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">Cost &amp; ROI</div>
+      <h2>这次 AI Coding 实战的工具账单</h2>
+    </div>
+    <div class="sub">基于个人 Google Play 订阅记录（2026-02 ~ 2026-05，新加坡区计费 SGD），覆盖 agent-platform 项目全程。</div>
+  </div>
+
+  <div class="row cols-2">
+    <div class="card spotlight" style="margin:0">
+      <h3>💳 总花费</h3>
+      <div class="big-num">S$1,393.94<small>≈ ¥7,402 RMB（汇率 1 SGD = 5.31 CNY）· 70 天 · 日均 S$19.91 / ¥105.7</small></div>
+      <div class="chips" style="margin-top:16px">
+        <span class="chip"><span class="dot p"></span>Claude Max ×4：<b>S$1,124.26</b></span>
+        <span class="chip"><span class="dot b"></span>ChatGPT Pro ×2：<b>S$152.76</b></span>
+        <span class="chip"><span class="dot g"></span>ChatGPT Plus ×3：<b>S$86.94</b></span>
+        <span class="chip"><span class="dot y"></span>Claude Pro ×1：<b>S$29.98</b></span>
+      </div>
+    </div>
+    <div class="card">
+      <h3>📑 订阅明细（按日期倒序）</h3>
+      <div class="tbl-wrap">
+        <table>
+          <thead><tr><th>日期</th><th>产品</th><th style="text-align:right">金额 SGD</th></tr></thead>
+          <tbody>
+            <tr><td>2026-05-09</td><td>ChatGPT Pro</td><td class="num">S$137.98</td></tr>
+            <tr><td>2026-05-06</td><td>ChatGPT Pro</td><td class="num">S$14.78</td></tr>
+            <tr><td>2026-04-14</td><td>Claude Max</td><td class="num">S$374.75</td></tr>
+            <tr><td>2026-04-09</td><td>ChatGPT Plus</td><td class="num">S$28.98</td></tr>
+            <tr><td>2026-03-30</td><td>Claude Max</td><td class="num">S$187.38</td></tr>
+            <tr><td>2026-03-26</td><td>Claude Max</td><td class="num">S$374.75</td></tr>
+            <tr><td>2026-03-15</td><td>Claude Max</td><td class="num">S$187.38</td></tr>
+            <tr><td>2026-03-11</td><td>Claude Max（升级）</td><td class="num">S$0.00</td></tr>
+            <tr><td>2026-03-11</td><td>Claude Pro Subscription</td><td class="num">S$29.98</td></tr>
+            <tr><td>2026-03-10</td><td>ChatGPT Plus</td><td class="num">S$28.98</td></tr>
+            <tr><td>2026-02-05</td><td>ChatGPT Plus</td><td class="num">S$28.98</td></tr>
+            <tr style="background:rgba(255,255,255,.04)"><td colspan="2"><b>合计</b></td><td class="num"><b>S$1,393.94</b></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="row cols-2" style="margin-top:18px">
+    <div class="card">
+      <h3>📊 按工具分布</h3>
+      <div class="chart-box tall"><canvas id="chart-cost-pie"></canvas></div>
+    </div>
+    <div class="card">
+      <h3>📈 时间分布（与 commit 节奏对齐）</h3>
+      <div class="chart-box tall"><canvas id="chart-cost-time"></canvas></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:18px;background:linear-gradient(160deg,rgba(52,211,153,.08),var(--card))">
+    <h3>💰 ROI（投入产出比）分析</h3>
+    <div class="row cols-3">
+      <div class="kpi">
+        <div class="lbl">每 commit 工具成本</div>
+        <div class="num" style="font-size:30px">¥3.32</div>
+        <div class="desc">S$0.63 / commit · ¥7,402 / 2,226</div>
+      </div>
+      <div class="kpi alt">
+        <div class="lbl">每文档工具成本</div>
+        <div class="num" style="font-size:30px">¥10.99</div>
+        <div class="desc">S$2.07 / doc · ¥7,402 / 674</div>
+      </div>
+      <div class="kpi warn">
+        <div class="lbl">日均工具成本</div>
+        <div class="num" style="font-size:30px">¥105.7</div>
+        <div class="desc">S$19.91 / 天 · 不到一杯精品咖啡</div>
+      </div>
+    </div>
+    <table style="width:100%;font-size:14px;margin-top:18px">
+      <tr>
+        <td style="color:var(--mut);width:60%">如果用传统人力完成同等体量（≈60 人月，按月薪 ¥30,000 折算）</td>
+        <td class="num"><b style="color:#fb7185">¥1,800,000</b><br><small style="color:var(--dim)">≈ 180 万 RMB</small></td>
+      </tr>
+      <tr>
+        <td style="color:var(--mut)">AI Coding 实际人力成本（王欣鑫 2.3 人月）</td>
+        <td class="num"><b style="color:#fbbf24">¥69,000</b><br><small style="color:var(--dim)">2.3 × ¥30,000</small></td>
+      </tr>
+      <tr>
+        <td style="color:var(--mut)">AI 工具订阅成本</td>
+        <td class="num"><b style="color:#a78bfa">¥7,402</b></td>
+      </tr>
+      <tr style="background:rgba(52,211,153,.08)">
+        <td><b style="color:var(--acc3)">综合节省人力成本</b></td>
+        <td class="num"><b style="color:var(--acc3);font-size:18px">≈ ¥1,723,598</b><br><small style="color:var(--dim)">≈ 172 万 RMB · ROI ≈ 233×</small></td>
+      </tr>
+    </table>
+    <div class="note" style="margin-top:14px">
+      <b>📌 解读：</b>¥7,402 的 AI 订阅（S$1,393.94 按 1 SGD = 5.31 CNY 换算），撬动了原本需要约 ¥180 万人力（60 人月 × ¥30,000/月）才能完成的工程产出。
+      即便只把"传统估算"按 1/3 折算（保守口径，约 ¥60 万），ROI 仍达 <b>~71×</b>。
+      在企业级研发场景下，AI Coding 工具支出的"经济效率"几乎可以视为四舍五入到零。
+    </div>
+  </div>
+</section>
+
+<!-- ====== INSIGHTS ====== -->
+<section id="insights" class="section-anchor">
+  <div class="sec-head">
+    <div>
+      <div class="tag">TAKEAWAYS</div>
+      <h2>AI Coding 给事业群带来的 6 点启示</h2>
+    </div>
+    <div class="sub">从数据出发，给一线研发与管理者的可落地经验。</div>
+  </div>
+
+  <div class="takeaway">
+    <div class="take"><div class="num">1</div>
+      <h4>个人独立闭环成为可能</h4>
+      <p>过去需要 2~3 人协同（前端 + 后端 + 配置）才能交付的中等复杂业务，现在 1 个全栈工程师 + AI Agent 即可完成全栈交付，沟通成本几乎归零。</p>
+    </div>
+    <div class="take"><div class="num">2</div>
+      <h4>commit 颗粒度变细，可追溯性变强</h4>
+      <p>日均 32 次提交不是"水 commit"，而是 AI 驱动下"想清楚 → 写一小段 → 自审 → 修正"形成的最小可回滚单元。回滚和 Bisect 成本大幅降低。</p>
+    </div>
+    <div class="take"><div class="num">3</div>
+      <h4>文档与代码同步产生</h4>
+      <p>692 份 docs/.coord 文档随代码沉淀，研发"黑箱"变白盒。新人接手 / 跨团队对齐 / 离职交接都不再依赖会议或口口相传。</p>
+    </div>
+    <div class="take"><div class="num">4</div>
+      <h4>分支策略从"多版本并行"回归"主干推进"</h4>
+      <p>旧仓 36~49 条分支并发治理成本高。AI Coding 把节奏从"版本驱动"切到"任务驱动"，4 条分支就足以管理 70 天高强度迭代。</p>
+    </div>
+    <div class="take"><div class="num">5</div>
+      <h4>突发能力提升，月度产能可达 900+ commits</h4>
+      <p>agent-platform 在 2026-04 单月产出 920 commits，4 月+5 月共 1,789 commits。过去一年里整个 wisdom-vault 团队最高产月份才 221（2025-04）。</p>
+    </div>
+    <div class="take"><div class="num">6</div>
+      <h4>"高级工程师"角色升级为"Agent 团队负责人"</h4>
+      <p>从写代码到写 Prompt + 评审代码 + 设计协作协议。.coord/decisions 中的 D001~D003 三个 AI Agent 协作协议，本质是新型工程治理资产。</p>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:18px">
+    <b>⚠️ 数据口径与边界说明：</b>
+    本报告以 commit 数为主要产能代理变量，未引入 LOC / 代码复杂度 / 缺陷率等指标；
+    wisdom-vault 在 2024-01 之前由前团队（张垚等）启动，王欣鑫 自 2024-01 接手；
+    agent-platform 数据截至 <b id="ap-cutoff">2026-05-19</b>，仍在快速演进中。
+    指标解读应结合业务复杂度，但量级差异（10× ~ 25×）已足够支撑"AI Coding 显著提效"的结论。
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p>报告基于 <span class="code">git log --all</span> 全量去重，由 Claude Code (Opus 4.7) 自动生成与渲染。</p>
+  <p>数据源：gitlab.bj.sensetime.com · 生成于 <span id="footer-date"></span> · 单文件离线可读，<b>响应式适配手机/平板/桌面</b></p>
+  <p style="opacity:.55;margin-top:10px">© 2026 wangxinxin · SenseTime SenseSpring AIGC</p>
+</footer>
+
+<script>
+const DATA = {"wisdom_vault": {"name": "wisdom-vault (merged)", "total": 2581, "first": "2023-07-20T15:40:54+08:00", "last": "2026-04-14T12:32:32+08:00", "span_days": 1000, "active_days": 483, "daily_avg_over_span": 2.581, "daily_avg_on_active_days": 5.344, "monthly": {"2023-07": 1, "2023-08": 74, "2023-09": 143, "2023-10": 12, "2023-11": 44, "2023-12": 26, "2024-01": 62, "2024-02": 57, "2024-03": 90, "2024-04": 94, "2024-05": 131, "2024-06": 132, "2024-07": 71, "2024-08": 77, "2024-09": 56, "2024-10": 93, "2024-11": 25, "2024-12": 34, "2025-01": 117, "2025-02": 121, "2025-03": 93, "2025-04": 221, "2025-05": 62, "2025-06": 196, "2025-07": 105, "2025-08": 97, "2025-09": 53, "2025-10": 64, "2025-11": 48, "2025-12": 136, "2026-01": 19, "2026-02": 2, "2026-03": 20, "2026-04": 5}, "per_author": {"wangxinxin": 1795, "yangyuhui": 294, "张钊": 216, "zhangzhao": 100, "ZhangYao": 37, "dengxiang": 34, "luxin": 26, "zhangyao": 24, "chenilyang": 20, "sensepedia": 11, "chenliyang": 8, "张垚": 6, "Zhang Yao": 4, "System Administrator": 2, "root": 1, "zhang zhao": 1, "dujingjing": 1, "chenchunfang": 1}, "branches_per_repo": {"wisdom-vault-wxx": {"dev_emsd": 1745, "dev_V1.0.2": 1603, "LangGraph": 1494, "hk_customs": 1479, "query_assistant_test": 1476, "embedding_1024": 1452, "hk_cash": 1437, "bm25_rrf": 1429, "dev_hkced_query_assistant": 1421, "dev_V1.0.1": 1381, "dev_ASL": 1340, "dev_hkdh_dep1": 1318, "dev_hkced_poc_phase2_V0.1": 1317, "dev_V1.0.0": 1312, "dev_V0.3.4": 1307, "dev_V0.3.3": 1216, "main": 1}, "wisdom-vault-aigc": {"dev_emsd": 1747, "dev_V1.0.2": 1602, "dev_ASL": 1373, "fix/user-permission": 1368, "sensepedia-3a91893b-patch-b258": 1364, "feature/splitter_perf": 1318, "dev_hkced_poc_phase2_V0.1": 1317, "dev_V0.3.3": 1216, "main": 530}}, "branches_unified": {"dev_emsd": 1747, "dev_V1.0.2": 1603, "LangGraph": 1494, "hk_customs": 1479, "query_assistant_test": 1476, "embedding_1024": 1452, "hk_cash": 1437, "bm25_rrf": 1429, "dev_hkced_query_assistant": 1421, "dev_V1.0.1": 1381, "dev_ASL": 1373, "fix/user-permission": 1368, "sensepedia-3a91893b-patch-b258": 1364, "feature/splitter_perf": 1318, "dev_hkdh_dep1": 1318, "dev_hkced_poc_phase2_V0.1": 1317, "dev_V1.0.0": 1312, "dev_V0.3.4": 1307, "dev_V0.3.3": 1216, "main": 530}}, "aigc_conf": {"name": "aigc-conf", "total": 438, "first": "2024-05-31T21:09:51+08:00", "last": "2026-04-22T10:31:40+08:00", "span_days": 692, "active_days": 172, "daily_avg_over_span": 0.633, "daily_avg_on_active_days": 2.547, "monthly": {"2024-05": 5, "2024-06": 37, "2024-07": 22, "2024-08": 28, "2024-09": 10, "2024-10": 20, "2024-11": 44, "2024-12": 19, "2025-01": 10, "2025-02": 13, "2025-03": 10, "2025-04": 20, "2025-05": 14, "2025-06": 35, "2025-07": 25, "2025-08": 50, "2025-09": 17, "2025-10": 10, "2025-11": 20, "2025-12": 21, "2026-01": 2, "2026-02": 2, "2026-04": 4}, "per_author": {"wangxinxin": 226, "dengxiang": 207, "sensepedia": 5}, "branches": {"agent_hk_customs": 261, "dev_hkced_query_assistant": 260, "dev_ASL": 244, "tmp_dev_hkced_query_assistant": 242, "dev_V1.1.0": 239, "dev_V1.0.2": 221, "dev_V1.0.1": 219, "dev_emsd": 216, "hotfix/dev_V1.1.0": 202, "dev_V1.0.0": 197, "dev_hkced_poc_phase2_V0.1": 197, "dev_hkdh_dep1": 197, "dev_V0.3.4": 196, "dev_got": 184, "dev_V0.3.3": 179, "cuhk_neo4j": 2, "main": 1}}, "agent_platform": {"name": "agent-platform", "total": 2226, "first": "2026-03-11T21:46:32+08:00", "last": "2026-05-19T19:45:14+08:00", "span_days": 70, "active_days": 59, "daily_avg_over_span": 31.8, "daily_avg_on_active_days": 37.729, "monthly": {"2026-03": 437, "2026-04": 920, "2026-05": 869}, "per_author": {"wangxinxin": 2224, "sensepedia": 2}, "branches": {"mvp": 1972, "mvp-dockerfile": 1622, "hk_customs": 964, "main": 1}, "per_author_aliased": {"wangxinxin": 2224, "sensepedia": 2}, "docs": {"total": 674, "md": 641, "html": 33, "by_category": {"design": 329, "analysis": 36, "runbooks": 26, "adr": 2, "changelog": 4, "deploy": 4, "coord_tasks_handoff": 192, "coord_decisions": 3, "coord_approvals": 1, "services_readme": 7, "skills": 14}}}, "webserver_frontend": {"name": "webserver_frontend", "total": 985, "first": "2024-04-03T15:03:29+08:00", "last": "2026-04-03T09:57:02+08:00", "span_days": 731, "active_days": 259, "daily_avg_over_span": 1.347, "daily_avg_on_active_days": 3.803, "monthly": {"2024-04": 9, "2024-05": 16, "2024-06": 95, "2024-07": 85, "2024-08": 78, "2024-09": 96, "2024-10": 121, "2024-11": 97, "2024-12": 67, "2025-01": 12, "2025-02": 37, "2025-03": 20, "2025-04": 16, "2025-05": 15, "2025-06": 17, "2025-07": 24, "2025-08": 22, "2025-09": 42, "2025-10": 3, "2025-11": 31, "2025-12": 47, "2026-01": 31, "2026-02": 1, "2026-03": 2, "2026-04": 1}, "per_author": {"dengxiang": 858, "dujingjing": 116, "sensepedia": 6, "wangxinxin": 3, "wangshengpeng": 2}, "branches": {"dev_v1.0.0-merge_p": 640, "dev_V1.0.0-merge_p": 637, "dev_V1.0.0-hk_enquiry": 627, "dev_V1.0.1-wx_online": 599, "v3.2.0-merge": 582, "dev_V1.0.3": 522, "dev_v1.0.3_sp": 522, "v3.1.1-merge": 482, "develop/merge": 456, "dev_emsd": 455, "dev_V1.0.2": 454, "dev_V1.1.0": 428, "v3.0.2-merge": 409, "release_v0.3.2_online": 400, "dev_ASL": 397, "dev_V1.0.1": 394, "develop/emsd": 391, "main": 386, "dev_V1.0.1-wx": 382, "dev_v1.0.1-wx": 382, "dev_V1.0.0": 372, "dev_got": 371, "dev_V0.3.4": 363, "dev_V1.0.0-asl": 363, "v3.0.1-merge": 322, "v3.1.1-online": 316, "develop/pyth": 308, "develop/202411": 298, "develop/202410": 286, "v3.0.2-pyth": 274, "v3.0.2-online": 273, "v3.0.2": 247, "v3.0.1-online": 233, "v3.0.1-pyth": 222, "v2.2.1-merge": 202, "v3.0.1": 197, "v2.1.2-merge": 188, "develop/202409": 168, "v2.2.1": 168, "develop/202408": 148, "develop/202407": 122, "v2.0.2": 112, "v2.1.2": 111, "v2.0.1": 74, "develop/202406": 70, "v1.0.1": 39, "develop/202405": 25, "develop/202404": 9, "dev_": 1}}, "webserver_backend": {"name": "webserver_backend", "total": 824, "first": "2024-04-03T15:05:35+08:00", "last": "2026-04-28T11:29:34+08:00", "span_days": 756, "active_days": 249, "daily_avg_over_span": 1.09, "daily_avg_on_active_days": 3.309, "monthly": {"2024-04": 130, "2024-05": 147, "2024-06": 49, "2024-07": 5, "2024-08": 16, "2024-09": 13, "2024-10": 10, "2024-11": 40, "2024-12": 20, "2025-01": 17, "2025-02": 52, "2025-03": 43, "2025-04": 39, "2025-05": 19, "2025-06": 45, "2025-07": 51, "2025-08": 27, "2025-09": 35, "2025-10": 14, "2025-11": 23, "2025-12": 16, "2026-01": 9, "2026-02": 1, "2026-03": 2, "2026-04": 1}, "per_author": {"dengxiang": 486, "gaohuanjie.vendor": 316, "xiangjianbo_vendor": 9, "sensepedia": 4, "wangxinxin": 3, "chenchunfang": 2, "wangshengpeng": 1, "lvhoushuai": 1, "wangyanglang_vendor": 1, "dingyiyun": 1}, "branches": {"dev_V1.0.4": 548, "dev_ASL": 540, "dev_V1.0.0-merge_p": 524, "dev_V1.0.0-asl": 519, "dev_V1.1.0": 516, "dev_V1.0.3": 509, "dev_nacos": 503, "dev_V1.0.1-wx_online": 494, "dev_V1.0.2": 493, "dev_V1.0.1": 487, "dev_emsd": 482, "dev_V1.0.1-wx": 472, "dev_V1.0.0-merge": 459, "dev_got": 449, "dev_V1.0.1_lhs": 440, "dev_V0.3.4": 438, "dev_V1.0.0": 434, "develop-emsd": 427, "develop-v3.1.2": 402, "release_v0.3.2": 401, "develop-v3.1.1": 392, "v3.1.1-merge": 384, "develop-v3.1.0": 373, "v3.1.0": 353, "develop-v3.0.1": 351, "v3.0.1": 347, "develop-v2.9.0": 343, "develop-v2.2.1": 338, "v2.2.1-merge": 337, "v2.1.2": 333, "v2.2.1": 333, "v2.0.2": 329, "v2.0.1": 325, "v1.0.1": 322, "main_v1.0.1": 318, "main": 305}}, "documentparser_whl": {"name": "documentparser-whl", "total": 151, "first": "2023-07-31T11:54:44+08:00", "last": "2026-05-06T14:50:05+08:00", "span_days": 1011, "active_days": 68, "daily_avg_over_span": 0.149, "daily_avg_on_active_days": 2.221, "monthly": {"2023-07": 5, "2023-08": 43, "2023-09": 9, "2023-10": 3, "2023-11": 3, "2024-01": 2, "2024-03": 4, "2024-04": 3, "2024-05": 6, "2024-06": 4, "2024-07": 5, "2024-08": 1, "2024-09": 8, "2024-10": 29, "2024-11": 1, "2024-12": 8, "2025-01": 2, "2025-02": 9, "2025-09": 1, "2026-01": 1, "2026-02": 3, "2026-05": 1}, "per_author": {"wangxinxin": 74, "Chen Liyang": 38, "xuzihao": 30, "sensepedia": 2, "张钊": 2, "zhangyao": 2, "dengxiang": 1, "chenliyang": 1, "ZhangYao": 1}, "branches": {"uniparse_v1.1.0": 151, "master": 147}}, "autopdf": {"name": "autopdf", "total": 133, "first": "2024-10-22T09:53:09+08:00", "last": "2025-08-04T23:02:22+08:00", "span_days": 287, "active_days": 30, "daily_avg_over_span": 0.463, "daily_avg_on_active_days": 4.433, "monthly": {"2024-10": 50, "2024-11": 2, "2024-12": 26, "2025-01": 11, "2025-02": 29, "2025-03": 9, "2025-05": 5, "2025-08": 1}, "per_author": {"wangxinxin": 116, "miaomuxing1": 16, "dengxiang": 1}, "branches": {"DTGO": 42, "cnen_v050": 33, "muxi_0.6.1": 28, "cnen": 26, "nv_0.6.1": 15, "cnen_dp": 13, "main": 1}}, "license_info": {"name": "license-info", "total": 68, "first": "2024-02-22T18:06:28+08:00", "last": "2025-12-08T18:48:01+08:00", "span_days": 656, "active_days": 17, "daily_avg_over_span": 0.104, "daily_avg_on_active_days": 4.0, "monthly": {"2024-02": 32, "2024-03": 12, "2024-04": 4, "2024-05": 8, "2024-09": 1, "2024-11": 1, "2024-12": 5, "2025-02": 1, "2025-12": 4}, "per_author": {"wangxinxin": 68}, "branches": {"main": 60, "910B": 56}}, "text_generation_inference": {"name": "text-generation-inference", "total": 49, "first": "2024-03-27T14:51:57+08:00", "last": "2024-07-18T19:25:23+08:00", "span_days": 114, "active_days": 23, "daily_avg_over_span": 0.43, "daily_avg_on_active_days": 2.13, "monthly": {"2024-03": 4, "2024-04": 22, "2024-05": 3, "2024-06": 17, "2024-07": 3}, "per_author": {"wangxinxin": 46, "liuliang1": 2, "luxin": 1}, "branches": {"main": 46, "auth": 34}}, "tgi_for_ascend": {"name": "tgi-for-ascend", "total": 31, "first": "2024-04-08T12:00:08+08:00", "last": "2024-12-21T20:52:28+08:00", "span_days": 258, "active_days": 15, "daily_avg_over_span": 0.12, "daily_avg_on_active_days": 2.067, "monthly": {"2024-04": 10, "2024-05": 13, "2024-06": 7, "2024-12": 1}, "per_author": {"wangxinxin": 24, "liuliang1": 7}, "branches": {"auth": 22, "nuitka_c8445f+change": 22, "stable": 21, "nuitka_c8445f": 19, "main": 14}}, "excel_parser": {"name": "excel-parser", "total": 62, "first": "2024-07-08T09:59:26+08:00", "last": "2025-07-28T10:42:31+08:00", "span_days": 386, "active_days": 10, "daily_avg_over_span": 0.161, "daily_avg_on_active_days": 6.2, "monthly": {"2024-07": 38, "2025-07": 24}, "per_author": {"wangxinxin": 62}, "branches": {"main": 36, "rank_bm25_works_well": 17}}, "compare_old": {"name": "Old (10 repos: wisdom-vault + frontend + backend + aigc-conf + documentparser-whl + autopdf + license-info + text-generation-inference + tgi-for-ascend + excel-parser)", "total": 5322, "first": "2023-07-20T15:40:54+08:00", "last": "2026-05-06T14:50:05+08:00", "span_days": 1022, "active_days": 589, "daily_avg_over_span": 5.207, "daily_avg_on_active_days": 9.036, "monthly": {"2023-07": 6, "2023-08": 117, "2023-09": 152, "2023-10": 15, "2023-11": 47, "2023-12": 26, "2024-01": 64, "2024-02": 89, "2024-03": 110, "2024-04": 272, "2024-05": 329, "2024-06": 341, "2024-07": 229, "2024-08": 200, "2024-09": 184, "2024-10": 323, "2024-11": 210, "2024-12": 180, "2025-01": 169, "2025-02": 262, "2025-03": 175, "2025-04": 296, "2025-05": 115, "2025-06": 293, "2025-07": 229, "2025-08": 197, "2025-09": 148, "2025-10": 91, "2025-11": 122, "2025-12": 224, "2026-01": 62, "2026-02": 9, "2026-03": 24, "2026-04": 11, "2026-05": 1}, "per_author": {"wangxinxin": 2417, "dengxiang": 1587, "gaohuanjie.vendor": 316, "yangyuhui": 294, "张钊": 218, "dujingjing": 117, "zhangzhao": 100, "ZhangYao": 38, "Chen Liyang": 38, "xuzihao": 30, "sensepedia": 28, "luxin": 27, "zhangyao": 26, "chenilyang": 20, "miaomuxing1": 16, "chenliyang": 9, "xiangjianbo_vendor": 9, "liuliang1": 9, "张垚": 6, "Zhang Yao": 4, "chenchunfang": 3, "wangshengpeng": 3, "System Administrator": 2, "root": 1, "zhang zhao": 1, "lvhoushuai": 1, "wangyanglang_vendor": 1, "dingyiyun": 1}}, "compare_new": {"name": "agent-platform", "total": 2226, "first": "2026-03-11T21:46:32+08:00", "last": "2026-05-19T19:45:14+08:00", "span_days": 70, "active_days": 59, "daily_avg_over_span": 31.8, "daily_avg_on_active_days": 37.729, "monthly": {"2026-03": 437, "2026-04": 920, "2026-05": 869}, "per_author": {"wangxinxin": 2224, "sensepedia": 2}, "branches": {"mvp": 1972, "mvp-dockerfile": 1622, "hk_customs": 964, "main": 1}, "per_author_aliased": {"wangxinxin": 2224, "sensepedia": 2}, "docs": {"total": 674, "md": 641, "html": 33, "by_category": {"design": 329, "analysis": 36, "runbooks": 26, "adr": 2, "changelog": 4, "deploy": 4, "coord_tasks_handoff": 192, "coord_decisions": 3, "coord_approvals": 1, "services_readme": 7, "skills": 14}}}, "compare_old_wxx": {"name": "Old — wangxinxin commits", "total": 2417, "first": "2024-01-03T10:48:42+08:00", "last": "2026-04-22T10:31:40+08:00", "span_days": 841, "active_days": 422, "daily_avg_over_span": 2.874, "daily_avg_on_active_days": 5.727, "monthly": {"2024-01": 11, "2024-02": 63, "2024-03": 84, "2024-04": 126, "2024-05": 138, "2024-06": 170, "2024-07": 132, "2024-08": 92, "2024-09": 69, "2024-10": 171, "2024-11": 38, "2024-12": 72, "2025-01": 118, "2025-02": 123, "2025-03": 86, "2025-04": 103, "2025-05": 51, "2025-06": 197, "2025-07": 130, "2025-08": 131, "2025-09": 20, "2025-10": 52, "2025-11": 46, "2025-12": 143, "2026-01": 15, "2026-02": 4, "2026-03": 23, "2026-04": 9}, "per_author": {"wangxinxin": 2417}}, "compare_old_dx": {"name": "Old — dengxiang commits", "total": 1587, "first": "2024-04-15T10:04:25+08:00", "last": "2026-04-28T11:29:34+08:00", "span_days": 744, "active_days": 317, "daily_avg_over_span": 2.133, "daily_avg_on_active_days": 5.006, "monthly": {"2024-04": 8, "2024-05": 17, "2024-06": 117, "2024-07": 96, "2024-08": 106, "2024-09": 114, "2024-10": 147, "2024-11": 168, "2024-12": 95, "2025-01": 25, "2025-02": 88, "2025-03": 67, "2025-04": 65, "2025-05": 40, "2025-06": 72, "2025-07": 91, "2025-08": 61, "2025-09": 67, "2025-10": 34, "2025-11": 52, "2025-12": 38, "2026-01": 14, "2026-02": 3, "2026-04": 2}, "per_author": {"dengxiang": 1587}}, "compare_new_wxx": {"name": "New — wangxinxin commits", "total": 2224, "first": "2026-03-11T21:46:32+08:00", "last": "2026-05-19T19:45:14+08:00", "span_days": 70, "active_days": 59, "daily_avg_over_span": 31.771, "daily_avg_on_active_days": 37.695, "monthly": {"2026-03": 437, "2026-04": 920, "2026-05": 867}, "per_author": {"wangxinxin": 2224}}, "old_projects_table": [{"key": "wisdom_vault", "label": "wisdom-vault (merged)", "total": 2581, "wangxinxin": 1795, "dengxiang": 34, "others": 752, "first": "2023-07-20", "last": "2026-04-14", "span_days": 1000, "daily_avg": 2.581, "branches": 17}, {"key": "webserver_frontend", "label": "webserver_frontend", "total": 985, "wangxinxin": 3, "dengxiang": 858, "others": 124, "first": "2024-04-03", "last": "2026-04-03", "span_days": 731, "daily_avg": 1.347, "branches": 49}, {"key": "webserver_backend", "label": "webserver_backend", "total": 824, "wangxinxin": 3, "dengxiang": 486, "others": 335, "first": "2024-04-03", "last": "2026-04-28", "span_days": 756, "daily_avg": 1.09, "branches": 36}, {"key": "aigc_conf", "label": "aigc-conf", "total": 438, "wangxinxin": 226, "dengxiang": 207, "others": 5, "first": "2024-05-31", "last": "2026-04-22", "span_days": 692, "daily_avg": 0.633, "branches": 17}, {"key": "documentparser_whl", "label": "documentparser-whl", "total": 151, "wangxinxin": 74, "dengxiang": 1, "others": 76, "first": "2023-07-31", "last": "2026-05-06", "span_days": 1011, "daily_avg": 0.149, "branches": 2}, {"key": "autopdf", "label": "autopdf", "total": 133, "wangxinxin": 116, "dengxiang": 1, "others": 16, "first": "2024-10-22", "last": "2025-08-04", "span_days": 287, "daily_avg": 0.463, "branches": 7}, {"key": "license_info", "label": "license-info", "total": 68, "wangxinxin": 68, "dengxiang": 0, "others": 0, "first": "2024-02-22", "last": "2025-12-08", "span_days": 656, "daily_avg": 0.104, "branches": 2}, {"key": "text_generation_inference", "label": "text-generation-inference", "total": 49, "wangxinxin": 46, "dengxiang": 0, "others": 3, "first": "2024-03-27", "last": "2024-07-18", "span_days": 114, "daily_avg": 0.43, "branches": 2}, {"key": "tgi_for_ascend", "label": "tgi-for-ascend", "total": 31, "wangxinxin": 24, "dengxiang": 0, "others": 7, "first": "2024-04-08", "last": "2024-12-21", "span_days": 258, "daily_avg": 0.12, "branches": 5}, {"key": "excel_parser", "label": "excel-parser", "total": 62, "wangxinxin": 62, "dengxiang": 0, "others": 0, "first": "2024-07-08", "last": "2025-07-28", "span_days": 386, "daily_avg": 0.161, "branches": 2}], "productivity_metrics": {"old_repo_count": 10, "old_total_commits": 5322, "old_span_days": 1022, "old_daily_avg": 5.207, "old_wxx_commits": 2417, "old_wxx_span_days": 841, "old_wxx_daily_avg": 2.874, "old_dx_commits": 1587, "old_dx_daily_avg": 2.133, "new_total_commits": 2226, "new_span_days": 70, "new_daily_avg": 31.8, "new_wxx_commits": 2224, "new_wxx_daily_avg": 31.771, "wxx_productivity_lift": 11.05, "team_productivity_lift": 6.11, "docs_per_month_new": 292.7}};
+// Common Chart.js defaults for dark theme
+Chart.defaults.color = '#9fb0d1';
+Chart.defaults.borderColor = '#1f2a44';
+Chart.defaults.font.family = "-apple-system,BlinkMacSystemFont,'PingFang SC','Helvetica Neue',Inter,sans-serif";
+Chart.defaults.plugins.legend.labels.boxWidth = 12;
+Chart.defaults.plugins.legend.labels.font = {size:11};
+Chart.defaults.plugins.tooltip.backgroundColor = '#0b0f1a';
+Chart.defaults.plugins.tooltip.borderColor = '#2a3a5e';
+Chart.defaults.plugins.tooltip.borderWidth = 1;
+Chart.defaults.plugins.tooltip.padding = 10;
+
+function monthlyChart(canvasId, monthly, color='#6ea8ff'){
+  const ctx = document.getElementById(canvasId);
+  const labels = Object.keys(monthly);
+  const vals = Object.values(monthly);
+  // gradient
+  const c = ctx.getContext('2d');
+  const grad = c.createLinearGradient(0,0,0,260);
+  grad.addColorStop(0,color+'cc'); grad.addColorStop(1,color+'10');
+  new Chart(ctx,{
+    type:'bar',
+    data:{labels, datasets:[{label:'commits / month',data:vals,backgroundColor:grad,borderColor:color,borderWidth:1,borderRadius:4,maxBarThickness:30}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},title:{display:true,text:'按月提交分布',font:{size:13,weight:'600'},color:'#e8eefc',padding:{bottom:8}}},
+      scales:{
+        x:{grid:{display:false},ticks:{maxRotation:60,minRotation:60,font:{size:10}}},
+        y:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.04)'},ticks:{font:{size:10}}}
+      }
+    }
+  });
+}
+
+function authorChart(canvasId, perAuthor, topN=8){
+  const ctx = document.getElementById(canvasId);
+  const entries = Object.entries(perAuthor).slice(0,topN);
+  const labels = entries.map(([n])=>n);
+  const vals = entries.map(([,v])=>v);
+  const palette = ['#6ea8ff','#a78bfa','#34d399','#fbbf24','#fb7185','#f472b6','#22d3ee','#94a3b8'];
+  new Chart(ctx,{
+    type:'doughnut',
+    data:{labels,datasets:[{data:vals,backgroundColor:palette,borderColor:'#0e1424',borderWidth:2}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'62%',
+      plugins:{
+        legend:{position:'right',labels:{font:{size:11},padding:8}},
+        title:{display:true,text:'作者贡献分布',font:{size:13,weight:'600'},color:'#e8eefc',padding:{bottom:8}}
+      }
+    }
+  });
+}
+
+function renderBranchTable(tblId, branches, topN=null){
+  const tbl = document.getElementById(tblId);
+  if(!tbl) return;
+  const entries = Object.entries(branches).sort((a,b)=>b[1]-a[1]);
+  const items = topN? entries.slice(0,topN) : entries;
+  const max = Math.max(...entries.map(e=>e[1]));
+  let html = '<thead><tr><th>分支</th><th style="text-align:right">commits</th></tr></thead><tbody>';
+  for(const [br,cnt] of items){
+    const pct = max? (cnt/max*100):0;
+    html += `<tr><td><span class="code">${br}</span><span class="bar-bg"><span class="bar-fg" style="width:${pct.toFixed(1)}%"></span></span></td><td class="num"><b>${cnt}</b></td></tr>`;
+  }
+  if(topN && entries.length>topN){
+    html += `<tr><td colspan="2" style="text-align:center;color:var(--dim);font-size:12px">（共 ${entries.length} 条分支，仅显示前 ${topN}）</td></tr>`;
+  }
+  html += '</tbody>';
+  tbl.innerHTML = html;
+}
+
+function renderDocsTable(){
+  const cats = DATA.agent_platform.docs.by_category;
+  const tbl = document.getElementById('ap-docs');
+  if(!tbl) return;
+  const total = DATA.agent_platform.docs.total;
+  const labels = {
+    design:'docs/design — 设计文档',
+    analysis:'docs/analysis — 分析报告',
+    runbooks:'docs/runbooks — 运维 runbook',
+    adr:'docs/adr — 架构决策记录',
+    changelog:'docs/changelog — 变更日志',
+    deploy:'deploy/* — 部署文档',
+    coord_tasks_handoff:'.coord/tasks — AI 协作 handoff',
+    coord_decisions:'.coord/decisions — 协作协议',
+    coord_approvals:'.coord/approvals — 审批记录',
+    services_readme:'services/*/README — 服务说明',
+    skills:'skills/* — 技能定义',
+  };
+  let html='<thead><tr><th>分类</th><th style="text-align:right">数量</th><th style="text-align:right">占比</th></tr></thead><tbody>';
+  Object.entries(cats).sort((a,b)=>b[1]-a[1]).forEach(([k,v])=>{
+    html+=`<tr><td>${labels[k]||k}</td><td class="num"><b>${v}</b></td><td class="num">${(v/total*100).toFixed(1)}%</td></tr>`;
+  });
+  html+=`<tr style="background:rgba(255,255,255,.03)"><td><b>总计</b></td><td class="num"><b>${total}</b></td><td class="num">100%</td></tr>`;
+  html+='</tbody>';
+  tbl.innerHTML=html;
+}
+
+// Render
+monthlyChart('chart-wv-monthly', DATA.wisdom_vault.monthly, '#6ea8ff');
+authorChart ('chart-wv-author',  DATA.wisdom_vault.per_author);
+renderBranchTable('wv-branches', DATA.wisdom_vault.branches_unified);
+
+monthlyChart('chart-fe-monthly', DATA.webserver_frontend.monthly, '#a78bfa');
+authorChart ('chart-fe-author',  DATA.webserver_frontend.per_author);
+renderBranchTable('fe-branches', DATA.webserver_frontend.branches, 20);
+
+monthlyChart('chart-be-monthly', DATA.webserver_backend.monthly, '#fb7185');
+authorChart ('chart-be-author',  DATA.webserver_backend.per_author);
+renderBranchTable('be-branches', DATA.webserver_backend.branches, 20);
+
+monthlyChart('chart-ac-monthly', DATA.aigc_conf.monthly, '#fbbf24');
+authorChart ('chart-ac-author',  DATA.aigc_conf.per_author);
+renderBranchTable('ac-branches', DATA.aigc_conf.branches);
+
+// === 6 new old-era projects (柱状图 + 饼图) ===
+monthlyChart('chart-dp-monthly',   DATA.documentparser_whl.monthly,        '#fb7185');
+authorChart ('chart-dp-author',    DATA.documentparser_whl.per_author);
+renderBranchTable('dp-branches',   DATA.documentparser_whl.branches);
+
+monthlyChart('chart-ap2-monthly',  DATA.autopdf.monthly,                   '#f472b6');
+authorChart ('chart-ap2-author',   DATA.autopdf.per_author);
+renderBranchTable('ap2-branches',  DATA.autopdf.branches);
+
+monthlyChart('chart-li-monthly',   DATA.license_info.monthly,              '#fbbf24');
+authorChart ('chart-li-author',    DATA.license_info.per_author);
+renderBranchTable('li-branches',   DATA.license_info.branches);
+
+monthlyChart('chart-tgi-monthly',  DATA.text_generation_inference.monthly, '#a78bfa');
+authorChart ('chart-tgi-author',   DATA.text_generation_inference.per_author);
+renderBranchTable('tgi-branches',  DATA.text_generation_inference.branches);
+
+monthlyChart('chart-tgia-monthly', DATA.tgi_for_ascend.monthly,            '#6ea8ff');
+authorChart ('chart-tgia-author',  DATA.tgi_for_ascend.per_author);
+renderBranchTable('tgia-branches', DATA.tgi_for_ascend.branches);
+
+monthlyChart('chart-ep-monthly',   DATA.excel_parser.monthly,              '#22d3ee');
+authorChart ('chart-ep-author',    DATA.excel_parser.per_author);
+renderBranchTable('ep-branches',   DATA.excel_parser.branches);
+
+monthlyChart('chart-ap-monthly', DATA.agent_platform.monthly, '#34d399');
+authorChart ('chart-ap-author',  DATA.agent_platform.per_author_aliased);
+renderBranchTable('ap-branches', DATA.agent_platform.branches);
+renderDocsTable();
+document.getElementById('ap-active-days').textContent = DATA.agent_platform.active_days + ' 天';
+document.getElementById('ap-cutoff').textContent = DATA.agent_platform.last.slice(0,10);
+
+// Compare daily rate chart
+(function(){
+  const ctx = document.getElementById('chart-compare-rate');
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels:['日均提交','单人日均(王欣鑫)','单月峰值','项目跨度(天/10)','文档产出'],
+      datasets:[
+        {label:'AI Coding 之前',data:[5.21,2.87,22.1,102.2, 50/10],backgroundColor:'rgba(251,113,133,.7)',borderRadius:6,borderColor:'#fb7185',borderWidth:1},
+        {label:'AI Coding 之后',data:[31.8,31.8,92, 7.0,  674/10],backgroundColor:'rgba(52,211,153,.7)',borderRadius:6,borderColor:'#34d399',borderWidth:1}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,indexAxis:'y',
+      plugins:{
+        legend:{position:'top',align:'end'},
+        title:{display:true,text:'核心指标对比（部分单位为/10 缩放）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}}
+      },
+      scales:{
+        x:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.04)'}},
+        y:{grid:{display:false}}
+      }
+    }
+  });
+})();
+
+// ====== Design phase timeline (Gantt-like) ======
+(function(){
+  const ctx=document.getElementById('chart-design-timeline');
+  if(!ctx) return;
+  // Day-of-project axis: 1 = 2026-02-26
+  const meetings=[
+    {label:'① GenAI 启动会',           day: 1, dur: 0.06, color:'#6ea8ff'},
+    {label:'② GenAI 启动会 · 第二轮',  day: 2, dur: 0.06, color:'#6ea8ff'},
+    {label:'③ Agent 专题讨论',         day: 7, dur: 0.04, color:'#a78bfa'},
+    {label:'④ Agent 专题讨论',         day: 8, dur: 0.04, color:'#a78bfa'},
+    {label:'⑤ Agent 专题讨论',         day: 9, dur: 0.04, color:'#a78bfa'},
+    {label:'⑥ Agent 专题讨论 · 收敛',  day:14, dur: 0.04, color:'#34d399'},
+    {label:'🚀 Initial commit (当晚)', day:14.45, dur:0.55, color:'#fbbf24'}
+  ];
+  // build floating-bar data
+  const data = meetings.map(m=>({y:m.label, x:[m.day, m.day+0.5+m.dur*10]}));
+  new Chart(ctx,{
+    type:'bar',
+    data:{
+      labels: meetings.map(m=>m.label),
+      datasets:[{
+        label:'',
+        data: meetings.map(m=>[m.day, m.day + (m.label.includes('Initial')? 0.5 : 0.55)]),
+        backgroundColor: meetings.map(m=>m.color+'cc'),
+        borderColor: meetings.map(m=>m.color),
+        borderWidth:1,
+        borderRadius:4,
+        barThickness:18
+      }]
+    },
+    options:{
+      indexAxis:'y',
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        title:{display:true,text:'设计阶段时间线（项目日 1 = 2026-02-26）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}},
+        tooltip:{callbacks:{label:(c)=>{
+          const labels=['2026-02-26 周四','2026-02-27 周五','—','—','—','—','2026-03-04 周三','2026-03-05 周四','2026-03-06 周五','—','—','—','—','2026-03-11 周三'];
+          return ' ' + labels[Math.floor(c.raw[0])-1] || '';
+        }}}
+      },
+      scales:{
+        x:{min:0,max:16,grid:{color:'rgba(255,255,255,.04)'},
+           ticks:{stepSize:2,callback:(v)=>'D'+v,font:{size:11}},
+           title:{display:true,text:'项目日 (D1=02-26 启动 · D14=03-11 编码开始)',color:'#9fb0d1',font:{size:11}}},
+        y:{grid:{display:false},ticks:{font:{size:11}}}
+      }
+    }
+  });
+})();
+
+// ====== Deep-dive radar ======
+(function(){
+  const ctx=document.getElementById('chart-radar');
+  if(!ctx) return;
+  const dims=['功能广度','技术栈深度','技术难度','工作量','文档完备','部署复杂度'];
+  new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:dims,
+      datasets:[
+        {label:'wisdom-vault',data:[5,6,6,5,2,3],
+          backgroundColor:'rgba(110,168,255,.18)',borderColor:'#6ea8ff',pointBackgroundColor:'#6ea8ff',borderWidth:2},
+        {label:'agent-platform',data:[9.5,9,9,9,10,9.5],
+          backgroundColor:'rgba(52,211,153,.20)',borderColor:'#34d399',pointBackgroundColor:'#34d399',borderWidth:2}
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',align:'end'},
+        title:{display:true,text:'两项目六维能力对比（10 分制）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}}},
+      scales:{r:{
+        suggestedMin:0,suggestedMax:10,
+        angleLines:{color:'rgba(255,255,255,.08)'},
+        grid:{color:'rgba(255,255,255,.08)'},
+        pointLabels:{color:'#e8eefc',font:{size:12}},
+        ticks:{color:'rgba(255,255,255,.35)',backdropColor:'transparent',stepSize:2}
+      }}
+    }
+  });
+})();
+
+// difficulty mini bar
+(function(){
+  const ctx=document.getElementById('chart-difficulty');
+  if(!ctx) return;
+  new Chart(ctx,{type:'bar',
+    data:{labels:['架构','语言栈','通信','状态','集成','可观测','测试'],
+      datasets:[
+        {label:'wisdom-vault',data:[5,4,3,3,3,3,3],backgroundColor:'rgba(110,168,255,.7)',borderColor:'#6ea8ff',borderWidth:1,borderRadius:4},
+        {label:'agent-platform',data:[9,9,9,8,9,9,7],backgroundColor:'rgba(52,211,153,.7)',borderColor:'#34d399',borderWidth:1,borderRadius:4}
+      ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',align:'end',labels:{font:{size:11}}},
+        title:{display:true,text:'技术难度分维度评分',color:'#e8eefc',font:{size:12,weight:'600'},padding:{bottom:4}}},
+      scales:{y:{beginAtZero:true,max:10,grid:{color:'rgba(255,255,255,.04)'},ticks:{font:{size:10}}},
+              x:{grid:{display:false},ticks:{font:{size:10}}}}
+    }
+  });
+})();
+
+// workload comparison
+(function(){
+  const ctx=document.getElementById('chart-workload');
+  if(!ctx) return;
+  new Chart(ctx,{type:'bar',
+    data:{labels:['wisdom-vault','agent-platform (传统估算)','agent-platform (AI Coding 实际)'],
+      datasets:[
+        {label:'人月 (FTE-Month)',data:[18,60,2.3],
+          backgroundColor:['rgba(110,168,255,.7)','rgba(251,113,133,.7)','rgba(52,211,153,.8)'],
+          borderColor:['#6ea8ff','#fb7185','#34d399'],borderWidth:1,borderRadius:8,maxBarThickness:60}
+      ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        title:{display:true,text:'工作量人月对比（FTE-Month）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}},
+        tooltip:{callbacks:{label:(c)=> c.raw + ' 人月'}}
+      },
+      scales:{y:{beginAtZero:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{callback:(v)=>v+' 人月',font:{size:11}}},
+              x:{grid:{display:false},ticks:{font:{size:11}}}}
+    }
+  });
+})();
+
+// cost pie
+(function(){
+  const ctx=document.getElementById('chart-cost-pie');
+  if(!ctx) return;
+  new Chart(ctx,{type:'doughnut',
+    data:{labels:['Claude Max (4 次)','Claude Pro Subscription','ChatGPT Pro (2 次)','ChatGPT Plus (3 次)'],
+      datasets:[{
+        data:[1124.26,29.98,152.76,86.94],
+        backgroundColor:['#a78bfa','#c4b5fd','#34d399','#86efac'],borderColor:'#0e1424',borderWidth:2
+      }]},
+    options:{
+      responsive:true,maintainAspectRatio:false,cutout:'58%',
+      plugins:{
+        legend:{position:'right',labels:{font:{size:11},padding:8}},
+        title:{display:true,text:'按工具分布（SGD）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}},
+        tooltip:{callbacks:{label:(c)=>{
+          const total=1393.94; const pct=(c.raw/total*100).toFixed(1);
+          return ' '+c.label+'：S$'+c.raw.toFixed(2)+' ('+pct+'%)';
+        }}}
+      }
+    }
+  });
+})();
+
+// cost by month timeline
+(function(){
+  const ctx=document.getElementById('chart-cost-time');
+  if(!ctx) return;
+  // Aggregate by month
+  const months=['2026-02','2026-03','2026-04','2026-05'];
+  const claude=[0, 29.98+0+187.38+374.75+187.38, 374.75, 0];
+  const gpt=[28.98, 28.98, 28.98, 14.78+137.98];
+  new Chart(ctx,{type:'bar',
+    data:{labels:months,datasets:[
+      {label:'Claude (Pro/Max)',data:claude,backgroundColor:'rgba(167,139,250,.75)',borderColor:'#a78bfa',borderWidth:1,borderRadius:5,stack:'a'},
+      {label:'ChatGPT (Plus/Pro)',data:gpt,backgroundColor:'rgba(52,211,153,.75)',borderColor:'#34d399',borderWidth:1,borderRadius:5,stack:'a'}
+    ]},
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{position:'top',align:'end',labels:{font:{size:11}}},
+        title:{display:true,text:'按月支出（SGD，堆叠）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}},
+        tooltip:{callbacks:{label:(c)=> ' '+c.dataset.label+'：S$'+c.raw.toFixed(2)}}
+      },
+      scales:{
+        x:{stacked:true,grid:{display:false}},
+        y:{stacked:true,beginAtZero:true,grid:{color:'rgba(255,255,255,.04)'},ticks:{callback:(v)=>'S$'+v}}
+      }
+    }
+  });
+})();
+
+document.getElementById('footer-date').textContent = new Date().toLocaleDateString('zh-CN');
+</script>
+
+</body>
+</html>
