@@ -255,7 +255,7 @@ h2.head{font-size:clamp(24px,4.2vw,42px);line-height:1.2;font-weight:800;letter-
 <section class="panel center" id="cover" data-label="封面">
   <div class="wrap">
     <div class="kicker reveal"><span class="d"></span>ABG AI-native 创享马拉松 · 2nd Session</div>
-    <h1 class="title reveal d1">用 <span class="grad">Claude Code</span> + <span class="grad2">Codex</span><br>把开发人效干到 <span class="grad3">11×</span></h1>
+    <h1 class="title reveal d1">用 <span class="grad">Claude Code</span> + <span class="grad2">Codex</span><br>把开发人效提升到 <span class="grad3">11×</span></h1>
     <div class="big2 reveal d2">
       <div class="b"><div class="n grad">11.2×</div><div class="l">个人产能放大</div></div>
       <div class="b"><div class="n grad2">6.2×</div><div class="l">团队级效率提升</div></div>
@@ -557,15 +557,15 @@ h2.head{font-size:clamp(24px,4.2vw,42px);line-height:1.2;font-weight:800;letter-
         <div class="bn">①</div>
         <div>
           <h3>复杂根因排查，AI 可能很慢 —— 需要人的直觉</h3>
-          <p>真实场景：Claude Code（Opus 4.7）以 <b class="hl">xhigh effort</b> 连续 thinking <b style="color:var(--acc4)">13 小时</b>，追查"子智能体的 write 为何没走到 guarded sink"这个深层 root cause，<b class="hl">仍未定位</b>。</p>
+          <p>真实场景：Claude Code（Opus 4.7）以 <b class="hl">xhigh effort</b> 连续 thinking <b style="color:var(--acc4)">13 小时</b>，追查「<b class="hl">子智能体调用错乱、子智能体写文件失败</b>」的深层 root cause，<b class="hl">仍未定位</b>。</p>
         </div>
       </div>
       <div class="term mt" style="margin-top:14px">
         <div class="tbar"><i class="t1"></i><i class="t2"></i><i class="t3"></i><span>· Continue server-side secret generation and deployment</span></div>
         <div class="body mono">
-          <span class="am">●</span> Agent(<span class="gr">Trace why sub-agent write misses guarded sink</span>)<br>
-          <span class="dim">&nbsp;&nbsp;↳ document_writer 只发了 1 次 tool call，pi-runtime 没有任何日志</span><br>
-          <span class="dim">&nbsp;&nbsp;↳ write_file 始终没走到 guarded sink …</span><br>
+          <span class="am">●</span> Agent(<span class="gr">Trace sub-agent routing chaos + file-write failure</span>)<br>
+          <span class="dim">&nbsp;&nbsp;↳ 子智能体调用错乱：document_writer 只发了 1 次 tool call</span><br>
+          <span class="dim">&nbsp;&nbsp;↳ 写文件失败：write_file 始终没走到 guarded sink，pi-runtime 无日志 …</span><br>
           <span class="yl">✻ Simmering…</span> <span class="dim">(xhigh effort · 深层 code+runtime 追踪)</span><br>
           <span class="goal">/goal active (13h)</span> &nbsp;<span class="rd">still no root cause</span>
         </div>
