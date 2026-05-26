@@ -837,22 +837,10 @@ details[open] > summary::before{content:"▾ "}
       <div class="track" style="margin-top:5px"><div class="fill new" style="width:100%"></div></div>
     </div>
     <div class="compare-bar">
-      <div class="head"><span>团队规模</span><span><b style="color:#fb7185">旧 2 主力 + 15协作者</b> vs <b style="color:#34d399">新 1 人</b></span></div>
-      <div class="track"><div class="fill old" style="width:100%"></div></div>
-      <div class="track" style="margin-top:5px"><div class="fill new" style="width:50%"></div></div>
-    </div>
-    <div class="compare-bar">
-      <div class="head"><span>项目跨度</span><span><b style="color:#fb7185">旧 1022 天</b> vs <b style="color:#34d399">新 76 天</b> · 13.4× 提速</span></div>
-      <div class="track"><div class="fill old" style="width:100%"></div></div>
-      <div class="track" style="margin-top:5px"><div class="fill new" style="width:6.9%"></div></div>
-    </div>
-    <div class="compare-bar">
       <div class="head"><span>设计 / 运维 / 协作文档</span><span><b style="color:#fb7185">旧 ≪50</b> vs <b style="color:#34d399">新 689</b> · 数量级提升</span></div>
       <div class="track"><div class="fill old" style="width:7%"></div></div>
       <div class="track" style="margin-top:5px"><div class="fill new" style="width:100%"></div></div>
     </div>
-
-    <div class="chart-box tall" style="margin-top:16px"><canvas id="chart-compare-rate"></canvas></div>
   </div>
 
   <div class="card" style="margin-top:18px">
@@ -1487,32 +1475,6 @@ renderBranchTable('ap-branches', DATA.agent_platform.branches);
 renderDocsTable();
 document.getElementById('ap-active-days').textContent = DATA.agent_platform.active_days + ' 天';
 document.getElementById('ap-cutoff').textContent = DATA.agent_platform.last.slice(0,10);
-
-// Compare daily rate chart
-(function(){
-  const ctx = document.getElementById('chart-compare-rate');
-  new Chart(ctx,{
-    type:'bar',
-    data:{
-      labels:['日均提交','单人日均(王欣鑫)','单月峰值','项目跨度(天/10)','文档产出'],
-      datasets:[
-        {label:'AI Coding 之前',data:[5.21,2.87,22.1,102.2, 50/10],backgroundColor:'rgba(251,113,133,.7)',borderRadius:6,borderColor:'#fb7185',borderWidth:1},
-        {label:'AI Coding 之后',data:[32.3,32.3,110, 7.6,  689/10],backgroundColor:'rgba(52,211,153,.7)',borderRadius:6,borderColor:'#34d399',borderWidth:1}
-      ]
-    },
-    options:{
-      responsive:true,maintainAspectRatio:false,indexAxis:'y',
-      plugins:{
-        legend:{position:'top',align:'end'},
-        title:{display:true,text:'核心指标对比（部分单位为/10 缩放）',color:'#e8eefc',font:{size:13,weight:'600'},padding:{bottom:8}}
-      },
-      scales:{
-        x:{beginAtZero:true,grid:{color:'rgba(255,255,255,0.04)'}},
-        y:{grid:{display:false}}
-      }
-    }
-  });
-})();
 
 // quarterly simultaneous headcount (Era1 vs Era2, along commit timeline)
 (function(){
