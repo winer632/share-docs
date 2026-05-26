@@ -967,21 +967,6 @@ details[open] > summary::before{content:"▾ "}
     <h3>🔬 不同视角的解读</h3>
     <div class="row cols-2">
       <div>
-        <h4 style="color:var(--acc2);margin:6px 0">📐 颗粒度视角</h4>
-        <p style="color:var(--mut);font-size:14px;margin:0">
-          AI Coding 时代单次 commit 的粒度变小（任务驱动 + 高频小步迭代），表面上 commit 数膨胀，
-          但本质是 <b style="color:var(--txt)">设计、实现、自审、修复</b> 各环节都被 commit 记录化，可追溯性反而提升。
-          689 份 markdown 文档与 commit 一一对应，说明 commit 不是水量。
-        </p>
-      </div>
-      <div>
-        <h4 style="color:var(--acc2);margin:6px 0">⏱️ 时间维度</h4>
-        <p style="color:var(--mut);font-size:14px;margin:0">
-          旧任务跨度 33 个月，王欣鑫 在 10 个旧仓累计 2,417 commit。新任务 2 个月 14 天，王欣鑫 累计 2,456 commit —
-          单位时间产能差距是 <b style="color:var(--txt)">11.2×</b>。同样的人，工具变了。
-        </p>
-      </div>
-      <div>
         <h4 style="color:var(--acc3);margin:6px 0">🧩 复杂度视角</h4>
         <p style="color:var(--mut);font-size:14px;margin:0">
           agent-platform 涵盖 Agent 编排、MCP 工具栈、frontend-web、hostops、whatsapp/wechat 多渠道桥、k8s 部署等 7+ 子服务，
@@ -994,22 +979,6 @@ details[open] > summary::before{content:"▾ "}
           202 份 <span class="code">.coord</span> 协作文档（handoff/decisions/review）—
           AI Coding 不仅写代码，还把"研发会议纪要"也固化成可检索的 markdown，
           这是过去人工开发流几乎不会产生的资产。
-        </p>
-      </div>
-      <div>
-        <h4 style="color:var(--acc4);margin:6px 0">🌿 分支复杂度</h4>
-        <p style="color:var(--mut);font-size:14px;margin:0">
-          旧任务 frontend 49 条分支 / backend 36 条 / wisdom-vault 20 条 — 多版本并发交付。
-          新任务只用 4 条主线（mvp / mvp-dockerfile / hk_customs / main）即支撑完整迭代。
-          <b style="color:var(--txt)">少而精</b>，工程治理成本下降。
-        </p>
-      </div>
-      <div>
-        <h4 style="color:var(--acc4);margin:6px 0">💰 人效经济账</h4>
-        <p style="color:var(--mut);font-size:14px;margin:0">
-          以 commit 为粗略产能代理变量：王欣鑫 76 天产出 2,456 commit ≈ 同一人在旧 10 仓 841 天产出 2,417 commit。
-          按人天计算，AI Coding 加持下的<b style="color:var(--txt)">单人时间产能提升约 11.2×</b>，
-          且不计入文档产出（689 份）和测试覆盖。
         </p>
       </div>
     </div>
