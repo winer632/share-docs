@@ -589,22 +589,24 @@ h2.head{font-size:clamp(24px,4.2vw,42px);line-height:1.2;font-weight:800;letter-
 <section class="panel" id="cost" data-label="成本 & ROI">
   <div class="wrap">
     <div class="kicker reveal"><span class="d"></span>Cost & ROI · 工具账单</div>
-    <h2 class="head reveal d1">76 天工具账单：<span class="grad3">¥7,402</span></h2>
-    <p class="lead reveal d2">基于个人订阅真实记录（2026-02 ~ 05，新加坡区 SGD），覆盖 agent-platform 全程。</p>
+    <h2 class="head reveal d1">76 天工具账单：<span class="grad3">¥15,077</span></h2>
+    <p class="lead reveal d2">个人订阅（2026-02 ~ 05，新加坡区 SGD）＋ 直连 API 按实际 token 计费（Azure GPT-5.4 / Cursor），覆盖 agent-platform 全程。</p>
     <div class="grid cols-2 mt2" style="align-items:stretch">
-      <div class="kpi big reveal d3"><div class="lbl">总花费 · 76 天</div><div class="num grad3">¥7,402</div><div class="desc">S$1,393.94 · 日均 ¥97.4</div></div>
+      <div class="kpi big reveal d3"><div class="lbl">总花费 · 76 天</div><div class="num grad3">¥15,077</div><div class="desc">订阅 ¥7,402 ＋ API 按量 ¥7,675 · 日均 ¥198.4</div></div>
       <div class="card reveal d3">
-        <h3 style="margin-bottom:10px">📑 订阅构成</h3>
+        <h3 style="margin-bottom:10px">📑 账单构成（订阅 + API 按量）</h3>
         <div class="chips">
           <span class="chip"><b>Claude Max ×4</b> · S$1,124</span>
           <span class="chip"><b>Claude Pro ×1</b> · S$30</span>
           <span class="chip"><b>ChatGPT Pro ×2</b> · S$153</span>
           <span class="chip"><b>ChatGPT Plus ×3</b> · S$87</span>
+          <span class="chip" style="border-color:var(--acc4)"><b>Azure GPT-5.4</b> · API token ¥7,200</span>
+          <span class="chip" style="border-color:var(--acc4)"><b>Cursor 公司订阅</b> · US$70 ≈ ¥475</span>
         </div>
       </div>
     </div>
     <div class="takeaway mt2 reveal d4" style="border-left-color:var(--acc4)">
-      传统估算 <b class="hl" style="color:var(--acc4)">≈ 60 人月</b>（10 services + Agent 编排 + 多渠道 + K8s）的工作量，AI Coding 实际投入 = <b class="hl" style="color:var(--acc4)">1 人 · 76 天 · ¥7,402 工具费</b>。ROI 不在一个量级。
+      传统估算 <b class="hl" style="color:var(--acc4)">≈ 60 人月</b>（10 services + Agent 编排 + 多渠道 + K8s）的工作量，AI Coding 实际投入 = <b class="hl" style="color:var(--acc4)">1 人 · 76 天 · ¥15,077（订阅 ¥7,402 + 直连 API ¥7,675）</b>。ROI 不在一个量级。
     </div>
   </div>
 </section>
