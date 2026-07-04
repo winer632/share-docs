@@ -1,0 +1,604 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>agent-platform 代码统计报告</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f6f7f8;
+      --surface: #ffffff;
+      --ink: #1d2329;
+      --muted: #66717f;
+      --line: #d9dee5;
+      --accent: #087f5b;
+      --accent-2: #d9480f;
+      --accent-3: #364fc7;
+      --soft: #e6fcf5;
+      --soft-2: #fff4e6;
+      --shadow: 0 12px 28px rgba(18, 25, 38, 0.08);
+      --radius: 8px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      line-height: 1.5;
+    }
+
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 48px;
+    }
+
+    header {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.12;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .metric {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      min-width: 0;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .metric strong {
+      display: block;
+      font-size: clamp(24px, 4vw, 34px);
+      line-height: 1.1;
+      letter-spacing: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .metric small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    section {
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .note {
+      background: var(--soft);
+      border-left: 4px solid var(--accent);
+      border-radius: var(--radius);
+      color: #163b2f;
+      padding: 14px 16px;
+      margin: 0 0 18px;
+      font-size: 14px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 720px;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+      background: #fbfcfd;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .num {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .name {
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .bar-cell {
+      width: 34%;
+      min-width: 220px;
+    }
+
+    .bar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .track {
+      height: 10px;
+      background: #eef1f4;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .fill {
+      display: block;
+      height: 100%;
+      width: var(--pct);
+      background: var(--accent);
+      border-radius: 999px;
+    }
+
+    .fill.orange {
+      background: var(--accent-2);
+    }
+
+    .fill.indigo {
+      background: var(--accent-3);
+    }
+
+    .pct {
+      min-width: 56px;
+      text-align: right;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 3px 9px;
+      background: var(--soft-2);
+      color: #7c2d12;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    details {
+      margin-top: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      background: #fbfcfd;
+    }
+
+    summary {
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .details-body {
+      color: var(--muted);
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .details-body ul {
+      margin: 8px 0 0;
+      padding-left: 18px;
+    }
+
+    @media (max-width: 860px) {
+      .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page {
+        width: min(100% - 20px, 1180px);
+        padding: 20px 0 32px;
+      }
+
+      section {
+        padding: 14px;
+      }
+
+      .summary-grid {
+        grid-template-columns: 1fr;
+      }
+
+      table,
+      thead,
+      tbody,
+      th,
+      td,
+      tr {
+        display: block;
+      }
+
+      table {
+        min-width: 0;
+      }
+
+      thead {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+
+      tr {
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        padding: 10px;
+        margin-bottom: 10px;
+        background: #fff;
+      }
+
+      td {
+        display: grid;
+        grid-template-columns: 104px minmax(0, 1fr);
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 0;
+        white-space: normal;
+      }
+
+      td::before {
+        content: attr(data-label);
+        color: var(--muted);
+        font-weight: 700;
+      }
+
+      .num {
+        text-align: left;
+      }
+
+      .bar-cell {
+        width: 100%;
+        min-width: 0;
+      }
+
+      .bar {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <p class="meta">agent-platform / 代码统计报告</p>
+      <h1>代码规模、语言分布、模块排序与 hk_customs 提交统计</h1>
+      <p class="meta">生成日期：2026-06-30。统计基于当前仓库已跟踪文件，报告文件本身未计入统计。</p>
+    </header>
+
+    <div class="summary-grid" aria-label="总体统计">
+      <div class="metric">
+        <span>总有效代码行</span>
+        <strong>584,420</strong>
+        <small>不含空行和常见注释行</small>
+      </div>
+      <div class="metric">
+        <span>语言 / 文件类型</span>
+        <strong>12</strong>
+        <small>源码、脚本、配置和结构化数据</small>
+      </div>
+      <div class="metric">
+        <span>模块数</span>
+        <strong>49</strong>
+        <small>按代码行数大于 0 的模块统计</small>
+      </div>
+      <div class="metric">
+        <span>统计文件数</span>
+        <strong>2,271</strong>
+        <small>来自 git 已跟踪文件</small>
+      </div>
+    </div>
+
+    <section>
+      <h2>hk_customs 分支提交统计</h2>
+      <p class="note">截至 2026-06-30，远端 GitLab <strong>hk_customs</strong> 分支累计 <strong>3,571</strong> 次提交，时间跨度 2026-03-11 ~ 2026-06-30（约 4 个月）。下表为按月提交次数（柱长按当月相对峰值月份，百分比为占分支总提交的比例）。</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>月份</th>
+              <th class="num">提交次数</th>
+              <th class="num">占总提交</th>
+              <th class="bar-cell">月度活跃度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name" data-label="月份">2026-03</td>
+              <td class="num" data-label="提交次数">437</td>
+              <td class="num" data-label="占总提交">12.24%</td>
+              <td class="bar-cell" data-label="月度活跃度"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 34.82%"></span></div><span class="pct">34.82%</span></div></td>
+            </tr>
+            <tr>
+              <td class="name" data-label="月份">2026-04</td>
+              <td class="num" data-label="提交次数">675</td>
+              <td class="num" data-label="占总提交">18.90%</td>
+              <td class="bar-cell" data-label="月度活跃度"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 53.78%"></span></div><span class="pct">53.78%</span></div></td>
+            </tr>
+            <tr>
+              <td class="name" data-label="月份">2026-05</td>
+              <td class="num" data-label="提交次数">1,255</td>
+              <td class="num" data-label="占总提交">35.14%</td>
+              <td class="bar-cell" data-label="月度活跃度"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 100.00%"></span></div><span class="pct">100.00%</span></div></td>
+            </tr>
+            <tr>
+              <td class="name" data-label="月份">2026-06</td>
+              <td class="num" data-label="提交次数">1,204</td>
+              <td class="num" data-label="占总提交">33.72%</td>
+              <td class="bar-cell" data-label="月度活跃度"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 95.94%"></span></div><span class="pct">95.94%</span></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>统计口径</h2>
+      <p class="note">本报告统计“有效代码行”：排除空行、常见整行注释和常见块注释；排除文档、历史 HTML 报告、图片、PDF/DOCX、lock 文件、依赖目录、缓存目录和构建产物。</p>
+      <details>
+        <summary>查看纳入和排除规则</summary>
+        <div class="details-body">
+          <ul>
+            <li>纳入：Python、JavaScript、TypeScript、Shell、YAML、JSON、TOML、SQL、Dockerfile、Env、少量实际应用 HTML。</li>
+            <li>排除：README、Markdown 设计文档、docs 目录、artifacts、diagrams、node_modules、.venv、dist、playwright-report、test-results、.coord、.octo、.claude、缓存目录和 lock 文件。</li>
+            <li>模块边界：services/*、packages/*、agents/*、skills/* 按二级目录拆分；deploy、scripts、tests、stitch、.github 和 root 作为独立模块。</li>
+          </ul>
+        </div>
+      </details>
+    </section>
+
+    <section>
+      <h2>语言分布</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>语言</th>
+              <th class="num">代码行</th>
+              <th class="num">文件数</th>
+              <th class="bar-cell">占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="name" data-label="语言">Python</td>
+              <td class="num" data-label="代码行">467,455</td>
+              <td class="num" data-label="文件数">1,702</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill " style="--pct: 79.99%"></span></div><span class="pct">79.99%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">Vue</td>
+              <td class="num" data-label="代码行">52,797</td>
+              <td class="num" data-label="文件数">85</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill orange" style="--pct: 9.03%"></span></div><span class="pct">9.03%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">JavaScript</td>
+              <td class="num" data-label="代码行">30,315</td>
+              <td class="num" data-label="文件数">186</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill indigo" style="--pct: 5.19%"></span></div><span class="pct">5.19%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">Shell</td>
+              <td class="num" data-label="代码行">15,413</td>
+              <td class="num" data-label="文件数">96</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill " style="--pct: 2.64%"></span></div><span class="pct">2.64%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">TypeScript</td>
+              <td class="num" data-label="代码行">8,145</td>
+              <td class="num" data-label="文件数">54</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill orange" style="--pct: 1.39%"></span></div><span class="pct">1.39%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">YAML</td>
+              <td class="num" data-label="代码行">7,537</td>
+              <td class="num" data-label="文件数">81</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill indigo" style="--pct: 1.29%"></span></div><span class="pct">1.29%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">JSON</td>
+              <td class="num" data-label="代码行">1,122</td>
+              <td class="num" data-label="文件数">17</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill " style="--pct: 0.19%"></span></div><span class="pct">0.19%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">Env</td>
+              <td class="num" data-label="代码行">469</td>
+              <td class="num" data-label="文件数">12</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.08%"></span></div><span class="pct">0.08%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">SQL</td>
+              <td class="num" data-label="代码行">358</td>
+              <td class="num" data-label="文件数">13</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.06%"></span></div><span class="pct">0.06%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">TOML</td>
+              <td class="num" data-label="代码行">328</td>
+              <td class="num" data-label="文件数">12</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill " style="--pct: 0.06%"></span></div><span class="pct">0.06%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">Dockerfile</td>
+              <td class="num" data-label="代码行">322</td>
+              <td class="num" data-label="文件数">11</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.06%"></span></div><span class="pct">0.06%</span></div>
+              </td>
+            </tr>
+            <tr>
+              <td class="name" data-label="语言">HTML</td>
+              <td class="num" data-label="代码行">159</td>
+              <td class="num" data-label="文件数">2</td>
+              <td class="bar-cell" data-label="占比">
+                <div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.03%"></span></div><span class="pct">0.03%</span></div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <h2>模块代码行排序</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>排名</th>
+              <th>模块</th>
+              <th class="num">代码行</th>
+              <th class="num">文件数</th>
+              <th>主要语言</th>
+              <th>前三语言构成</th>
+              <th class="bar-cell">占比</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td data-label="排名">1</td><td class="name" data-label="模块">services/platform-api</td><td class="num" data-label="代码行">385,183</td><td class="num" data-label="文件数">1,279</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 384,724, JSON 304, Dockerfile 53</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 65.91%"></span></div><span class="pct">65.91%</span></div></td></tr>
+            <tr><td data-label="排名">2</td><td class="name" data-label="模块">services/frontend-web</td><td class="num" data-label="代码行">81,246</td><td class="num" data-label="文件数">273</td><td data-label="主要语言"><span class="tag">Vue</span></td><td data-label="前三语言构成">Vue 52,797, JavaScript 28,370, JSON 32</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 13.90%"></span></div><span class="pct">13.90%</span></div></td></tr>
+            <tr><td data-label="排名">3</td><td class="name" data-label="模块">services/knowledge-ingestion</td><td class="num" data-label="代码行">32,415</td><td class="num" data-label="文件数">128</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 32,174, YAML 159, TOML 46</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 5.55%"></span></div><span class="pct">5.55%</span></div></td></tr>
+            <tr><td data-label="排名">4</td><td class="name" data-label="模块">deploy</td><td class="num" data-label="代码行">28,760</td><td class="num" data-label="文件数">160</td><td data-label="主要语言"><span class="tag">Shell</span></td><td data-label="前三语言构成">Shell 14,955, Python 6,836, YAML 5,876</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 4.92%"></span></div><span class="pct">4.92%</span></div></td></tr>
+            <tr><td data-label="排名">5</td><td class="name" data-label="模块">tests</td><td class="num" data-label="代码行">9,216</td><td class="num" data-label="文件数">67</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 8,967, Shell 186, YAML 63</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 1.58%"></span></div><span class="pct">1.58%</span></div></td></tr>
+            <tr><td data-label="排名">6</td><td class="name" data-label="模块">services/pi-runtime</td><td class="num" data-label="代码行">7,191</td><td class="num" data-label="文件数">40</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 7,094, Dockerfile 60, TOML 37</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 1.23%"></span></div><span class="pct">1.23%</span></div></td></tr>
+            <tr><td data-label="排名">7</td><td class="name" data-label="模块">services/llm-gateway</td><td class="num" data-label="代码行">7,159</td><td class="num" data-label="文件数">53</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 7,101, Dockerfile 34, TOML 24</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 1.22%"></span></div><span class="pct">1.22%</span></div></td></tr>
+            <tr><td data-label="排名">8</td><td class="name" data-label="模块">services/whatsapp-bridge</td><td class="num" data-label="代码行">5,420</td><td class="num" data-label="文件数">43</td><td data-label="主要语言"><span class="tag">TypeScript</span></td><td data-label="前三语言构成">TypeScript 5,361, JSON 45, Dockerfile 14</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.93%"></span></div><span class="pct">0.93%</span></div></td></tr>
+            <tr><td data-label="排名">9</td><td class="name" data-label="模块">services/hostops</td><td class="num" data-label="代码行">5,316</td><td class="num" data-label="文件数">23</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 5,258, Dockerfile 35, TOML 23</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.91%"></span></div><span class="pct">0.91%</span></div></td></tr>
+            <tr><td data-label="排名">10</td><td class="name" data-label="模块">services/rag-query</td><td class="num" data-label="代码行">4,393</td><td class="num" data-label="文件数">32</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 4,138, YAML 93, JSON 91</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.75%"></span></div><span class="pct">0.75%</span></div></td></tr>
+            <tr><td data-label="排名">11</td><td class="name" data-label="模块">packages/wisdom-vault-adapter</td><td class="num" data-label="代码行">3,402</td><td class="num" data-label="文件数">22</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 3,378, TOML 24</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.58%"></span></div><span class="pct">0.58%</span></div></td></tr>
+            <tr><td data-label="排名">12</td><td class="name" data-label="模块">services/weixin-bridge</td><td class="num" data-label="代码行">2,830</td><td class="num" data-label="文件数">17</td><td data-label="主要语言"><span class="tag">TypeScript</span></td><td data-label="前三语言构成">TypeScript 2,784, JSON 37, Dockerfile 9</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.48%"></span></div><span class="pct">0.48%</span></div></td></tr>
+            <tr><td data-label="排名">13</td><td class="name" data-label="模块">skills/pptx-generator</td><td class="num" data-label="代码行">2,040</td><td class="num" data-label="文件数">4</td><td data-label="主要语言"><span class="tag">JavaScript</span></td><td data-label="前三语言构成">JavaScript 1,945, YAML 80, JSON 15</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.35%"></span></div><span class="pct">0.35%</span></div></td></tr>
+            <tr><td data-label="排名">14</td><td class="name" data-label="模块">scripts</td><td class="num" data-label="代码行">1,969</td><td class="num" data-label="文件数">21</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 1,414, Shell 259, SQL 255</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.34%"></span></div><span class="pct">0.34%</span></div></td></tr>
+            <tr><td data-label="排名">15</td><td class="name" data-label="模块">packages/common</td><td class="num" data-label="代码行">1,913</td><td class="num" data-label="文件数">31</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 1,890, TOML 23</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.33%"></span></div><span class="pct">0.33%</span></div></td></tr>
+            <tr><td data-label="排名">16</td><td class="name" data-label="模块">packages/contracts</td><td class="num" data-label="代码行">1,910</td><td class="num" data-label="文件数">23</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 1,897, TOML 13</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.33%"></span></div><span class="pct">0.33%</span></div></td></tr>
+            <tr><td data-label="排名">17</td><td class="name" data-label="模块">packages/sp-cli</td><td class="num" data-label="代码行">851</td><td class="num" data-label="文件数">8</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 828, TOML 23</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.15%"></span></div><span class="pct">0.15%</span></div></td></tr>
+            <tr><td data-label="排名">18</td><td class="name" data-label="模块">packages/mcp-runtime</td><td class="num" data-label="代码行">630</td><td class="num" data-label="文件数">6</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 612, TOML 18</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.11%"></span></div><span class="pct">0.11%</span></div></td></tr>
+            <tr><td data-label="排名">19</td><td class="name" data-label="模块">root</td><td class="num" data-label="代码行">504</td><td class="num" data-label="文件数">2</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 310, Python 194</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.09%"></span></div><span class="pct">0.09%</span></div></td></tr>
+            <tr><td data-label="排名">20</td><td class="name" data-label="模块">skills/raccoon-office</td><td class="num" data-label="代码行">432</td><td class="num" data-label="文件数">2</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 365, YAML 67</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.07%"></span></div><span class="pct">0.07%</span></div></td></tr>
+            <tr><td data-label="排名">21</td><td class="name" data-label="模块">packages/agent-base</td><td class="num" data-label="代码行">284</td><td class="num" data-label="文件数">4</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 265, TOML 19</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.05%"></span></div><span class="pct">0.05%</span></div></td></tr>
+            <tr><td data-label="排名">22</td><td class="name" data-label="模块">services/mock-threatbook-mcp</td><td class="num" data-label="代码行">260</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 260</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.04%"></span></div><span class="pct">0.04%</span></div></td></tr>
+            <tr><td data-label="排名">23</td><td class="name" data-label="模块">.github</td><td class="num" data-label="代码行">187</td><td class="num" data-label="文件数">2</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 187</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.03%"></span></div><span class="pct">0.03%</span></div></td></tr>
+            <tr><td data-label="排名">24</td><td class="name" data-label="模块">stitch</td><td class="num" data-label="代码行">146</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">HTML</span></td><td data-label="前三语言构成">HTML 146</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.02%"></span></div><span class="pct">0.02%</span></div></td></tr>
+            <tr><td data-label="排名">25</td><td class="name" data-label="模块">agents/hostops</td><td class="num" data-label="代码行">103</td><td class="num" data-label="文件数">4</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 58, Dockerfile 26, Python 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.02%"></span></div><span class="pct">0.02%</span></div></td></tr>
+            <tr><td data-label="排名">26</td><td class="name" data-label="模块">agents/knowledge-agent</td><td class="num" data-label="代码行">86</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 86</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.01%"></span></div><span class="pct">0.01%</span></div></td></tr>
+            <tr><td data-label="排名">27</td><td class="name" data-label="模块">agents/intent-agent</td><td class="num" data-label="代码行">79</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 79</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.01%"></span></div><span class="pct">0.01%</span></div></td></tr>
+            <tr><td data-label="排名">28</td><td class="name" data-label="模块">skills/knowledge-document-execute</td><td class="num" data-label="代码行">63</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 63</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.01%"></span></div><span class="pct">0.01%</span></div></td></tr>
+            <tr><td data-label="排名">29</td><td class="name" data-label="模块">agents/customer-agent</td><td class="num" data-label="代码行">61</td><td class="num" data-label="文件数">2</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 58, Dockerfile 3</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.01%"></span></div><span class="pct">0.01%</span></div></td></tr>
+            <tr><td data-label="排名">30</td><td class="name" data-label="模块">services/mcp-echo-server</td><td class="num" data-label="代码行">48</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">Python</span></td><td data-label="前三语言构成">Python 48</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.01%"></span></div><span class="pct">0.008%</span></div></td></tr>
+            <tr><td data-label="排名">31</td><td class="name" data-label="模块">skills/knowledge-read-source-section</td><td class="num" data-label="代码行">40</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 40</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.01%"></span></div><span class="pct">0.007%</span></div></td></tr>
+            <tr><td data-label="排名">32</td><td class="name" data-label="模块">agents/data-analyst</td><td class="num" data-label="代码行">38</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 38</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.01%"></span></div><span class="pct">0.007%</span></div></td></tr>
+            <tr><td data-label="排名">33</td><td class="name" data-label="模块">skills/intent-evaluation-replay</td><td class="num" data-label="代码行">21</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 21</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.004%</span></div></td></tr>
+            <tr><td data-label="排名">34</td><td class="name" data-label="模块">skills/direct-agent-chat-contract</td><td class="num" data-label="代码行">20</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 20</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.003%</span></div></td></tr>
+            <tr><td data-label="排名">35</td><td class="name" data-label="模块">skills/customer-agent-handoff-contract</td><td class="num" data-label="代码行">19</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 19</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.00%"></span></div><span class="pct">0.003%</span></div></td></tr>
+            <tr><td data-label="排名">36</td><td class="name" data-label="模块">skills/intent-negative-rule-checker</td><td class="num" data-label="代码行">19</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 19</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.003%</span></div></td></tr>
+            <tr><td data-label="排名">37</td><td class="name" data-label="模块">skills/intent-judging-and-ranking</td><td class="num" data-label="代码行">18</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 18</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.003%</span></div></td></tr>
+            <tr><td data-label="排名">38</td><td class="name" data-label="模块">skills/intent-catalog-reader</td><td class="num" data-label="代码行">16</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 16</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.00%"></span></div><span class="pct">0.003%</span></div></td></tr>
+            <tr><td data-label="排名">39</td><td class="name" data-label="模块">skills/hostops-deploy-check</td><td class="num" data-label="代码行">13</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 13</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">40</td><td class="name" data-label="模块">skills/hostops-health-check</td><td class="num" data-label="代码行">13</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 13</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">41</td><td class="name" data-label="模块">skills/hostops-troubleshoot</td><td class="num" data-label="代码行">13</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 13</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">42</td><td class="name" data-label="模块">skills/knowledge-answer-with-rag</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">43</td><td class="name" data-label="模块">skills/knowledge-find-documents</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">44</td><td class="name" data-label="模块">skills/knowledge-get-source-profile</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">45</td><td class="name" data-label="模块">skills/knowledge-inspect-evidence-context</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">46</td><td class="name" data-label="模块">skills/knowledge-read-original-excerpt</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">47</td><td class="name" data-label="模块">skills/knowledge-scope-resolver</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill orange" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">48</td><td class="name" data-label="模块">skills/knowledge-search-evidence</td><td class="num" data-label="代码行">12</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 12</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill indigo" style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+            <tr><td data-label="排名">49</td><td class="name" data-label="模块">skills/summarize</td><td class="num" data-label="代码行">9</td><td class="num" data-label="文件数">1</td><td data-label="主要语言"><span class="tag">YAML</span></td><td data-label="前三语言构成">YAML 9</td><td class="bar-cell" data-label="占比"><div class="bar"><div class="track"><span class="fill " style="--pct: 0.00%"></span></div><span class="pct">0.002%</span></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
