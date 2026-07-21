@@ -43,6 +43,7 @@
     font-size:16px;
   }
   a{color:var(--brand);text-decoration:none;}
+  .emphasis-danger{color:var(--danger);font-weight:700;}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 18px;}
   .page-shell{
     width:100%;max-width:calc(var(--sidebar-w) + var(--layout-gap) + var(--maxw) + 36px);
@@ -234,6 +235,21 @@
   /* Repository metrics dashboard */
   .project-activity{margin:18px 0 22px;}
   .project-activity img{display:block;width:100%;max-width:869px;height:auto;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 2px rgba(20,30,55,.04);}
+  .directory-overview{max-width:640px;margin:22px 0;padding:18px 20px;background:#171b21;color:#e7eaf1;border:1px solid #2a313d;border-radius:14px;box-shadow:0 8px 20px rgba(20,30,55,.12);font:13px/1.45 ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;}
+  .directory-overview .directory-title{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #2a313d;color:#aeb8c9;font-size:12px;}
+  .directory-overview .directory-title strong{color:#fff;font-size:13px;}
+  .directory-overview .tree-row{display:grid;grid-template-columns:minmax(0,1fr) auto max-content;gap:16px;align-items:baseline;min-height:20px;}
+  .directory-overview .tree-name{min-width:0;overflow-wrap:anywhere;color:#e7eaf1;}
+  .directory-overview .tree-count{color:#c9d1de;font-weight:700;font-variant-numeric:tabular-nums;}
+  .directory-overview .tree-note{color:#aeb8c9;font-family:inherit;font-size:12px;white-space:nowrap;}
+  .directory-overview .dir-tree,.directory-overview .dir-tree ul{list-style:none;margin:0;padding:0;color:#e7eaf1;}
+  .directory-overview .dir-tree>li{margin:1px 0;}
+  .directory-overview .dir-tree ul{margin:1px 0 1px 10px;padding-left:14px;border-left:1px solid #667085;}
+  .directory-overview .dir-tree ul>li>.tree-row{position:relative;}
+  .directory-overview .dir-tree ul>li>.tree-row::before{content:"";position:absolute;left:-14px;top:10px;width:10px;border-top:1px solid #667085;}
+  .directory-overview .dir-tree ul>li{margin:1px 0;}
+  .directory-overview .dir-tree .emphasis{color:#fff;font-weight:700;}
+  @media(max-width:540px){.directory-overview{padding:14px;font-size:11.5px;}.directory-overview .tree-row{gap:8px;}.directory-overview .tree-note{display:none;}}
   .repo-dashboard{margin:18px 0 10px;}
   .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 20px;}
   .metric-card{background:linear-gradient(180deg,var(--card),var(--bg-soft));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(20,30,55,.04);}
@@ -331,8 +347,8 @@
       <div class="metric-grid">
         <div class="metric-card"><span class="metric-ico">📝</span><span class="metric-label">Markdown 设计文档</span><strong>796</strong><small>Git 已追踪的 .md 文件</small></div>
         <div class="metric-card"><span class="metric-ico">🌐</span><span class="metric-label">HTML 设计文档</span><strong>147</strong><small>Git 已追踪的 .html / .htm 文件</small></div>
-        <div class="metric-card"><span class="metric-ico">🔖</span><span class="metric-label">hk_customs 提交数</span><strong>4,155</strong><small>本地与 origin 分支一致</small></div>
-        <div class="metric-card"><span class="metric-ico">💻</span><span class="metric-label">工程代码行</span><strong>795,724</strong><small>不含空行、注释与文档文本</small></div>
+        <div class="metric-card"><span class="metric-ico">🔖</span><span class="metric-label">hk_customs 提交数</span><strong>4，155</strong><small>本地与 origin 分支一致</small></div>
+        <div class="metric-card"><span class="metric-ico">💻</span><span class="metric-label">工程代码行</span><strong>795，724</strong><small>不含空行、注释与文档文本</small></div>
       </div>
 
       <div class="dash-grid">
@@ -372,8 +388,8 @@
           <div class="month-chart" role="img" aria-label="hk_customs 分支每月提交次数，2026 年 6 月最高，为 1258 次">
             <div class="month-item"><span class="month-value">437</span><span class="month-bar" style="height:34.7%"></span><span class="month-label">2026-03</span></div>
             <div class="month-item"><span class="month-value">674</span><span class="month-bar" style="height:53.6%"></span><span class="month-label">2026-04</span></div>
-            <div class="month-item"><span class="month-value">1,256</span><span class="month-bar" style="height:99.8%"></span><span class="month-label">2026-05</span></div>
-            <div class="month-item"><span class="month-value">1,258</span><span class="month-bar" style="height:100%"></span><span class="month-label">2026-06</span></div>
+            <div class="month-item"><span class="month-value">1，256</span><span class="month-bar" style="height:99.8%"></span><span class="month-label">2026-05</span></div>
+            <div class="month-item"><span class="month-value">1，258</span><span class="month-bar" style="height:100%"></span><span class="month-label">2026-06</span></div>
             <div class="month-item"><span class="month-value">530</span><span class="month-bar" style="height:42.1%"></span><span class="month-label">2026-07</span></div>
           </div>
         </div>
@@ -384,7 +400,7 @@
           <h4>👥 按作者的提交分布</h4>
           <p class="dash-note">按 author name 聚合；同名不同邮箱已合并</p>
           <div class="bar-chart" role="img" aria-label="hk_customs 分支作者提交数，wangxinxin 4070 次，dengxiang 72 次，曹吴昊 12 次，spwangxp 1 次">
-            <div class="bar-row"><span class="bar-label">wangxinxin</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">4,070</span></div>
+            <div class="bar-row"><span class="bar-label">wangxinxin</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">4，070</span></div>
             <div class="bar-row"><span class="bar-label">dengxiang</span><span class="bar-track"><span class="bar-fill" style="width:1.8%"></span></span><span class="bar-value">72</span></div>
             <div class="bar-row"><span class="bar-label">曹吴昊</span><span class="bar-track"><span class="bar-fill" style="width:.3%"></span></span><span class="bar-value">12</span></div>
             <div class="bar-row"><span class="bar-label">spwangxp</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">1</span></div>
@@ -402,17 +418,17 @@
 
       <div class="dash-block">
         <h4>🧱 按语言的代码行数</h4>
-        <p class="dash-note">cloc 2.06，统计 Git 已追踪文件；工程代码共 795,724 行，已排除 Markdown、HTML 与 Text 文档内容</p>
+        <p class="dash-note">cloc 2.06，统计 Git 已追踪文件；工程代码共 795，724 行，已排除 Markdown、HTML 与 Text 文档内容</p>
         <div class="language-chart" role="img" aria-label="项目各语言代码行数，Python 500630 行最多">
-          <div class="bar-row"><span class="bar-label">Python</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">500,630</span></div>
-          <div class="bar-row"><span class="bar-label">JSON</span><span class="bar-track"><span class="bar-fill" style="width:22.4%"></span></span><span class="bar-value">111,999</span></div>
-          <div class="bar-row"><span class="bar-label">Vue</span><span class="bar-track"><span class="bar-fill" style="width:14.4%"></span></span><span class="bar-value">72,014</span></div>
-          <div class="bar-row"><span class="bar-label">JavaScript</span><span class="bar-track"><span class="bar-fill" style="width:8.6%"></span></span><span class="bar-value">43,205</span></div>
-          <div class="bar-row"><span class="bar-label">YAML</span><span class="bar-track"><span class="bar-fill" style="width:5.0%"></span></span><span class="bar-value">25,209</span></div>
-          <div class="bar-row"><span class="bar-label">Bourne Shell</span><span class="bar-track"><span class="bar-fill" style="width:3.8%"></span></span><span class="bar-value">19,126</span></div>
-          <div class="bar-row"><span class="bar-label">TypeScript</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10,166</span></div>
-          <div class="bar-row"><span class="bar-label">CSV</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10,001</span></div>
-          <div class="bar-row"><span class="bar-label">SCSS</span><span class="bar-track"><span class="bar-fill" style="width:.4%"></span></span><span class="bar-value">2,249</span></div>
+          <div class="bar-row"><span class="bar-label">Python</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">500，630</span></div>
+          <div class="bar-row"><span class="bar-label">JSON</span><span class="bar-track"><span class="bar-fill" style="width:22.4%"></span></span><span class="bar-value">111，999</span></div>
+          <div class="bar-row"><span class="bar-label">Vue</span><span class="bar-track"><span class="bar-fill" style="width:14.4%"></span></span><span class="bar-value">72，014</span></div>
+          <div class="bar-row"><span class="bar-label">JavaScript</span><span class="bar-track"><span class="bar-fill" style="width:8.6%"></span></span><span class="bar-value">43，205</span></div>
+          <div class="bar-row"><span class="bar-label">YAML</span><span class="bar-track"><span class="bar-fill" style="width:5.0%"></span></span><span class="bar-value">25，209</span></div>
+          <div class="bar-row"><span class="bar-label">Bourne Shell</span><span class="bar-track"><span class="bar-fill" style="width:3.8%"></span></span><span class="bar-value">19，126</span></div>
+          <div class="bar-row"><span class="bar-label">TypeScript</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10，166</span></div>
+          <div class="bar-row"><span class="bar-label">CSV</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10，001</span></div>
+          <div class="bar-row"><span class="bar-label">SCSS</span><span class="bar-track"><span class="bar-fill" style="width:.4%"></span></span><span class="bar-value">2，249</span></div>
           <div class="bar-row"><span class="bar-label">Text</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">557</span></div>
           <div class="bar-row"><span class="bar-label">SQL</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">399</span></div>
           <div class="bar-row"><span class="bar-label">TOML</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">330</span></div>
@@ -437,23 +453,82 @@
       </div>
     </div>
 
-    <p>传统模式下, 人是架构设计和代码开发的主体，开发团队由一名组长和多名组员构成，沟通协调的方式是声波互联协议--也就是组会--进行同步；<br>
+    <p>传统模式下， 人是架构设计和代码开发的主体，开发团队由一名组长和多名组员构成，沟通协调的方式是声波互联协议--也就是组会--进行同步；<br>
     AI 原生模式下，人是意图、约束与质量的主体，AI 是高吞吐的执行主体，开发团队由一名人类和多个Agent构成，沟通协议是 markdown 和 html 文档。<br>
     人的核心能力从「经验丰富」「编码快」转向把问题定义清楚、把约束表达清楚、把结果验证清楚。<br>
-    系统迭代进入高通量时代，快速开发商业可用的大规模稳定系统的瓶颈转移到了唯一真正稀缺的资源：人类的时间和注意力。</p>
+    系统迭代进入高通量时代，快速开发商业可用的大规模稳定系统的瓶颈转移到了唯一真正稀缺的资源：<span class="emphasis-danger">人类的时间和注意力</span>。</p>
+
+    <div class="directory-overview" aria-label="agent-platform 项目目录结构与文件数量">
+      <div class="directory-title"><strong>设计文档所在目录分布</strong><span>agent-platform 仓库快照</span></div>
+      <div class="tree-row"><span class="tree-name emphasis">agent-platform/</span><span class="tree-count">944</span></div>
+      <ul class="dir-tree">
+        <li><div class="tree-row"><span class="tree-name">根目录文件/</span><span class="tree-count">16</span></div></li>
+        <li>
+          <div class="tree-row"><span class="tree-name">.coord/</span><span class="tree-count">236</span></div>
+          <ul>
+            <li><div class="tree-row"><span class="tree-name">approvals/</span><span class="tree-count">1</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">decisions/</span><span class="tree-count">4</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">tasks/**</span><span class="tree-count">231</span></div></li>
+          </ul>
+        </li>
+        <li>
+          <div class="tree-row"><span class="tree-name">docs/</span><span class="tree-count">647</span></div>
+          <ul>
+            <li><div class="tree-row"><span class="tree-name">adr/</span><span class="tree-count">2</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">analysis/</span><span class="tree-count">46</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">api/</span><span class="tree-count">1</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">changelog/</span><span class="tree-count">1</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">ci/</span><span class="tree-count">1</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">design/</span><span class="tree-count">405</span><span class="tree-note">← 主要设计规格目录</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">front/</span><span class="tree-count">19</span></div></li>
+            <li>
+              <div class="tree-row"><span class="tree-name">reports/</span><span class="tree-count">65</span></div>
+              <ul>
+                <li><div class="tree-row"><span class="tree-name">cyber-soca-system-busy-rca-2026-07-01.html</span></div></li>
+                <li>
+                  <div class="tree-row"><span class="tree-name">soca-e2e/</span><span class="tree-count">64</span><span class="tree-note">← 验收证据，非设计规格</span></div>
+                  <ul>
+                    <li>
+                      <div class="tree-row"><span class="tree-name">2026-07-04/</span></div>
+                      <ul>
+                        <li><div class="tree-row"><span class="tree-name">baseline/</span><span class="tree-count">21</span></div></li>
+                        <li><div class="tree-row"><span class="tree-name">afterfix-1/</span><span class="tree-count">19</span></div></li>
+                        <li><div class="tree-row"><span class="tree-name">afterfix-2/</span><span class="tree-count">4</span></div></li>
+                        <li><div class="tree-row"><span class="tree-name">afterfix-3/</span><span class="tree-count">0</span><span class="tree-note">（仅 JSON，非 MD/HTML）</span></div></li>
+                        <li><div class="tree-row"><span class="tree-name">final/</span><span class="tree-count">19</span></div></li>
+                      </ul>
+                    </li>
+                  </ul>
+                </li>
+              </ul>
+            </li>
+            <li><div class="tree-row"><span class="tree-name">runbooks/</span><span class="tree-count">40</span></div></li>
+            <li><div class="tree-row"><span class="tree-name">superpowers/{plans，specs}/</span><span class="tree-count">4</span></div></li>
+          </ul>
+        </li>
+        <li><div class="tree-row"><span class="tree-name">skills/</span><span class="tree-count">14</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">services/</span><span class="tree-count">12</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">deploy/</span><span class="tree-count">8</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">tests/</span><span class="tree-count">5</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">agents/</span><span class="tree-count">2</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">stitch/</span><span class="tree-count">2</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">.octo/</span><span class="tree-count">1</span></div></li>
+        <li><div class="tree-row"><span class="tree-name">diagrams/</span><span class="tree-count">1</span></div></li>
+      </ul>
+    </div>
 
     <h3>编码 Agent 的价值与边界</h3>
 
-    <p>编码 Agent 的主要价值,不只是「编码更快」,而是能降低需求澄清、知识传递、设计草拟和编码的成本。它能放大研发效率，但放大效果取决于驾驭 Agent 的人在系统设计、技术掌握、业务 know how 的知识沉淀、需求稳定性、上下文可获得性、QA体系和团队使用方式。</p>
+    <p>编码 Agent 的主要价值，不只是「编码更快」，而是能降低需求澄清、知识传递、设计草拟和编码的成本。它能放大研发效率，但放大效果取决于驾驭 Agent 的人在系统设计、技术掌握、业务 know how 的知识沉淀、需求稳定性、上下文可获得性、QA体系和团队使用方式。</p>
 
     <div class="grid two">
       <div class="card">
         <h4><span class="ico">🗣️</span>需求确认大幅提效</h4>
-        <p>可用快速原型、可运行 demo 或交互稿对齐需求,减少抽象讨论带来的偏差。对外展示时必须标注 demo 的验证范围,避免把探索性原型误认为可交付产品。</p>
+        <p>可用快速原型、可运行 demo 或交互稿对齐需求，减少抽象讨论带来的偏差。对外展示时必须标注 demo 的验证范围，避免把探索性原型误认为可交付产品。</p>
       </div>
       <div class="card">
         <h4><span class="ico">📥</span>规模化获取显式上下文</h4>
-        <p>Agent 能从代码、文档、提交记录和测试里快速提取上下文,降低交接损耗。但它不会天然理解隐式业务知识;关键约定必须沉淀为文档、类型、测试或运行证据。</p>
+        <p>Agent 能从代码、文档、提交记录和测试里快速提取上下文，降低交接损耗。但它不会天然理解隐式业务知识;关键约定必须沉淀为文档、类型、测试或运行证据。</p>
       </div>
       <div class="card">
         <h4><span class="ico">📐</span>存量梳理 + 风险分层覆盖</h4>
@@ -461,7 +536,7 @@
       </div>
       <div class="card">
         <h4><span class="ico">⚡</span>突破部分协作瓶颈</h4>
-        <p>在需求相对清晰、模块边界明确、验证体系健全的项目里,Agent 可以减少「加人带来的沟通成本」。不承诺固定倍数;每个项目应以交付周期、缺陷率和返工率来评估收益。</p>
+        <p>在需求相对清晰、模块边界明确、验证体系健全的项目里，Agent 可以减少「加人带来的沟通成本」。不承诺固定倍数;每个项目应以交付周期、缺陷率和返工率来评估收益。</p>
       </div>
     </div>
 
@@ -469,11 +544,11 @@
     <div class="grid two">
       <div class="card">
         <h4><span class="ico">🎯</span>重心转向价值确认</h4>
-        <p>实现成本下降后,瓶颈更容易前移到「做对的事」。团队需要把更多精力放在业务价值、用户路径、风险边界和验收口径上。</p>
+        <p>实现成本下降后，瓶颈更容易前移到「做对的事」。团队需要把更多精力放在业务价值、用户路径、风险边界和验收口径上。</p>
       </div>
       <div class="card">
         <h4><span class="ico">🔗</span>减少低价值同步</h4>
-        <p>能由文档、代码、测试和 Agent 自动汇总解决的问题,不再依赖反复开会传话。高风险决策、资源冲突和跨团队承诺仍需明确责任人。</p>
+        <p>能由文档、代码、测试和 Agent 自动汇总解决的问题，不再依赖反复开会传话。高风险决策、资源冲突和跨团队承诺仍需明确责任人。</p>
       </div>
     </div>
 
@@ -485,20 +560,20 @@
       <div class="badge">1</div>
       <div>
         <h2>框架与模块设计</h2>
-        <p class="sec-sub">先对齐意图与边界,再让 AI 填充实现;接口与契约是 AI 协作的「公共语言」。</p>
+        <p class="sec-sub">先对齐意图与边界，再让 AI 填充实现;接口与契约是 AI 协作的「公共语言」。</p>
       </div>
     </div>
 
-    <h3>1.1 设计先于编码:用 AI 做发散,用人做收敛</h3>
+    <h3>1.1 设计先于编码:用 AI 做发散，用人做收敛</h3>
     <ul>
-      <li><strong>需求澄清(Brainstorm)</strong>:动手前先和 AI 过一轮——目标、用户、约束、非目标、失败模式、可选方案与取舍。让 AI 主动反问、列出不确定点,而不是直接给方案。</li>
-      <li><strong>设计文档作为需求与决策事实源</strong>:由人给出初始推动的想法,再由 AI 起草设计文档(目标 / 模块边界 / 接口 / 数据流 / 风险),人 review 后定稿。需求、取舍和边界以设计文档为准;代码、测试和线上行为是实现事实源,变更时必须同步更新。</li>
-      <li><strong>多方案并行评审</strong>:对关键设计让 AI 产出 2–3 个独立方案(如「最小可用优先 / 风险优先 / 扩展性优先」),再由人择优并嫁接各自亮点。</li>
+      <li><strong>需求澄清(Brainstorm)</strong>:动手前先和 AI 过一轮——目标、用户、约束、非目标、失败模式、可选方案与取舍。让 AI 主动反问、列出不确定点，而不是直接给方案。</li>
+      <li><strong>设计文档作为需求与决策事实源</strong>:由人给出初始推动的想法，再由 AI 起草设计文档(目标 / 模块边界 / 接口 / 数据流 / 风险)，人 review 后定稿。需求、取舍和边界以设计文档为准;代码、测试和线上行为是实现事实源，变更时必须同步更新。</li>
+      <li><strong>多方案并行评审</strong>:对关键设计让 AI 产出 2–3 个独立方案(如「最小可用优先 / 风险优先 / 扩展性优先」)，再由人择优并嫁接各自亮点。</li>
     </ul>
 
     <div class="callout principle">
-      <div class="t">🔁 实操经验:设计文档先反复交叉评审到收敛,再动手</div>
-      正式开发前先写<strong>设计文档</strong>,然后让 <strong>Claude Code 和 Codex 分别多轮 review</strong>,把发现的问题逐条修订,<strong>直到两个 Coding Agent 都认为设计文档不再有任何问题为止</strong>。人也必须参与这一轮:把自己的关注点、以及觉得不对或有风险的地方明确告诉 Agent,让它<strong>按你的思路去 review 或修改</strong>,而不是被动接受 AI 的判断。设计阶段多花的时间,远低于在错误架构上返工的成本。
+      <div class="t">🔁 实操经验:设计文档先反复交叉评审到收敛，再动手</div>
+      正式开发前先写<strong>设计文档</strong>，然后让 <strong>Claude Code 和 Codex 分别多轮 review</strong>，把发现的问题逐条修订，<strong>直到两个 Coding Agent 都认为设计文档不再有任何问题为止</strong>。人也必须参与这一轮:把自己的关注点、以及觉得不对或有风险的地方明确告诉 Agent，让它<strong>按你的思路去 review 或修改</strong>，而不是被动接受 AI 的判断。设计阶段多花的时间，远低于在错误架构上返工的成本。
     </div>
 
     <h3>1.2 设计分层门槛</h3>
@@ -515,20 +590,20 @@
 
     <h3>1.3 模块设计原则(对 AI 协作友好)</h3>
     <div class="grid two">
-      <div class="card"><h4>接口先行</h4><p>先定义清晰的接口/契约/类型,AI 在明确契约下实现质量显著更高,也便于替换实现。</p></div>
+      <div class="card"><h4>接口先行</h4><p>先定义清晰的接口/契约/类型，AI 在明确契约下实现质量显著更高，也便于替换实现。</p></div>
       <div class="card"><h4>边界清晰、低耦合</h4><p>模块可独立理解、独立测试。清晰的边界 = 可拆成多个并行子任务交给多 Agent。</p></div>
-      <div class="card"><h4>可独立验证</h4><p>每个单元都有「怎么算对」的判定标准,这是后续自动化验证与并行化的前提。</p></div>
-      <div class="card"><h4>显式优于隐式</h4><p>命名、目录约定、错误处理写清楚;AI 主要依赖可见上下文,隐式约定必须转成文档、类型、测试或示例。</p></div>
+      <div class="card"><h4>可独立验证</h4><p>每个单元都有「怎么算对」的判定标准，这是后续自动化验证与并行化的前提。</p></div>
+      <div class="card"><h4>显式优于隐式</h4><p>命名、目录约定、错误处理写清楚;AI 主要依赖可见上下文，隐式约定必须转成文档、类型、测试或示例。</p></div>
     </div>
 
     <div class="callout tip">
       <div class="t">💡 实践提示</div>
-      把项目级约定沉淀进 <code>CLAUDE.md</code> / <code>AGENTS.md</code>(技术栈、目录结构、需要遵守的开发规范、开发测试服务器的 ip/port 以及密钥、构建与测试命令)。这是给所有 AI 协作的「项目宪法」,一次写好长期复用。
+      把项目级约定沉淀进 <code>CLAUDE.md</code> / <code>AGENTS.md</code>(技术栈、目录结构、需要遵守的开发规范、开发测试服务器的 ip/port 以及密钥、构建与测试命令)。这是给所有 AI 协作的「项目宪法」，一次写好长期复用。
     </div>
 
     <div class="callout dont">
       <div class="t">⛔ 反模式</div>
-      跳过设计直接「帮我实现这个功能」→ AI 在错误的架构上高速产出大量代码,返工成本远高于省下的设计时间。<strong>越大的任务,设计阶段的杠杆越高。</strong>
+      跳过设计直接「帮我实现这个功能」→ AI 在错误的架构上高速产出大量代码，返工成本远高于省下的设计时间。<strong>越大的任务，设计阶段的杠杆越高。</strong>
     </div>
   </section>
 
@@ -552,28 +627,28 @@
 
     <h3>2.2 关键做法</h3>
     <ul>
-      <li><strong>复杂任务先进 Plan 模式</strong>:让 AI 先给出实现计划(改哪些文件、什么顺序、风险点),人确认后再执行,避免「一把梭」跑偏。</li>
+      <li><strong>复杂任务先进 Plan 模式</strong>:让 AI 先给出实现计划(改哪些文件、什么顺序、风险点)，人确认后再执行，避免「一把梭」跑偏。</li>
       <li><strong>小 diff、勤提交</strong>:每个 commit/PR 对应一个可描述、可回滚的改动;便于 review 与定位回归。</li>
-      <li><strong>风格对齐既有代码</strong>:让新代码在命名、注释密度、惯用法上与周边一致,而不是 AI 自带的风格。</li>
-      <li><strong>独立子任务并行化</strong>:互不依赖、无共享状态的多个任务,可派发多个子 Agent 并行;有依赖则串行,避免并行制造冲突。</li>
-      <li><strong>人工守住高危操作</strong>:涉及发布、数据删除、改线上配置、对外发送等不可逆动作,AI 暂停、人确认。</li>
+      <li><strong>风格对齐既有代码</strong>:让新代码在命名、注释密度、惯用法上与周边一致，而不是 AI 自带的风格。</li>
+      <li><strong>独立子任务并行化</strong>:互不依赖、无共享状态的多个任务，可派发多个子 Agent 并行;有依赖则串行，避免并行制造冲突。</li>
+      <li><strong>人工守住高危操作</strong>:涉及发布、数据删除、改线上配置、对外发送等不可逆动作，AI 暂停、人确认。</li>
     </ul>
 
     <h3>2.3 并行 Agent 操作约束</h3>
     <ul class="check">
-      <li><span class="box">✓</span><span><strong>先切任务边界</strong>:每个 Agent 只负责一个可验证子目标,明确可改文件范围和不可改区域。</span></li>
-      <li><span class="box">✓</span><span><strong>隔离工作区</strong>:并行实现优先使用独立 branch/worktree,避免多个 Agent 同时改同一批文件。</span></li>
-      <li><span class="box">✓</span><span><strong>集中合并</strong>:由人或主 Agent 统一合并,逐个跑测试和验证;不要把多个 Agent 的 diff 一次性混合提交。</span></li>
+      <li><span class="box">✓</span><span><strong>先切任务边界</strong>:每个 Agent 只负责一个可验证子目标，明确可改文件范围和不可改区域。</span></li>
+      <li><span class="box">✓</span><span><strong>隔离工作区</strong>:并行实现优先使用独立 branch/worktree，避免多个 Agent 同时改同一批文件。</span></li>
+      <li><span class="box">✓</span><span><strong>集中合并</strong>:由人或主 Agent 统一合并，逐个跑测试和验证;不要把多个 Agent 的 diff 一次性混合提交。</span></li>
       <li><span class="box">✓</span><span><strong>保留证据链</strong>:每个子任务交付时必须说明改动、测试命令、结果、已知风险和未覆盖范围。</span></li>
     </ul>
 
     <div class="callout do">
       <div class="t">✅ 推荐</div>
-      把「怎么构建、怎么跑测试、怎么本地启动」写进项目文档并让 AI 自己执行验证——它能闭环自查,你只看结论与证据。
+      把「怎么构建、怎么跑测试、怎么本地启动」写进项目文档并让 AI 自己执行验证——它能闭环自查，你只看结论与证据。
     </div>
     <div class="callout dont">
       <div class="t">⛔ 避免</div>
-      一个 prompt 让 AI 写完整个功能后直接采纳。大块未经分段验证的代码,是回归与隐性 bug 的高发区。
+      一个 prompt 让 AI 写完整个功能后直接采纳。大块未经分段验证的代码，是回归与隐性 bug 的高发区。
     </div>
   </section>
 
@@ -583,7 +658,7 @@
       <div class="badge">3</div>
       <div>
         <h2>Code Review</h2>
-        <p class="sec-sub">AI 先做一遍机器评审,人聚焦判断与上下文;对 AI 的反馈要核实,不要盲从。</p>
+        <p class="sec-sub">AI 先做一遍机器评审，人聚焦判断与上下文;对 AI 的反馈要核实，不要盲从。</p>
       </div>
     </div>
 
@@ -601,30 +676,30 @@
     <h3>3.2 交叉评审:换一个 AI 来挑刺(强烈推荐)</h3>
     <div class="callout principle">
       <div class="t">🔀 异构交叉评审</div>
-      实践发现:<strong>AI 很难 review 出自己写的设计/方案的问题</strong>——它会复用产出时的同一套假设,对自己的盲点免疫。换一个 AI(如 Claude Code 写、Codex 评,或反之),常能暴露实现方忽略的正确性、边界或安全问题。让一方实现、另一方专门「挑刺」,是低成本、高收益的质量手段。
+      实践发现:<strong>AI 很难 review 出自己写的设计/方案的问题</strong>——它会复用产出时的同一套假设，对自己的盲点免疫。换一个 AI(如 Claude Code 写、Codex 评，或反之)，常能暴露实现方忽略的正确性、边界或安全问题。让一方实现、另一方专门「挑刺」，是低成本、高收益的质量手段。
     </div>
     <div class="table-scroll">
       <table>
         <thead><tr><th>角色</th><th>分工</th><th>要点</th></tr></thead>
         <tbody>
-          <tr><td>实现方<br>(如 Claude Code)</td><td>设计 + 编码 + 自测</td><td>产出方案与代码,先完成自查</td></tr>
-          <tr><td>评审方<br>(如 Codex)</td><td>对抗式 review</td><td>以「假设实现方错了」为前提找漏洞,重点盯 P0:正确性、边界、安全、架构缺陷</td></tr>
-          <tr><td>人</td><td>裁决收口</td><td>核实交叉评审暴露的问题是否成立,决定采纳/反驳</td></tr>
+          <tr><td>实现方<br>(如 Claude Code)</td><td>设计 + 编码 + 自测</td><td>产出方案与代码，先完成自查</td></tr>
+          <tr><td>评审方<br>(如 Codex)</td><td>对抗式 review</td><td>以「假设实现方错了」为前提找漏洞，重点盯 P0:正确性、边界、安全、架构缺陷</td></tr>
+          <tr><td>人</td><td>裁决收口</td><td>核实交叉评审暴露的问题是否成立，决定采纳/反驳</td></tr>
         </tbody>
       </table>
     </div>
     <ul>
-      <li><strong>关键节点必交叉</strong>:设计方案、核心模块、高风险改动,定稿前过一遍「换一个 AI」。</li>
-      <li><strong>双向都做</strong>:谁写的不重要,重要的是评审方与实现方<strong>不是同一个模型</strong>,避免共享盲点。</li>
-      <li><strong>P0 优先</strong>:让评审方先报「会导致严重后果」的问题,再谈风格与优化。</li>
+      <li><strong>关键节点必交叉</strong>:设计方案、核心模块、高风险改动，定稿前过一遍「换一个 AI」。</li>
+      <li><strong>双向都做</strong>:谁写的不重要，重要的是评审方与实现方<strong>不是同一个模型</strong>，避免共享盲点。</li>
+      <li><strong>P0 优先</strong>:让评审方先报「会导致严重后果」的问题，再谈风格与优化。</li>
     </ul>
 
     <h3>3.3 接收评审意见(对 AI 也对人)</h3>
     <div class="callout principle">
-      <div class="t">🧪 技术严谨,而非表演式同意</div>
-      收到「建议这样改」时——先<strong>核实</strong>:这条意见技术上成立吗?有没有反例?成立才改,不成立要讲清为什么。<strong>盲目照改和盲目拒绝同样有害。</strong>
+      <div class="t">🧪 技术严谨，而非表演式同意</div>
+      收到「建议这样改」时——先<strong>核实</strong>:这条意见技术上成立吗?有没有反例?成立才改，不成立要讲清为什么。<strong>盲目照改和盲目拒绝同样有害。</strong>
     </div>
-    <p class="pill-note">对抗式验证小技巧:对一个可疑结论,派几个「专门挑刺」的视角去反驳它(正确性 / 安全 / 能否复现);多数都驳不倒,才算站得住。</p>
+    <p class="pill-note">对抗式验证小技巧:对一个可疑结论，派几个「专门挑刺」的视角去反驳它(正确性 / 安全 / 能否复现);多数都驳不倒，才算站得住。</p>
   </section>
 
   <!-- 4 -->
@@ -637,17 +712,22 @@
       </div>
     </div>
 
+    <div class="callout do">
+      <div class="t">🧭 测试范围与分工</div>
+      测试包含<strong>单元测试、集成测试和系统测试</strong>。在开发环节，AI 更适合生成并执行单元测试和集成测试，也可覆盖部分系统测试；系统测试仍主要由测试同事负责完成。
+    </div>
+
     <h3>4.1 测试驱动开发(TDD)红-绿-重构</h3>
     <div class="flow">
-      <div class="step"><div class="k">RED</div><div class="v">先写会失败的测试,锁定期望行为</div></div>
+      <div class="step"><div class="k">RED</div><div class="v">先写会失败的测试，锁定期望行为</div></div>
       <div class="step"><div class="k">GREEN</div><div class="v">AI 写最小实现让测试通过</div></div>
-      <div class="step"><div class="k">REFACTOR</div><div class="v">测试护航下重构,保持全绿</div></div>
+      <div class="step"><div class="k">REFACTOR</div><div class="v">测试护航下重构，保持全绿</div></div>
     </div>
-    <p>测试先行的额外价值:它<strong>把模糊需求逼成可执行的规格</strong>。一旦测试写清楚,AI 实现的命中率显著提升,也天然防止「实现跑偏却自称完成」。</p>
+    <p>测试先行的额外价值:它<strong>把模糊需求逼成可执行的规格</strong>。一旦测试写清楚，AI 实现的命中率显著提升，也天然防止「实现跑偏却自称完成」。</p>
 
-    <h3>4.2 让 AI 增强测试,而不是替代判断</h3>
+    <h3>4.2 让 AI 增强测试，而不是替代判断</h3>
     <ul>
-      <li>让 AI 主动<strong>列边界与异常用例</strong>(空值、超长、并发、越权、网络失败),人补业务关键路径。</li>
+      <li>让 AI 主动<strong>列边界与异常用例</strong>(空值、超长、并发、越权、网络失败)，人补业务关键路径。</li>
       <li>关注<strong>关键路径与高风险分支</strong>是否真被测到。</li>
       <li>当修改核心模块后可以对系统全量跑一次回归测试，务必保持所有测试全部通过，不通过的测试需要看是测试用例过时了还是确实有问题。</li>
     </ul>
@@ -657,7 +737,7 @@
       <table>
         <thead><tr><th>风险等级</th><th>示例</th><th>最低测试要求</th></tr></thead>
         <tbody>
-          <tr><td>低</td><td>文案、样式、非核心展示逻辑</td><td>可用人工验证或快照/视觉检查,记录验证证据</td></tr>
+          <tr><td>低</td><td>文案、样式、非核心展示逻辑</td><td>可用人工验证或快照/视觉检查，记录验证证据</td></tr>
           <tr><td>中</td><td>普通业务功能、接口适配、状态变更</td><td>单测或集成测试覆盖主路径 + 关键边界</td></tr>
           <tr><td>高</td><td>权限、计费、资金、隐私数据、迁移、并发、删除操作</td><td>单测 + 集成/端到端测试 + 失败路径 + 回归用例;必要时加人工 checklist</td></tr>
         </tbody>
@@ -677,8 +757,13 @@
       <div class="badge">5</div>
       <div>
         <h2>Verification 验证收口</h2>
-        <p class="sec-sub">单测过 ≠ 真的好用。在「真实环境/真实路径」上验证,并以证据收口。</p>
+        <p class="sec-sub">单测和集成测试过 ≠ 真的好用。在「真实环境/真实路径」上验证，并以证据收口。</p>
       </div>
+    </div>
+
+    <div class="callout tip">
+      <div class="t">📚 设计文档评审</div>
+      测试同事验证前需要查看项目目录中对应的<strong>设计文档</strong>，其中通常也包含「为什么做此设计」的原始需求来源；应据此评审设计、实现与测试结果是否真正满足需求，而不只核对e2e测试是否通过。
     </div>
 
     <h3>5.1 测试 vs 验证</h3>
@@ -702,12 +787,12 @@
 
     <div class="callout tip">
       <div class="t">⚙️ 配置复杂度也是系统复杂度</div>
-      使用 AI 开发可以用较少的资源构建出过去难以想象的复杂系统,但随着功能和服务数量增长,部署与配置复杂度也会显著上升。很多线上问题并非代码 Bug,而是环境变量、服务地址、权限或版本等配置错误。以当前系统为例,配置项已超过 700 个,部署时只要少量变量错配,就可能导致部分功能异常。因此,配置必须像代码一样版本化和评审;发布前校验必填项、类型、取值范围、跨配置依赖及目标环境差异,启动时对关键配置快速失败,发布后核对实际生效的配置版本并验证核心用户路径。
+      使用 AI 开发可以用较少的资源构建出过去难以想象的复杂系统，但随着功能和服务数量增长，部署与配置复杂度也会显著上升。很多线上问题并非代码 Bug，而是环境变量、服务地址、权限或版本等配置错误。以当前系统为例，配置项已超过 700 个，部署时只要少量变量错配，就可能导致部分功能异常。因此，配置必须像代码一样版本化和评审；发布前校验必填项、类型、取值范围、跨配置依赖及目标环境差异，启动时对关键配置快速失败，发布后核对实际生效的配置版本并验证核心用户路径。
     </div>
 
     <div class="callout do">
       <div class="t">✅ 当前实操:以系统配置表为核对基线</div>
-      持续维护一份系统配置表,并在每次部署时让 AI 参考这份配置表检查目标服务器的实际配置,识别缺失项、异常值、环境差异和疑似错配。对于密钥等敏感配置,仅校验是否存在、格式或指纹是否符合预期,不得读取或回显明文。
+      持续维护一份系统配置表，并在每次部署时让 AI 参考这份配置表检查目标服务器的实际配置，识别缺失项、异常值、环境差异和疑似错配。对于密钥等敏感配置，仅校验是否存在、格式或指纹是否符合预期，不得读取或回显明文。
     </div>
 
   </section>
@@ -726,8 +811,8 @@
     <div class="grid two">
       <div class="card"><h4><span class="ico">📜</span>项目宪法</h4><p><code>CLAUDE.md</code>/<code>AGENTS.md</code>:技术栈、结构、命名、禁忌、构建与测试命令、安全边界——所有 AI 协作的统一前提。</p></div>
       <div class="card"><h4><span class="ico">🧠</span>跨会话记忆</h4><p>把踩过的坑、团队约定、长期上下文沉淀为可复用记忆。</p></div>
-      <div class="card"><h4><span class="ico">🛠️</span>技能/SOP 化</h4><p>把高频流程(评审、调试、发布前检查)固化成可调用的标准流程,降低发挥波动。</p></div>
-      <div class="card"><h4><span class="ico">⛓️</span>多 Agent 编排</h4><p>独立任务并行(fan-out)、关键结论对抗式核验、再汇总收口;复杂工作拆成可验证子任务,并隔离分支/工作区。</p></div>
+      <div class="card"><h4><span class="ico">🛠️</span>技能/SOP 化</h4><p>把高频流程(评审、调试、发布前检查)固化成可调用的标准流程，降低发挥波动。</p></div>
+      <div class="card"><h4><span class="ico">⛓️</span>多 Agent 编排</h4><p>独立任务并行(fan-out)、关键结论对抗式核验、再汇总收口;复杂工作拆成可验证子任务，并隔离分支/工作区。</p></div>
     </div>
     <div class="callout do">
       <div class="t">✅ 实操经验:让好经验跨项目复用</div>
