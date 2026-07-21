@@ -24,6 +24,8 @@
     --chip:#eef1f7;
     --radius:16px;
     --maxw:880px;
+    --sidebar-w:260px;
+    --layout-gap:32px;
   }
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
   html{scroll-behavior:smooth;}
@@ -42,6 +44,24 @@
   }
   a{color:var(--brand);text-decoration:none;}
   .wrap{max-width:var(--maxw);margin:0 auto;padding:0 18px;}
+  .page-shell{
+    width:100%;max-width:calc(var(--sidebar-w) + var(--layout-gap) + var(--maxw) + 36px);
+    margin:0 auto;padding:0 18px;
+    display:grid;
+    grid-template-columns:var(--sidebar-w) minmax(0,var(--maxw));
+    grid-template-areas:
+      ". hero"
+      "sidebar content";
+    column-gap:var(--layout-gap);
+    align-items:start;
+  }
+  .page-shell > header.hero{grid-area:hero;min-width:0;}
+  .page-shell > header.hero .wrap{max-width:none;margin:0;padding:0;}
+  .page-shell > main.wrap{grid-area:content;min-width:0;max-width:none;margin:0;padding:0;}
+  aside.sidebar{
+    grid-area:sidebar;position:sticky;top:18px;align-self:start;
+    max-height:calc(100vh - 36px);padding-top:30px;
+  }
 
   /* Header */
   header.hero{
@@ -81,12 +101,13 @@
 
   /* TOC */
   nav.toc{
-    margin:26px 0 8px;
+    margin:0;
     background:linear-gradient(180deg,var(--card),var(--card-2));
     border:1px solid var(--line);
     border-radius:var(--radius);
     padding:14px 14px 6px;
     box-shadow:0 1px 2px rgba(20,30,55,.04);
+    max-height:calc(100vh - 36px);overflow-y:auto;overscroll-behavior:contain;
   }
   nav.toc .toc-h{font-size:12.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);padding:2px 6px 8px;}
   nav.toc ol{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr;gap:2px;}
@@ -96,10 +117,20 @@
     font-size:15px;border:1px solid transparent;
   }
   nav.toc a:hover{background:var(--card-2);border-color:var(--line);}
+  nav.toc a.active{background:rgba(79,111,224,.10);border-color:rgba(79,111,224,.22);}
   nav.toc .num{
     flex:0 0 auto;width:26px;height:26px;border-radius:8px;
     display:grid;place-items:center;font-size:13px;font-weight:700;
     background:rgba(79,111,224,.12);color:var(--brand);border:1px solid rgba(79,111,224,.25);
+  }
+
+  @media(max-width:899px){
+    .page-shell{
+      max-width:var(--maxw);display:grid;grid-template-columns:minmax(0,1fr);
+      grid-template-areas:"hero" "sidebar" "content";column-gap:0;
+    }
+    aside.sidebar{position:static;max-height:none;padding-top:0;}
+    nav.toc{margin:0 0 8px;max-height:none;overflow:visible;}
   }
 
   /* Sections */
@@ -206,51 +237,98 @@
   }
   .backtop.show{opacity:1;pointer-events:auto;}
   .pill-note{font-size:12.5px;color:var(--muted);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 12px;margin:14px 0;background:rgba(20,30,55,.02);}
+
+  /* Repository metrics dashboard */
+  .repo-dashboard{margin:18px 0 10px;}
+  .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 20px;}
+  .metric-card{background:linear-gradient(180deg,var(--card),var(--bg-soft));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(20,30,55,.04);}
+  .metric-card .metric-ico{font-size:20px;display:block;margin-bottom:7px;}
+  .metric-card .metric-label{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;}
+  .metric-card strong{display:block;font-size:25px;line-height:1.15;margin:4px 0 3px;letter-spacing:-.02em;}
+  .metric-card small{display:block;color:var(--dim);font-size:11.5px;line-height:1.35;}
+  .dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px;margin:14px 0;}
+  .dash-block{min-width:0;}
+  .dash-block h4{margin:0 0 4px;font-size:16px;color:var(--text);}
+  .dash-note{font-size:12px;color:var(--muted);margin:0 0 11px;}
+  .bar-chart{display:grid;gap:7px;}
+  .bar-row{display:grid;grid-template-columns:66px minmax(0,1fr) 48px;gap:9px;align-items:center;font-size:12.5px;}
+  .bar-label{color:var(--muted);text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .bar-track{height:11px;background:rgba(79,111,224,.08);border-radius:999px;overflow:hidden;}
+  .bar-fill{height:100%;min-width:2px;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px;}
+  .bar-value{font-variant-numeric:tabular-nums;color:var(--text);font-weight:600;}
+  .hour-chart{display:grid;grid-template-columns:repeat(24,minmax(8px,1fr));gap:4px;height:176px;padding:8px 2px 0;border-bottom:1px solid var(--line);align-items:end;}
+  .hour-item{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:0;}
+  .hour-value{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1;}
+  .hour-bar{width:100%;min-height:2px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--brand-2),var(--brand));}
+  .hour-label{font-size:9px;color:var(--dim);line-height:1;}
+  .month-chart{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;height:178px;padding:8px 8px 0;border-bottom:1px solid var(--line);align-items:end;}
+  .month-item{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0;}
+  .month-value{font-size:12px;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;line-height:1;}
+  .month-bar{width:min(48px,78%);min-height:2px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--accent),#61cbb8);}
+  .month-label{font-size:11px;color:var(--muted);white-space:nowrap;}
+  .language-chart{columns:2;column-gap:24px;}
+  .language-chart .bar-row{break-inside:avoid;margin-bottom:7px;}
+  .language-chart .bar-row{grid-template-columns:94px minmax(0,1fr) 62px;}
+  .people-chart .bar-row{grid-template-columns:82px minmax(0,1fr) 48px;}
+  .stats-source{font-size:12px;color:var(--muted);margin:18px 0 0;padding:10px 12px;border-left:3px solid var(--brand);background:rgba(79,111,224,.05);border-radius:0 10px 10px 0;}
+  @media(max-width:700px){
+    .metric-grid{grid-template-columns:1fr 1fr;}
+    .dash-grid{grid-template-columns:1fr;gap:24px;}
+    .language-chart{columns:1;}
+  }
+  @media(max-width:430px){
+    .metric-card strong{font-size:22px;}
+    .hour-chart{gap:2px;height:150px;}
+    .hour-value{font-size:8px;}
+    .hour-label{font-size:8px;}
+  }
 </style>
 </head>
 <body>
 
-<header class="hero">
-  <div class="wrap">
-    <h1>开发岗 · <span class="grad">AI 原生研发 SOP</span><br>与最佳实践</h1>
-    <p class="lede">从「人写代码、工具辅助」到「人定义意图与约束、AI 执行、人验证收口」——覆盖框架与模块设计、Coding、Code Review、Test、Verification 的端到端工作方式。</p>
-    <div class="meta-row">
-      <span class="chip"><b>版本</b> v0.2 草稿</span>
-      <span class="chip"><b>日期</b> 2026-06-26</span>
-      <span class="chip"><b>状态</b> 待讨论 / 可迭代</span>
-      <span class="chip"><b>适用</b> 开发岗全员</span>
+<div class="page-shell">
+  <header class="hero">
+    <div class="wrap">
+      <h1>开发岗 · <span class="grad">AI 原生研发 SOP</span><br>与最佳实践</h1>
+      <p class="lede">从「人写代码、工具辅助」到「人定义意图与约束、AI 执行、人验证收口」——覆盖框架与模块设计、Coding、Code Review、Test、Verification 的端到端工作方式。</p>
+      <div class="meta-row">
+        <span class="chip"><b>版本</b> v0.2 草稿</span>
+        <span class="chip"><b>日期</b> 2026-06-26</span>
+        <span class="chip"><b>状态</b> 待讨论 / 可迭代</span>
+        <span class="chip"><b>适用</b> 开发岗全员</span>
+      </div>
     </div>
-  </div>
-</header>
+  </header>
 
-<div class="wrap">
+  <aside class="sidebar" aria-label="页面目录">
+    <nav class="toc">
+      <div class="toc-h">目录 · 点击跳转</div>
+      <ol>
+        <li><a href="#core"><span class="num">0</span><span>核心理念</span></a></li>
+        <li><a href="#why"><span class="num">★</span><span>背景: 编码 Agent 的价值</span></a></li>
+        <li><a href="#design"><span class="num">1</span><span>框架与模块设计</span></a></li>
+        <li><a href="#coding"><span class="num">2</span><span>Coding 编码</span></a></li>
+        <li><a href="#review"><span class="num">3</span><span>Code Review</span></a></li>
+        <li><a href="#test"><span class="num">4</span><span>Test 测试</span></a></li>
+        <li><a href="#verify"><span class="num">5</span><span>Verification 验证收口</span></a></li>
+        <li><a href="#stack"><span class="num">6</span><span>工具链与上下文工程</span></a></li>
+      </ol>
+    </nav>
+  </aside>
 
-  <nav class="toc">
-    <div class="toc-h">目录 · 点击跳转</div>
-    <ol>
-      <li><a href="#core"><span class="num">0</span><span>核心理念与六条铁律</span></a></li>
-      <li><a href="#why"><span class="num">★</span><span>背景: 编码 Agent 的价值</span></a></li>
-      <li><a href="#design"><span class="num">1</span><span>框架与模块设计</span></a></li>
-      <li><a href="#coding"><span class="num">2</span><span>Coding 编码</span></a></li>
-      <li><a href="#review"><span class="num">3</span><span>Code Review</span></a></li>
-      <li><a href="#test"><span class="num">4</span><span>Test 测试</span></a></li>
-      <li><a href="#verify"><span class="num">5</span><span>Verification 验证收口</span></a></li>
-      <li><a href="#security"><span class="num">6</span><span>安全、权限与治理</span></a></li>
-      <li><a href="#stack"><span class="num">7</span><span>工具链与上下文工程</span></a></li>
-    </ol>
-  </nav>
+  <main class="wrap">
 
   <!-- 0 -->
   <section id="core">
     <div class="sec-head">
       <div class="badge">0</div>
       <div>
-        <h2>核心理念与六条铁律</h2>
+        <h2>核心理念</h2>
         <p class="sec-sub">AI 原生 ≠ 让 AI 替你干活,而是重构「谁定义、谁执行、谁负责」的分工。</p>
       </div>
     </div>
 
-    <p>传统模式下,人是<strong>执行主体</strong>,工具补全是辅助;AI 原生模式下,人是<strong>意图、约束与质量的主体</strong>,AI 是高吞吐的执行主体。开发者的核心能力从「编码快」转向<strong>把问题定义清楚、把约束表达清楚、把结果验证清楚</strong>。下面六条是所有环节都适用的底线。</p>
+    <p>传统模式下,人是<strong>执行主体</strong>,工具补全是辅助;AI 原生模式下,人是<strong>意图、约束与质量的主体</strong>,AI 是高吞吐的执行主体。开发者的核心能力从「编码快」转向<strong>把问题定义清楚、把约束表达清楚、把结果验证清楚</strong>。系统快速开发的瓶颈转移到了我们唯一真正稀缺的资源：人类的时间和注意力。</p>
 
     <div class="grid two">
       <div class="card">
@@ -466,24 +544,12 @@
         <thead><tr><th>层</th><th>谁来做</th><th>关注点</th></tr></thead>
         <tbody>
           <tr><td>第一层<br>机器评审</td><td>AI(自动化 review / 安全扫描 / 静态检查)</td><td>常见 bug、空指针、边界、未处理错误、明显安全问题、风格一致性、与计划的偏离</td></tr>
-          <tr><td>第二层<br>人工评审</td><td>评审人</td><td>是否真正解决了问题、架构是否合理、可维护性、业务正确性、AI 看不到的上下文与权衡</td></tr>
+          <tr><td>第二层<br>人工评审</td><td>评审人</td><td>是否真正解决了问题、架构是否合理、可维护性、业务正确性、是否过拟合、AI 看不到的上下文与权衡</td></tr>
         </tbody>
       </table>
     </div>
 
-    <h3>3.2 评审清单</h3>
-    <ul class="check">
-      <li><span class="box">✓</span><span>改动是否对齐<strong>设计文档/计划</strong>?有无偷偷扩大范围(scope creep)?</span></li>
-      <li><span class="box">✓</span><span>是否有<strong>对应测试</strong>且确实覆盖了改动与边界,而非凑数?</span></li>
-      <li><span class="box">✓</span><span>错误处理、边界、并发、空值是否考虑充分?</span></li>
-      <li><span class="box">✓</span><span>有无<strong>看似合理但实则错误</strong>的实现(AI 幻觉重灾区)?对可疑点做对抗式核实。</span></li>
-      <li><span class="box">✓</span><span>是否引入未声明的依赖、隐藏的副作用、被静默吞掉的异常?</span></li>
-      <li><span class="box">✓</span><span>是否影响权限、数据范围、日志脱敏、外部 API、配置和部署脚本?</span></li>
-      <li><span class="box">✓</span><span>新增依赖是否有许可证、维护状态、漏洞和供应链风险评估?</span></li>
-      <li><span class="box">✓</span><span>命名/风格是否与既有代码一致,是否可维护?</span></li>
-    </ul>
-
-    <h3>3.3 交叉评审:换一个 AI 来挑刺(强烈推荐)</h3>
+    <h3>3.2 交叉评审:换一个 AI 来挑刺(强烈推荐)</h3>
     <div class="callout principle">
       <div class="t">🔀 异构交叉评审</div>
       实践发现:<strong>AI 很难 review 出自己写的设计/方案的问题</strong>——它会复用产出时的同一套假设,对自己的盲点免疫。换一个 AI(如 Claude Code 写、Codex 评,或反之),常能暴露实现方忽略的正确性、边界或安全问题。让一方实现、另一方专门「挑刺」,是低成本、高收益的质量手段。
@@ -504,7 +570,7 @@
       <li><strong>P0 优先</strong>:让评审方先报「会导致严重后果」的问题,再谈风格与优化。</li>
     </ul>
 
-    <h3>3.4 接收评审意见(对 AI 也对人)</h3>
+    <h3>3.3 接收评审意见(对 AI 也对人)</h3>
     <div class="callout principle">
       <div class="t">🧪 技术严谨,而非表演式同意</div>
       收到「建议这样改」时——先<strong>核实</strong>:这条意见技术上成立吗?有没有反例?成立才改,不成立要讲清为什么。<strong>盲目照改和盲目拒绝同样有害。</strong>
@@ -549,10 +615,11 @@
       </table>
     </div>
 
-    <div class="callout dont">
-      <div class="t">⛔ 危险信号</div>
-      AI 为了让测试变绿,去<strong>改测试迁就实现</strong>而非修实现。任何「放宽断言/删用例」的改动都要人确认意图。
+    <div class="callout principle">
+      <div class="t">🤖 自动化回归基线</div>
+      随着代码产出效率提升，质量瓶颈会逐渐转移到人工 QA 的处理能力。由于人的时间和注意力是真正的稀缺资源，除需人工判断的具体业务场景外，应为通用功能和稳定核心链路建立尽可能完整、可重复执行的自动化回归测试；全量套件每周定期运行 1–2 次，并持续跟踪通过率、分析各组件缺陷分布，以监控系统质量。
     </div>
+
   </section>
 
   <!-- 5 -->
@@ -577,100 +644,149 @@
       </table>
     </div>
 
+    <div class="callout principle">
+      <div class="t">👥 角色分工</div>
+      Test 由开发主责；Verification 由开发先自验、测试独立验证。高风险或业务关键场景还需产品和前场FDE参与验收。
+    </div>
+
     <h3>5.2 验证铁律</h3>
     <ul class="check">
       <li><span class="box">✓</span><span><strong>证据先于断言</strong>:宣称「完成/修好/通过」前,跑命令、贴输出,确认无误再说。</span></li>
       <li><span class="box">✓</span><span><strong>在真实应用里验证</strong>,不只跑单测——真正启动应用、走一遍用户路径。</span></li>
       <li><span class="box">✓</span><span><strong>验证「真的生效了」</strong>:热更新/配置变更后,确认实际加载的就是新版本(踩过坑:挂载路径/版本不匹配导致静默无效)。</span></li>
       <li><span class="box">✓</span><span><strong>失败如实上报</strong>:测试挂了就贴输出说挂了;跳过了就说跳过;不粉饰。</span></li>
+      <li><span class="box">✓</span><span><strong>统一 Bug 工单</strong>:测试、产品、前场FDE发现的问题都维护到一个统一的 Bug 工单系统中,防止遗漏 Bug 以及事后出现的人脑幻觉(记不清楚当前发现的问题属于①之前测试没有覆盖到,还是②之前测试过这个场景是没问题的,现在测试同样的场景有问题)。</span></li>
       <li><span class="box">✓</span><span><strong>可行性门槛 + 止损</strong>:动手前先判断这条路是否可行;触发止损线(超时/连续失败)即停并复盘。</span></li>
     </ul>
 
-    <h3>5.3 发布与回滚收口</h3>
-    <ul>
-      <li><strong>发布前</strong>:确认迁移脚本、配置变更、feature flag、依赖升级和外部 API 影响;高风险改动必须有回滚方案。</li>
-      <li><strong>发布中</strong>:优先灰度、小流量或开关控制;不可逆动作必须人工二次确认。</li>
-      <li><strong>发布后</strong>:检查核心指标、错误日志、告警、用户路径和版本命中情况;异常时按回滚方案处理,而不是让 AI 临场猜修。</li>
-    </ul>
+    <h3>5.3 配置校验</h3>
 
-    <div class="callout principle">
-      <div class="t">🔒 收口标准(Definition of Done)</div>
-      ① 设计被实现且未越界 · ② 测试按风险等级覆盖且真实通过 · ③ 人工评审通过 · ④ 安全/权限/依赖影响已检查 · ⑤ 真实环境验证有证据 · ⑥ 发布、灰度、回滚和监控计划明确 · ⑦ 责任人确认署名上线。七项齐全才算「完成」。
+    <div class="callout tip">
+      <div class="t">⚙️ 配置复杂度也是系统复杂度</div>
+      使用 AI 开发可以用较少的资源构建出过去难以想象的复杂系统,但随着功能和服务数量增长,部署与配置复杂度也会显著上升。很多线上问题并非代码 Bug,而是环境变量、服务地址、权限或版本等配置错误。以当前系统为例,配置项已超过 700 个,部署时只要少量变量错配,就可能导致部分功能异常。因此,配置必须像代码一样版本化和评审;发布前校验必填项、类型、取值范围、跨配置依赖及目标环境差异,启动时对关键配置快速失败,发布后核对实际生效的配置版本并验证核心用户路径。
     </div>
+
+    <div class="callout do">
+      <div class="t">✅ 当前实操:以系统配置表为核对基线</div>
+      持续维护一份系统配置表,并在每次部署时让 AI 参考这份配置表检查目标服务器的实际配置,识别缺失项、异常值、环境差异和疑似错配。对于密钥等敏感配置,仅校验是否存在、格式或指纹是否符合预期,不得读取或回显明文。
+    </div>
+
   </section>
 
   <!-- 6 -->
-  <section id="security">
-    <div class="sec-head">
-      <div class="badge">6</div>
-      <div>
-        <h2>安全、权限与治理</h2>
-        <p class="sec-sub">AI 可以提升吞吐,但不能绕过数据边界、权限边界和上线责任。</p>
-      </div>
-    </div>
-
-    <h3>6.1 数据与上下文分级</h3>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>级别</th><th>示例</th><th>AI 使用规则</th></tr></thead>
-        <tbody>
-          <tr><td>公开/内部公开</td><td>公开文档、通用技术资料、无敏代码片段</td><td>可直接使用,仍需核实来源和版本</td></tr>
-          <tr><td>内部受限</td><td>私有代码、内部接口、业务配置、非敏日志</td><td>仅在授权工具和授权仓库内使用,避免外发到未批准系统</td></tr>
-          <tr><td>敏感/机密</td><td>客户数据、密钥、个人信息、财务数据、生产凭证</td><td>默认禁止直接输入 AI;必须脱敏、最小化或走专门审批</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>6.2 高风险操作门禁</h3>
-    <ul class="check">
-      <li><span class="box">✓</span><span><strong>密钥与凭证</strong>:不得让 AI 生成、复制、提交或暴露真实密钥;发现泄露立即轮换。</span></li>
-      <li><span class="box">✓</span><span><strong>生产数据</strong>:查询、导出、删除、批量修复必须有工单/审批/备份/回滚路径。</span></li>
-      <li><span class="box">✓</span><span><strong>外部发送</strong>:邮件、短信、推送、客户通知、公开发布必须人工确认最终内容和收件范围。</span></li>
-      <li><span class="box">✓</span><span><strong>权限变更</strong>:账号、角色、ACL、网络策略和安全组变更必须由责任人 review。</span></li>
-      <li><span class="box">✓</span><span><strong>依赖引入</strong>:新增三方包、镜像、脚本和 MCP/插件必须确认来源、权限和维护状态。</span></li>
-    </ul>
-
-    <div class="callout dont">
-      <div class="t">⛔ 底线</div>
-      不能因为「AI 能处理更多上下文」就扩大数据暴露面。上下文越多,越要做最小权限、脱敏、审计和可回滚设计。
-    </div>
-  </section>
-
-  <!-- 7 -->
   <section id="stack">
     <div class="sec-head">
-      <div class="badge">7</div>
+      <div class="badge">6</div>
       <div>
         <h2>工具链与上下文工程</h2>
         <p class="sec-sub">把「怎么让 AI 干得好」工程化:规范、记忆、技能、并行编排。</p>
       </div>
     </div>
 
-    <h3>7.1 项目代码规模基线: agent-platform</h3>
-    <p>本次调研以 <code>/Users/wangxinxin/Desktop/dev_agent/agent-platform</code> 的 <code>hk_customs</code> 分支提交 <code>89c961c8</code> 为准,统计源码、测试、脚本、SQL、Dockerfile 与配置文件。主口径包含空行与注释,用于衡量 AI 获取上下文、切分任务和设计验证策略时面对的真实文件规模。</p>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>口径</th><th>行数</th><th>文件数</th><th>说明</th></tr></thead>
-        <tbody>
-          <tr><td>源码 + 测试 + 脚本 + SQL + 配置</td><td><strong>734,100</strong></td><td>2,541</td><td>包含 <code>.py</code>、<code>.ts</code>、<code>.vue</code>、<code>.js</code>、<code>.sh</code>、<code>.sql</code>、YAML/JSON/TOML/env、Dockerfile 等</td></tr>
-          <tr><td>排除 <code>.coord</code> 协作记录后的核心工程口径</td><td><strong>713,319</strong></td><td>2,309</td><td>用于观察更接近产品代码与工程配置的体量</td></tr>
-          <tr><td>主口径非空行</td><td><strong>641,207</strong></td><td>2,541</td><td>剔除纯空行,仍保留注释与配置内容</td></tr>
-          <tr><td>全部可统计文本</td><td><strong>1,023,339</strong></td><td>3,435</td><td>含 Markdown、HTML 调研稿等文本资料;不作为代码规模主口径</td></tr>
-        </tbody>
-      </table>
+    <h3>6.1 agent-platform 仓库统计看板</h3>
+    <p>设计文档、<code>hk_customs</code> 分支提交与代码规模的统一快照。</p>
+
+    <div class="repo-dashboard" aria-label="agent-platform 仓库统计图表">
+      <div class="metric-grid">
+        <div class="metric-card"><span class="metric-ico">📝</span><span class="metric-label">Markdown 设计文档</span><strong>796</strong><small>Git 已追踪的 .md 文件</small></div>
+        <div class="metric-card"><span class="metric-ico">🌐</span><span class="metric-label">HTML 设计文档</span><strong>147</strong><small>Git 已追踪的 .html / .htm 文件</small></div>
+        <div class="metric-card"><span class="metric-ico">🔖</span><span class="metric-label">hk_customs 提交数</span><strong>4,155</strong><small>本地与 origin 分支一致</small></div>
+        <div class="metric-card"><span class="metric-ico">💻</span><span class="metric-label">工程代码行</span><strong>795,724</strong><small>不含空行、注释与文档文本</small></div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-block">
+          <h4>⏰ 按小时的提交分布</h4>
+          <p class="dash-note">0–23 点，按 Git committer 本地时间统计</p>
+          <div class="hour-chart" role="img" aria-label="hk_customs 分支每小时提交次数，15 点最高，为 311 次">
+            <div class="hour-item"><span class="hour-value">122</span><span class="hour-bar" style="height:39.2%"></span><span class="hour-label">00</span></div>
+            <div class="hour-item"><span class="hour-value">105</span><span class="hour-bar" style="height:33.8%"></span><span class="hour-label">01</span></div>
+            <div class="hour-item"><span class="hour-value">76</span><span class="hour-bar" style="height:24.4%"></span><span class="hour-label">02</span></div>
+            <div class="hour-item"><span class="hour-value">69</span><span class="hour-bar" style="height:22.2%"></span><span class="hour-label">03</span></div>
+            <div class="hour-item"><span class="hour-value">37</span><span class="hour-bar" style="height:11.9%"></span><span class="hour-label">04</span></div>
+            <div class="hour-item"><span class="hour-value">22</span><span class="hour-bar" style="height:7.1%"></span><span class="hour-label">05</span></div>
+            <div class="hour-item"><span class="hour-value">26</span><span class="hour-bar" style="height:8.4%"></span><span class="hour-label">06</span></div>
+            <div class="hour-item"><span class="hour-value">58</span><span class="hour-bar" style="height:18.6%"></span><span class="hour-label">07</span></div>
+            <div class="hour-item"><span class="hour-value">34</span><span class="hour-bar" style="height:10.9%"></span><span class="hour-label">08</span></div>
+            <div class="hour-item"><span class="hour-value">77</span><span class="hour-bar" style="height:24.8%"></span><span class="hour-label">09</span></div>
+            <div class="hour-item"><span class="hour-value">206</span><span class="hour-bar" style="height:66.2%"></span><span class="hour-label">10</span></div>
+            <div class="hour-item"><span class="hour-value">242</span><span class="hour-bar" style="height:77.8%"></span><span class="hour-label">11</span></div>
+            <div class="hour-item"><span class="hour-value">271</span><span class="hour-bar" style="height:87.1%"></span><span class="hour-label">12</span></div>
+            <div class="hour-item"><span class="hour-value">184</span><span class="hour-bar" style="height:59.2%"></span><span class="hour-label">13</span></div>
+            <div class="hour-item"><span class="hour-value">198</span><span class="hour-bar" style="height:63.7%"></span><span class="hour-label">14</span></div>
+            <div class="hour-item"><span class="hour-value">311</span><span class="hour-bar" style="height:100%"></span><span class="hour-label">15</span></div>
+            <div class="hour-item"><span class="hour-value">293</span><span class="hour-bar" style="height:94.2%"></span><span class="hour-label">16</span></div>
+            <div class="hour-item"><span class="hour-value">302</span><span class="hour-bar" style="height:97.1%"></span><span class="hour-label">17</span></div>
+            <div class="hour-item"><span class="hour-value">258</span><span class="hour-bar" style="height:83.0%"></span><span class="hour-label">18</span></div>
+            <div class="hour-item"><span class="hour-value">247</span><span class="hour-bar" style="height:79.4%"></span><span class="hour-label">19</span></div>
+            <div class="hour-item"><span class="hour-value">246</span><span class="hour-bar" style="height:79.1%"></span><span class="hour-label">20</span></div>
+            <div class="hour-item"><span class="hour-value">283</span><span class="hour-bar" style="height:91.0%"></span><span class="hour-label">21</span></div>
+            <div class="hour-item"><span class="hour-value">282</span><span class="hour-bar" style="height:90.7%"></span><span class="hour-label">22</span></div>
+            <div class="hour-item"><span class="hour-value">206</span><span class="hour-bar" style="height:66.2%"></span><span class="hour-label">23</span></div>
+          </div>
+        </div>
+        <div class="dash-block">
+          <h4>📅 按月份的提交分布</h4>
+          <p class="dash-note">2026-03 至 2026-07，按 Git committer 日期统计</p>
+          <div class="month-chart" role="img" aria-label="hk_customs 分支每月提交次数，2026 年 6 月最高，为 1258 次">
+            <div class="month-item"><span class="month-value">437</span><span class="month-bar" style="height:34.7%"></span><span class="month-label">2026-03</span></div>
+            <div class="month-item"><span class="month-value">674</span><span class="month-bar" style="height:53.6%"></span><span class="month-label">2026-04</span></div>
+            <div class="month-item"><span class="month-value">1,256</span><span class="month-bar" style="height:99.8%"></span><span class="month-label">2026-05</span></div>
+            <div class="month-item"><span class="month-value">1,258</span><span class="month-bar" style="height:100%"></span><span class="month-label">2026-06</span></div>
+            <div class="month-item"><span class="month-value">530</span><span class="month-bar" style="height:42.1%"></span><span class="month-label">2026-07</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-grid">
+        <div class="dash-block people-chart">
+          <h4>👥 按作者的提交分布</h4>
+          <p class="dash-note">按 author name 聚合；同名不同邮箱已合并</p>
+          <div class="bar-chart" role="img" aria-label="hk_customs 分支作者提交数，wangxinxin 4070 次，dengxiang 72 次，曹吴昊 12 次，spwangxp 1 次">
+            <div class="bar-row"><span class="bar-label">wangxinxin</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">4,070</span></div>
+            <div class="bar-row"><span class="bar-label">dengxiang</span><span class="bar-track"><span class="bar-fill" style="width:1.8%"></span></span><span class="bar-value">72</span></div>
+            <div class="bar-row"><span class="bar-label">曹吴昊</span><span class="bar-track"><span class="bar-fill" style="width:.3%"></span></span><span class="bar-value">12</span></div>
+            <div class="bar-row"><span class="bar-label">spwangxp</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">1</span></div>
+          </div>
+        </div>
+        <div class="dash-block">
+          <h4>📚 文档格式分布</h4>
+          <p class="dash-note">设计文档按 Git 已追踪文件的扩展名统计</p>
+          <div class="bar-chart" role="img" aria-label="Markdown 设计文档 796 个，HTML 设计文档 147 个">
+            <div class="bar-row"><span class="bar-label">Markdown</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">796</span></div>
+            <div class="bar-row"><span class="bar-label">HTML</span><span class="bar-track"><span class="bar-fill" style="width:18.5%"></span></span><span class="bar-value">147</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dash-block">
+        <h4>🧱 按语言的代码行数</h4>
+        <p class="dash-note">cloc 2.06，统计 Git 已追踪文件；工程代码共 795,724 行，已排除 Markdown、HTML 与 Text 文档内容</p>
+        <div class="language-chart" role="img" aria-label="项目各语言代码行数，Python 500630 行最多">
+          <div class="bar-row"><span class="bar-label">Python</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">500,630</span></div>
+          <div class="bar-row"><span class="bar-label">JSON</span><span class="bar-track"><span class="bar-fill" style="width:22.4%"></span></span><span class="bar-value">111,999</span></div>
+          <div class="bar-row"><span class="bar-label">Vue</span><span class="bar-track"><span class="bar-fill" style="width:14.4%"></span></span><span class="bar-value">72,014</span></div>
+          <div class="bar-row"><span class="bar-label">JavaScript</span><span class="bar-track"><span class="bar-fill" style="width:8.6%"></span></span><span class="bar-value">43,205</span></div>
+          <div class="bar-row"><span class="bar-label">YAML</span><span class="bar-track"><span class="bar-fill" style="width:5.0%"></span></span><span class="bar-value">25,209</span></div>
+          <div class="bar-row"><span class="bar-label">Bourne Shell</span><span class="bar-track"><span class="bar-fill" style="width:3.8%"></span></span><span class="bar-value">19,126</span></div>
+          <div class="bar-row"><span class="bar-label">TypeScript</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10,166</span></div>
+          <div class="bar-row"><span class="bar-label">CSV</span><span class="bar-track"><span class="bar-fill" style="width:2.0%"></span></span><span class="bar-value">10,001</span></div>
+          <div class="bar-row"><span class="bar-label">SCSS</span><span class="bar-track"><span class="bar-fill" style="width:.4%"></span></span><span class="bar-value">2,249</span></div>
+          <div class="bar-row"><span class="bar-label">Text</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">557</span></div>
+          <div class="bar-row"><span class="bar-label">SQL</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">399</span></div>
+          <div class="bar-row"><span class="bar-label">TOML</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">330</span></div>
+          <div class="bar-row"><span class="bar-label">Dockerfile</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">326</span></div>
+          <div class="bar-row"><span class="bar-label">INI</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">32</span></div>
+          <div class="bar-row"><span class="bar-label">Mako</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">17</span></div>
+          <div class="bar-row"><span class="bar-label">XML</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">17</span></div>
+          <div class="bar-row"><span class="bar-label">SVG</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">4</span></div>
+        </div>
+      </div>
+
+      <p class="stats-source">统计快照：<code>hk_customs</code> @ <code>441c58c9d9ec</code>（2026-07-20 17:57 +08:00）。提交按 committer 日期分桶，人员按 author name 聚合；文档统计包含全部 Git 已追踪的 <code>.md</code>、<code>.html</code> / <code>.htm</code> 文件。</p>
     </div>
 
-    <div class="grid two">
-      <div class="card"><h4>按技术栈拆分</h4><p>Python 555,213 行 / 1,722 文件; Vue 60,164 行 / 85 文件; JavaScript/MJS 37,679 行 / 185 文件; Shell 18,829 行 / 92 文件; TypeScript 9,861 行 / 54 文件; YAML/YML 25,794 行 / 257 文件; JSON 22,880 行 / 82 文件; 其它配置、Docker、SQL 等 3,680 行。</p></div>
-      <div class="card"><h4>按目录拆分</h4><p><code>services</code> 647,196 行 / 1,909 文件,是主要代码体量;<code>deploy</code> 34,185 行;<code>.coord</code> 20,781 行;<code>tests</code> 11,825 行;<code>packages</code> 11,566 行;<code>skills</code> 3,401 行;<code>scripts</code> 2,910 行;其它 2,236 行。</p></div>
-    </div>
-
-    <div class="callout principle">
-      <div class="t">🧭 调研结论</div>
-      该仓库已经是几十万行级别的多服务工程,AI 协作不能依赖「一次性全量读完」。更稳妥的方式是先用目录、语言和配置清单建立索引,再按服务/风险/变更面切分上下文;代码规模统计本身应作为任务拆解、评审范围和验证预算的输入。
-    </div>
-
-    <h3>7.2 工具链沉淀</h3>
+    <h3>6.2 工具链沉淀</h3>
     <div class="grid two">
       <div class="card"><h4><span class="ico">📜</span>项目宪法</h4><p><code>CLAUDE.md</code>/<code>AGENTS.md</code>:技术栈、结构、命名、禁忌、构建与测试命令、安全边界——所有 AI 协作的统一前提。</p></div>
       <div class="card"><h4><span class="ico">🧠</span>跨会话记忆</h4><p>把踩过的坑、团队约定、长期上下文沉淀为可复用记忆;写入前先确认不包含密钥、客户数据和临时误判。</p></div>
@@ -692,16 +808,32 @@
     <p style="opacity:.7;">王欣鑫 · 2026-06-26 · 开发岗 AI 原生研发 SOP（草稿 v0.2）</p>
   </footer>
 
+  </main>
 </div>
 
 <button class="backtop" id="backtop" aria-label="回到顶部">↑</button>
 
 <script>
   var bt=document.getElementById('backtop');
+  var tocLinks=Array.prototype.slice.call(document.querySelectorAll('.toc a'));
+  var sections=Array.prototype.slice.call(document.querySelectorAll('main section[id]'));
+  function updateToc(){
+    var current=sections[0]&&sections[0].id;
+    for(var i=0;i<sections.length;i++){
+      if(sections[i].getBoundingClientRect().top<=140){current=sections[i].id;}
+    }
+    tocLinks.forEach(function(link){
+      var active=link.getAttribute('href')==='#'+current;
+      link.classList.toggle('active',active);
+      if(active){link.setAttribute('aria-current','true');}else{link.removeAttribute('aria-current');}
+    });
+  }
   window.addEventListener('scroll',function(){
     if(window.scrollY>600){bt.classList.add('show');}else{bt.classList.remove('show');}
+    updateToc();
   },{passive:true});
   bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
+  updateToc();
 </script>
 </body>
 </html>

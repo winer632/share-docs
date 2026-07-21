@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f6f8fc">
+<title>汇编器与编译器 · 如何重塑编程世界</title>
+<style>
+  :root{
+    --bg:#f6f8fc;
+    --bg-soft:#eef1f7;
+    --panel:#ffffff;
+    --panel-2:#eef2f8;
+    --line:rgba(15,23,42,.10);
+    --line-strong:rgba(15,23,42,.16);
+    --ink:#171c26;
+    --ink-soft:#4a5566;
+    --ink-dim:#79839a;
+    --accent:#3b6fe0;
+    --accent-2:#12a07e;
+    --accent-3:#cf8527;
+    --accent-4:#d6558a;
+    --grad:linear-gradient(120deg,#4f7bf0 0%,#15b794 100%);
+    --grad-warm:linear-gradient(120deg,#ef9a3e 0%,#e0608f 100%);
+    --radius:18px;
+    --maxw:1080px;
+    --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,Helvetica,Arial,sans-serif;
+    --serif:"Iowan Old Style","Apple Garamond",Georgia,"Times New Roman","Songti SC",serif;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:var(--font);line-height:1.75;font-size:16px;
+    -webkit-font-smoothing:antialiased;
+    background-image:
+      radial-gradient(900px 500px at 80% -10%,rgba(124,158,255,.18),transparent 60%),
+      radial-gradient(700px 500px at -10% 10%,rgba(18,160,126,.12),transparent 55%);
+    background-attachment:fixed;
+  }
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 20px}
+
+  /* ---------- Top nav ---------- */
+  header.nav{
+    position:sticky;top:0;z-index:50;
+    backdrop-filter:saturate(160%) blur(14px);
+    background:rgba(255,255,255,.78);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{display:flex;align-items:center;gap:14px;height:58px}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.2px}
+  .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--grad);display:inline-block;box-shadow:0 0 18px rgba(124,158,255,.5)}
+  .brand small{font-weight:500;color:var(--ink-dim);font-size:12px;display:block;letter-spacing:.5px;text-transform:uppercase}
+  .nav-links{margin-left:auto;display:flex;gap:6px}
+  .nav-links a{
+    color:var(--ink-soft);text-decoration:none;font-size:13.5px;padding:7px 12px;border-radius:10px;transition:.2s;white-space:nowrap;
+  }
+  .nav-links a:hover{color:var(--ink);background:var(--panel)}
+  @media(max-width:760px){.nav-links{display:none}}
+
+  /* ---------- Hero ---------- */
+  .hero{padding:74px 0 30px;position:relative}
+  .eyebrow{
+    display:inline-flex;align-items:center;gap:8px;font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:var(--accent-2);border:1px solid var(--line-strong);padding:6px 14px;border-radius:999px;background:var(--panel)
+  }
+  .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent-2);box-shadow:0 0 0 0 rgba(110,231,199,.6);animation:pulse 2.2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(110,231,199,.55)}70%{box-shadow:0 0 0 9px rgba(110,231,199,0)}100%{box-shadow:0 0 0 0 rgba(110,231,199,0)}}
+  h1.title{
+    font-family:var(--serif);font-weight:600;line-height:1.1;letter-spacing:-.5px;
+    font-size:clamp(34px,7vw,62px);margin:22px 0 14px;
+  }
+  h1.title .g{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .lede{font-size:clamp(16px,2.4vw,20px);color:var(--ink-soft);max-width:760px}
+  .hero-note{
+    margin-top:22px;padding:16px 18px;border-left:3px solid var(--accent-3);
+    background:linear-gradient(90deg,rgba(246,184,107,.10),transparent);border-radius:0 12px 12px 0;color:var(--ink-soft);font-size:14.5px
+  }
+  .hero-note b{color:var(--ink)}
+
+  /* ---------- Section scaffolding ---------- */
+  section{padding:46px 0;border-top:1px solid var(--line)}
+  .kicker{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .kicker .num{
+    font-family:var(--serif);font-size:13px;color:var(--bg);background:var(--accent);
+    width:30px;height:30px;border-radius:9px;display:grid;place-items:center;font-weight:700;flex:none
+  }
+  .kicker .num.alt{background:var(--accent-2)}
+  .kicker .num.warm{background:var(--accent-3)}
+  .kicker .num.rose{background:var(--accent-4)}
+  .kicker span.tag{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+  h2{font-family:var(--serif);font-weight:600;font-size:clamp(24px,4vw,34px);line-height:1.2;margin:.1em 0 .5em;letter-spacing:-.3px}
+  h3{font-size:18px;margin:1.6em 0 .4em;color:var(--ink)}
+  p{color:var(--ink-soft);margin:.7em 0}
+  p strong,li strong{color:var(--ink);font-weight:600}
+  a.inline{color:var(--accent);text-decoration:none;border-bottom:1px dotted rgba(124,158,255,.5)}
+  ul{color:var(--ink-soft);padding-left:1.15em}
+  li{margin:.35em 0}
+
+  /* ---------- Cards / grid ---------- */
+  .grid{display:grid;gap:16px}
+  .g2{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:repeat(3,1fr)}
+  @media(max-width:760px){.g2,.g3{grid-template-columns:1fr}}
+  .card{
+    background:linear-gradient(180deg,var(--panel),var(--bg-soft));
+    border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px;position:relative;overflow:hidden
+  }
+  .card:before{content:"";position:absolute;inset:0 0 auto 0;height:3px;background:var(--grad);opacity:.8}
+  .card.warm:before{background:var(--grad-warm)}
+  .card h4{margin:.2em 0 .4em;font-size:16px;display:flex;align-items:center;gap:9px}
+  .card .ico{width:34px;height:34px;flex:none}
+  .card p{font-size:14px;margin:.4em 0}
+
+  /* ---------- Stat callouts ---------- */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:8px 0}
+  @media(max-width:760px){.stats{grid-template-columns:1fr 1fr}}
+  .stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .stat .v{font-family:var(--serif);font-size:clamp(22px,4.5vw,30px);font-weight:600;line-height:1}
+  .stat .v.a{color:var(--accent)} .stat .v.b{color:var(--accent-2)} .stat .v.c{color:var(--accent-3)} .stat .v.d{color:var(--accent-4)}
+  .stat .l{font-size:12.5px;color:var(--ink-dim);margin-top:7px}
+
+  /* ---------- Timeline ---------- */
+  .timeline{position:relative;margin:8px 0;padding-left:4px}
+  .tl-item{position:relative;padding:0 0 4px 42px;margin-bottom:18px}
+  .tl-item:before{content:"";position:absolute;left:13px;top:6px;bottom:-18px;width:2px;background:linear-gradient(var(--line-strong),transparent)}
+  .tl-item:last-child:before{display:none}
+  .tl-dot{position:absolute;left:5px;top:3px;width:18px;height:18px;border-radius:50%;background:var(--panel);border:2px solid var(--accent);box-shadow:0 0 0 4px rgba(124,158,255,.12)}
+  .tl-dot.b{border-color:var(--accent-2);box-shadow:0 0 0 4px rgba(110,231,199,.12)}
+  .tl-dot.c{border-color:var(--accent-3);box-shadow:0 0 0 4px rgba(246,184,107,.12)}
+  .tl-dot.d{border-color:var(--accent-4);box-shadow:0 0 0 4px rgba(232,121,166,.12)}
+  .tl-year{font-family:var(--serif);font-weight:700;font-size:20px;color:var(--ink)}
+  .tl-item p{margin:.2em 0;font-size:14.5px}
+
+  /* ---------- Table ---------- */
+  .table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:14px;-webkit-overflow-scrolling:touch}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+  th,td{text-align:left;padding:13px 15px;border-bottom:1px solid var(--line);vertical-align:top}
+  thead th{background:var(--panel-2);color:var(--ink);font-weight:600;position:sticky;top:0}
+  tbody tr:hover{background:rgba(15,23,42,.03)}
+  td .yr{font-family:var(--serif);color:var(--accent-2);font-weight:600}
+
+  /* ---------- Figure / chart blocks ---------- */
+  figure{margin:18px 0;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px}
+  figure svg{display:block;width:100%;height:auto}
+  figcaption{color:var(--ink-dim);font-size:12.5px;margin-top:10px;text-align:center}
+
+  .pill{display:inline-block;font-size:11.5px;padding:3px 10px;border-radius:999px;border:1px solid var(--line-strong);color:var(--ink-soft);margin:2px 4px 2px 0}
+  .pill.a{color:var(--accent);border-color:rgba(124,158,255,.35)}
+  .pill.b{color:var(--accent-2);border-color:rgba(110,231,199,.35)}
+  .pill.c{color:var(--accent-3);border-color:rgba(246,184,107,.35)}
+
+  .compare{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  @media(max-width:620px){.compare{grid-template-columns:1fr}}
+  .compare > div{padding:20px}
+  .compare .before{background:linear-gradient(180deg,rgba(246,184,107,.07),transparent)}
+  .compare .after{background:linear-gradient(180deg,rgba(110,231,199,.07),transparent);border-left:1px solid var(--line)}
+  @media(max-width:620px){.compare .after{border-left:0;border-top:1px solid var(--line)}}
+  .compare h4{margin:.1em 0 .6em;font-size:15px;display:flex;align-items:center;gap:8px}
+
+  blockquote{margin:16px 0;padding:14px 18px;border-left:3px solid var(--accent);background:var(--panel);border-radius:0 12px 12px 0;color:var(--ink-soft);font-size:14.5px}
+  .takeaway{margin-top:20px;padding:18px 20px;border-radius:var(--radius);background:linear-gradient(120deg,rgba(124,158,255,.12),rgba(110,231,199,.10));border:1px solid var(--line-strong)}
+  .takeaway b{color:var(--ink)}
+
+  footer{padding:40px 0 60px;border-top:1px solid var(--line);color:var(--ink-dim);font-size:13px}
+  .src{font-size:12px;color:var(--ink-dim);margin-top:8px;line-height:1.9}
+  .src a{color:var(--accent);text-decoration:none}
+  details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:4px 14px;background:var(--panel)}
+  summary{cursor:pointer;padding:10px 0;font-size:14px;color:var(--ink);font-weight:600}
+  .totop{position:fixed;right:16px;bottom:16px;z-index:60;background:var(--panel);border:1px solid var(--line-strong);color:var(--ink);width:46px;height:46px;border-radius:14px;display:none;place-items:center;text-decoration:none;font-size:20px;box-shadow:0 8px 24px rgba(15,23,42,.15)}
+  .totop.show{display:grid}
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <div class="brand"><span class="dot"></span><div>Compute&nbsp;History&nbsp;Lab<small>Tools that built programming</small></div></div>
+    <nav class="nav-links">
+      <a href="#timeline">时间轴</a>
+      <a href="#first">第一台计算机</a>
+      <a href="#assembler">汇编器</a>
+      <a href="#compiler">编译器</a>
+      <a href="#impact">核心影响</a>
+      <a href="#ai-agent">AI Agent</a>
+      <a href="#summary">总结</a>
+    </nav>
+  </div>
+</header>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="wrap">
+    <span class="eyebrow"><span class="pulse"></span>Research Brief · 编程工具史</span>
+    <h1 class="title">从<span class="g">拨开关</span>到<span class="g">写公式</span><br>汇编器与编译器如何重塑编程</h1>
+    <p class="lede">两件工具，把编程从「直接操纵机器」一步步推向「表达问题本身」，也把程序员从实验室里的几十人，扩展成数十万人的职业群体。</p>
+    <div class="hero-note">
+      <b>阅读前的一个关键提示：</b>「第一台计算机」「第一台汇编器」「第一台编译器」都有不同口径，本文采用主流历史口径。1940—1960 年代没有今天这种「程序员人数」统计，所以从业人员数量均为基于机器数量、机构规模与职业报告的<b>区间估计</b>，而非官方数据。
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE -->
+<section id="timeline">
+  <div class="wrap">
+    <div class="kicker"><span class="num">★</span><span class="tag">One-line Timeline</span></div>
+    <h2>一句话时间轴</h2>
+    <div class="grid g2" style="align-items:start">
+      <div class="timeline">
+        <div class="tl-item"><span class="tl-dot"></span><div class="tl-year">1941</div><p><strong>第一台现代可编程自动计算机</strong> · 德国 Konrad Zuse 的 <b>Z3</b>，通常被认为是第一台可工作的、程序控制的二进制计算机。</p></div>
+        <div class="tl-item"><span class="tl-dot"></span><div class="tl-year">1945 / 1946</div><p><strong>第一台通用电子计算机</strong> · <b>ENIAC</b>，1943—1945 建造，1946 公开宣布；早期大型通用电子计算机代表。</p></div>
+        <div class="tl-item"><span class="tl-dot b"></span><div class="tl-year">≈ 1949</div><p><strong>第一代汇编系统</strong> · 剑桥 EDSAC 的 <b>Initial Orders</b>，设计约 1948，EDSAC 1949 投入常规服务。</p></div>
+        <div class="tl-item"><span class="tl-dot c"></span><div class="tl-year">1951 — 1952</div><p><strong>第一代编译器雏形</strong> · Grace Hopper 的 <b>A-0</b>，常被称为最早的「compiler」，但更像链接器 / 装载器。</p></div>
+        <div class="tl-item"><span class="tl-dot d"></span><div class="tl-year">1957</div><p><strong>影响巨大的高级语言编译器</strong> · IBM <b>FORTRAN</b> 编译器商业发布，设计始于 1954，第一个极具影响力的高效高级语言编译器。</p></div>
+      </div>
+
+      <!-- SVG ERA STRIP -->
+      <figure>
+        <svg viewBox="0 0 420 300" role="img" aria-label="编程方式演进示意">
+          <defs>
+            <linearGradient id="gA" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7c9eff"/><stop offset="1" stop-color="#6ee7c7"/></linearGradient>
+            <linearGradient id="gW" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f6b86b"/><stop offset="1" stop-color="#e879a6"/></linearGradient>
+          </defs>
+          <!-- era 1: wires -->
+          <g transform="translate(20,24)">
+            <rect width="380" height="58" rx="10" fill="#eef2f8" stroke="rgba(15,23,42,.10)"/>
+            <text x="14" y="24" fill="#171c26" font-family="Georgia" font-size="14">机器码 · 接线 · 拨开关</text>
+            <text x="14" y="44" fill="#79839a" font-size="11">1940s — 直接对硬件说话</text>
+            <g stroke="#f6b86b" stroke-width="2" fill="none" opacity=".85">
+              <path d="M250 18 q20 16 40 0 q20 -16 40 0"/>
+              <path d="M250 34 q20 16 40 0 q20 -16 40 0" opacity=".6"/>
+            </g>
+            <circle cx="345" cy="20" r="4" fill="#f6b86b"/><circle cx="345" cy="40" r="4" fill="#6ee7c7"/>
+          </g>
+          <!-- era 2: assembler -->
+          <g transform="translate(20,104)">
+            <rect width="380" height="58" rx="10" fill="#eef2f8" stroke="rgba(18,160,126,.35)"/>
+            <text x="14" y="24" fill="#171c26" font-family="Georgia" font-size="14">汇编语言 · 助记符 · 标签</text>
+            <text x="14" y="44" fill="#79839a" font-size="11">≈1949 — 符号化指令</text>
+            <text x="262" y="28" fill="#0f8e70" font-family="ui-monospace,monospace" font-size="13">LOAD A</text>
+            <text x="262" y="46" fill="#0f8e70" font-family="ui-monospace,monospace" font-size="13">ADD  B</text>
+          </g>
+          <!-- era 3: compiler -->
+          <g transform="translate(20,184)">
+            <rect width="380" height="58" rx="10" fill="#eef2f8" stroke="rgba(214,85,138,.38)"/>
+            <text x="14" y="24" fill="#171c26" font-family="Georgia" font-size="14">高级语言 · 接近数学公式</text>
+            <text x="14" y="44" fill="#79839a" font-size="11">1957 — 表达问题本身</text>
+            <text x="250" y="38" fill="#d6558a" font-family="ui-monospace,monospace" font-size="13">Y = A*X + B</text>
+          </g>
+          <!-- arrow -->
+          <g transform="translate(10,82)" opacity=".9">
+            <path d="M0 0 V120" stroke="url(#gA)" stroke-width="3" fill="none"/>
+            <path d="M-5 112 L0 124 L5 112 Z" fill="#15b794"/>
+          </g>
+        </svg>
+        <figcaption>编程抽象层级的三次跃迁：从位模式 → 符号指令 → 问题表达</figcaption>
+      </figure>
+    </div>
+
+    <div class="table-wrap" style="margin-top:18px">
+      <table>
+        <thead><tr><th>节点</th><th>较稳妥年份</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>第一台现代可编程自动计算机</td><td><span class="yr">1941</span></td><td>德国 Konrad Zuse 的 Z3，第一台可工作的、程序控制的二进制计算机</td></tr>
+          <tr><td>第一台通用电子计算机</td><td><span class="yr">1945/1946</span></td><td>ENIAC，1943—1945 建造，1946 公开宣布</td></tr>
+          <tr><td>第一代汇编器 / 汇编系统</td><td><span class="yr">≈1949</span></td><td>剑桥 EDSAC 的 Initial Orders，设计约 1948，1949 投入服务</td></tr>
+          <tr><td>第一代编译器</td><td><span class="yr">1951—1952</span></td><td>Grace Hopper 的 A-0，更像链接器 / 装载器</td></tr>
+          <tr><td>影响巨大的高级语言编译器</td><td><span class="yr">1957</span></td><td>IBM FORTRAN，设计始于 1954，第一个高效高级语言编译器</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- 1. FIRST COMPUTER -->
+<section id="first">
+  <div class="wrap">
+    <div class="kicker"><span class="num">1</span><span class="tag">First Computer</span></div>
+    <h2>第一台计算机哪一年出现？</h2>
+    <p>这取决于你说的「计算机」是哪一种。</p>
+    <div class="grid g2">
+      <div class="card">
+        <h4>
+          <svg class="ico" viewBox="0 0 40 40"><rect x="4" y="8" width="32" height="22" rx="3" fill="none" stroke="#3b6fe0" stroke-width="2"/><rect x="9" y="12" width="22" height="11" fill="rgba(59,111,224,.20)"/><line x1="14" y1="34" x2="26" y2="34" stroke="#3b6fe0" stroke-width="2"/></svg>
+          1941 · Zuse Z3
+        </h4>
+        <p><strong>现代意义上的可编程自动计算机</strong>。由德国工程师 Konrad Zuse 制造，是可工作的、程序控制的二进制浮点计算机。德国 Deutsches Museum 也将 Z3 视为「世界第一台可编程二进制计算机」。</p>
+      </div>
+      <div class="card">
+        <h4>
+          <svg class="ico" viewBox="0 0 40 40"><rect x="5" y="6" width="9" height="28" rx="2" fill="none" stroke="#12a07e" stroke-width="2"/><rect x="16" y="6" width="9" height="28" rx="2" fill="none" stroke="#12a07e" stroke-width="2"/><rect x="27" y="6" width="8" height="28" rx="2" fill="none" stroke="#12a07e" stroke-width="2"/><circle cx="9.5" cy="13" r="1.6" fill="#12a07e"/><circle cx="20.5" cy="20" r="1.6" fill="#12a07e"/><circle cx="31" cy="27" r="1.6" fill="#12a07e"/></svg>
+          1945/1946 · ENIAC
+        </h4>
+        <p><strong>通用电子计算机的代表</strong>。在美国宾夕法尼亚大学 Moore School 建造，1943—1945 完成。它不是第一台「可编程计算机」，但是第一批大型通用电子计算机之一，速度远超机电设备。</p>
+      </div>
+    </div>
+    <div class="takeaway">
+      <b>最稳妥的回答：</b>1941 年 Z3，第一台可工作的程序控制计算机；1945/1946 年 ENIAC，早期通用电子计算机的代表。
+    </div>
+  </div>
+</section>
+
+<!-- 2. ASSEMBLER YEAR -->
+<section id="assembler">
+  <div class="wrap">
+    <div class="kicker"><span class="num alt">2</span><span class="tag">The Assembler</span></div>
+    <h2>汇编器哪一年出现？</h2>
+    <p>通常可以说：<strong>1949 年左右出现了第一代实用汇编系统</strong>。代表是英国剑桥大学 EDSAC 计算机上的 <strong>Initial Orders</strong>。EDSAC 于 <strong>1949 年 5 月 6 日</strong>运行第一个程序，很快成为第一批提供常规计算服务的存储程序计算机之一。它允许程序员用符号形式写指令，而不必直接写全部二进制机器码。</p>
+    <div class="timeline" style="margin-top:18px">
+      <div class="tl-item"><span class="tl-dot b"></span><div class="tl-year">1948</div><p>Wheeler 等人设计 EDSAC Initial Orders</p></div>
+      <div class="tl-item"><span class="tl-dot b"></span><div class="tl-year">1949</div><p>EDSAC 实际运行并提供服务</p></div>
+      <div class="tl-item"><span class="tl-dot b"></span><div class="tl-year">1951</div><p>相关方法在书籍和论文中更系统地传播</p></div>
+    </div>
+    <div class="takeaway"><b>简单回答：</b>汇编器大约在 1949 年出现；EDSAC Initial Orders 是最重要的早期代表。</div>
+  </div>
+</section>
+
+<!-- 3. BEFORE ASSEMBLER: HOW -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num alt">3</span><span class="tag">Before · Method</span></div>
+    <h2>汇编器之前，人们怎么编码？</h2>
+    <p>汇编器出现之前，编程更像「直接操纵机器」。主要方式有三类：</p>
+    <div class="grid g3">
+      <div class="card warm">
+        <h4>① 插线 · 拨开关 · 接面板</h4>
+        <p>ENIAC 的早期编程不是敲键盘，而是通过电缆连接、开关设置、功能表设置来「配置」机器。Computer History Museum 明确提到，ENIAC 程序通过面板接线和开关完成。</p>
+      </div>
+      <div class="card warm">
+        <h4>② 直接写机器码</h4>
+        <p>程序员需把操作码、地址、数据位置手工写成数字或二进制，再通过纸带、打孔卡、开关输入。EDSAC 早期文档涉及 17 位机器指令与符号 / 机器指令间的转换，正说明了过渡的痛点。</p>
+      </div>
+      <div class="card warm">
+        <h4>③ 人工计算员流程</h4>
+        <p>电子计算机普及前，大量计算由「human computers」（尤其女性）完成。她们用纸笔、计算器、滑尺、制表机，计算弹道、航空、天文、工程数据。</p>
+      </div>
+    </div>
+    <blockquote>换句话说，汇编器之前的「编码」不是今天意义上的写源代码，而是：<strong>机器级数字 + 物理接线 + 手工地址计算 + 打孔介质 + 大量人工检查。</strong></blockquote>
+  </div>
+</section>
+
+<!-- 4. BEFORE ASSEMBLER: WHO -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num alt">4</span><span class="tag">Before · People</span></div>
+    <h2>汇编器之前：从业人员有多少？组成与分布？</h2>
+    <p>这里要分两个口径。</p>
+    <div class="compare">
+      <div class="before">
+        <h4>🔬 狭义：真正给电子 / 数字计算机写程序的人</h4>
+        <p>在 1945—1949 年，狭义的「程序员」非常少，全球大概是<strong>几十人到不足一两百人</strong>这个量级。原因很简单：当时可工作的电子或自动数字计算机极少。</p>
+        <p>ENIAC 的早期核心程序员团队只有 <strong>6 名女性</strong>，原本来自弹道计算员队伍。剑桥 Mathematical Laboratory 在 1945 年甚至只有 Maurice Wilkes 一名全职雇员。</p>
+      </div>
+      <div class="after">
+        <h4>🧮 广义：人工计算员 / 打孔卡 / 数学计算人员</h4>
+        <p>若把人工计算员算进去，人数大得多。二战期间宾大 Moore School 有 <strong>200 多名女性</strong>参与弹道表计算；NACA/NASA Langley 也雇用数百名女性计算员。</p>
+        <p>广义上，<strong>仅美国就至少有数百到上千名「计算劳动者」</strong>，加上英、德、政府实验室、军方，全球更多——但大多还不是今天意义上的程序员。</p>
+      </div>
+    </div>
+
+    <h3>人员组成</h3>
+    <p>主要包括：<span class="pill a">数学家</span><span class="pill a">物理学家</span><span class="pill a">工程师</span><span class="pill">军方技术人员</span><span class="pill">人工计算员</span><span class="pill">打孔卡操作员</span></p>
+    <p>核心设计人员通常受过大学数学、物理、电气工程训练；大量人工计算员中不少女性拥有数学或科学背景，但职位常被低估为「文书型」或「辅助型」。Smithsonian 指出，human computer 岗位虽被社会看作低地位、重复性劳动，实际往往需要很强的数学能力。</p>
+
+    <h3>地理与机构分布</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h4>🇺🇸 美国</h4>
+        <p>宾大 Moore School、Aberdeen 弹道实验场、NACA Langley、Los Alamos、MIT、军方与政府实验室。</p>
+      </div>
+      <div class="card">
+        <h4>🇬🇧 英国 · 🇩🇪 德国 · 企业</h4>
+        <p>英国：剑桥、曼彻斯特、Bletchley Park 计算传统、国家物理实验室。德国：Zuse 的机器与少数工程团队。企业 / 统计机构：IBM 打孔卡用户、人口普查、保险、会计部门。</p>
+      </div>
+    </div>
+    <div class="takeaway">汇编器出现前，编程还不是大众职业，而是<b>军事、科研、大学实验室与少数政府机构里的高度专业化活动</b>。</div>
+  </div>
+</section>
+
+<!-- 5. AFTER ASSEMBLER -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num alt">5</span><span class="tag">After · Assembler</span></div>
+    <h2>汇编器之后：人数 / 组成 / 分布的变化</h2>
+    <p>汇编器出现后，程序员数量没有立刻爆炸，但开始从「几十人级别」进入「数千人级别」。</p>
+    <div class="stats">
+      <div class="stat"><div class="v a">~2,000</div><div class="l">1951 年美国数学博士总数</div></div>
+      <div class="stat"><div class="v a">2,000–4,000</div><div class="l">1951 年美国计算相关岗位</div></div>
+      <div class="stat"><div class="v b">~700</div><div class="l">1950s 末 SDC 单独雇用程序员</div></div>
+      <div class="stat"><div class="v b">~7,000</div><div class="l">1956–61 SDC 培训的程序员 / 分析员</div></div>
+    </div>
+    <blockquote>粗略估计：<strong>汇编器前</strong>狭义程序员全球几十到一百多人；<strong>汇编器后到编译器普及前</strong>，美国相关岗位达数千人，全球可能是数千到低万级。（推断值，非官方统计）</blockquote>
+
+    <h3>人员组成变化</h3>
+    <p>编程开始从「机器硬件专家的手艺」变成「可以培训的职业」。人员仍以这些人为主：<span class="pill a">数学家</span><span class="pill a">工程师</span><span class="pill a">物理学家</span><span class="pill">系统分析员</span><span class="pill">操作员</span><span class="pill">转型而来的人工计算员</span></p>
+    <p>变化在于：汇编器降低了直接写二进制的难度，让更多数学与工程背景的人能参与；「程序员」逐渐成为独立岗位，而不只是硬件工程师或人工计算员的附属工作。但门槛仍高——程序员通常还需懂机器结构、存储地址、输入输出设备、数值方法与调试技巧。</p>
+
+    <h3>分布变化</h3>
+    <p>仍主要在：<strong>美国军方、航空航天、大学、政府实验室、IBM 等厂商、人口普查与大型企业</strong>。英国同样重要（剑桥 EDSAC、曼彻斯特、Lyons 的 LEO 商用计算机）。HNF 资料提到，1950 年代计算机应用从军事科学扩展到统计与商业；到 1950 年代末全球约有 <strong>8,000 套</strong>计算机系统，但仍主要掌握在专家手中。</p>
+    <div class="takeaway"><b>汇编器的核心影响：</b>把程序从「机器位模式」提升到「人能读懂的符号指令」，让程序更容易写、改、调试和复用。</div>
+  </div>
+</section>
+
+<!-- 6. COMPILER YEAR -->
+<section id="compiler">
+  <div class="wrap">
+    <div class="kicker"><span class="num warm">6</span><span class="tag">The Compiler</span></div>
+    <h2>编译器哪一年出现？</h2>
+    <div class="grid g2">
+      <div class="card warm">
+        <h4>1951–1952 · A-0</h4>
+        <p>Grace Hopper 在 UNIVAC 相关工作中开发的 <strong>A-0 system</strong>，常被称为最早的 compiler 之一。但它更像今天的链接器、装载器或子程序调用系统：把已有子程序组合起来，而非像现代编译器那样完整地把高级语言翻译成机器码。</p>
+      </div>
+      <div class="card warm">
+        <h4>1957 · FORTRAN</h4>
+        <p>真正对编程领域产生巨大实际影响的，是 IBM 的 <strong>FORTRAN 编译器</strong>。1954 开始设计，1957 商业发布。IBM 的历史介绍说：1950 年代早期，编程主要是少数专家写机器语言；FORTRAN 让科学家、数学家和工程师也能直接表达问题。</p>
+      </div>
+    </div>
+    <div class="takeaway"><b>可以这样回答：</b>最早的编译器雏形是 1951–1952 的 A-0；真正影响广泛的高级语言编译器是 1957 年的 FORTRAN。</div>
+  </div>
+</section>
+
+<!-- 7. BEFORE COMPILER: HOW -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num warm">7</span><span class="tag">Before · Method</span></div>
+    <h2>编译器之前，人们怎么编码？</h2>
+    <p>编译器普及前，主要编码方式是：<span class="pill c">机器码</span><span class="pill c">汇编语言</span><span class="pill c">早期自动编码系统</span><span class="pill c">子程序库</span></p>
+    <p>也就是说，程序员仍要非常接近硬件。他们需要知道：</p>
+    <ul>
+      <li>哪个寄存器或内存地址放什么数据；</li>
+      <li>每条机器指令做什么；</li>
+      <li>输入输出设备怎么工作；</li>
+      <li>如何手工优化速度；如何安排子程序；</li>
+      <li>如何避免地址错误、跳转错误、数值错误。</li>
+    </ul>
+    <blockquote>IBM 对 FORTRAN 诞生背景的描述很直接：1950 年代早期，编程几乎是少数专家的领域，他们直接写机器语言；FORTRAN 把这种工作从极少数机器专家手里扩展到科学家、数学家和工程师手里。John Backus 团队的目标是：让程序员使用接近数学公式的表达方式，再由机器把它翻译成高效机器程序。</blockquote>
+    <p><strong>简单说：</strong>编译器之前的程序员是在对机器说话；编译器之后，程序员开始更多地对「问题本身」说话。</p>
+  </div>
+</section>
+
+<!-- 8. BEFORE COMPILER: WHO -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num warm">8</span><span class="tag">Before · People</span></div>
+    <h2>编译器之前：从业人员有多少？组成与分布？</h2>
+    <p>这里指 <strong>1951—1957 年左右</strong>——A-0 已出现但 FORTRAN 还没真正广泛影响之前。</p>
+    <div class="stats">
+      <div class="stat"><div class="v c">2,000–4,000</div><div class="l">1951 美国计算相关岗位</div></div>
+      <div class="stat"><div class="v c">~2,000</div><div class="l">全国数学博士总数（对比）</div></div>
+      <div class="stat"><div class="v c">数千人</div><div class="l">美国从业人员大致规模</div></div>
+      <div class="stat"><div class="v c">数千–低万</div><div class="l">全球推断规模</div></div>
+    </div>
+    <h3>人员组成</h3>
+    <p>比汇编器前更复杂：<span class="pill">数学家</span><span class="pill">物理学家</span><span class="pill">工程师</span><span class="pill">军方科研人员</span><span class="pill">程序员</span><span class="pill">机器操作员</span><span class="pill">系统分析员</span><span class="pill">打孔卡 / 制表机人员</span><span class="pill">人工计算员转型者</span></p>
+    <p>学历上，大学数学、物理、工程背景仍很重要。很多早期程序员并非计算机专业毕业——当时现代计算机科学专业还没完全形成，他们往往从数学、工程、物理、天文、统计、会计、军方技术岗位转来。职业上开始出现「programmer」「coder」「operator」「systems analyst」等更明确的岗位名称，但边界还不稳定：一个人可能同时写程序、操作机器、调试硬件、准备纸带或打孔卡。</p>
+    <h3>分布</h3>
+    <div class="grid g3">
+      <div class="card warm"><h4>🇺🇸 美国</h4><p>IBM、RAND/SDC、军方、航空航天、大学、Los Alamos、MIT、人口普查、保险、制造业。</p></div>
+      <div class="card warm"><h4>🇬🇧 英国</h4><p>剑桥、曼彻斯特、LEO、政府与大学实验室。</p></div>
+      <div class="card warm"><h4>🇪🇺 欧洲其他</h4><p>德、法、荷等开始发展本国计算机与数据处理能力。</p></div>
+    </div>
+    <div class="takeaway">这个阶段，软件职业已经形成<b>雏形</b>，但还没有完全大众化——只有军方、政府、大学、大企业买得起早期大型机。</div>
+  </div>
+</section>
+
+<!-- 9. AFTER COMPILER + GROWTH CHART -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num rose">9</span><span class="tag">After · Compiler</span></div>
+    <h2>编译器之后：人数 / 组成 / 分布的变化</h2>
+    <p>编译器，尤其是 FORTRAN 之后，程序员数量与计算机应用范围迅速扩大。IBM 提到：一个原本可能需要手工输入约 <strong>1,000 条机器指令</strong>的任务，可以用几十条 FORTRAN 语句表达，极大降低了科学与工程人员使用计算机的门槛。</p>
+
+    <!-- GROWTH BAR CHART (log-ish, manual heights) -->
+    <figure>
+      <svg viewBox="0 0 860 390" role="img" aria-label="从业人员规模增长（对数尺度示意）">
+        <defs>
+          <linearGradient id="bar1" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#7c9eff" stop-opacity=".4"/><stop offset="1" stop-color="#7c9eff"/></linearGradient>
+          <linearGradient id="bar2" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#6ee7c7" stop-opacity=".4"/><stop offset="1" stop-color="#6ee7c7"/></linearGradient>
+          <linearGradient id="bar3" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#f6b86b" stop-opacity=".4"/><stop offset="1" stop-color="#f6b86b"/></linearGradient>
+          <linearGradient id="bar4" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#e879a6" stop-opacity=".4"/><stop offset="1" stop-color="#e879a6"/></linearGradient>
+          <linearGradient id="bar5" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#8a63e0" stop-opacity=".4"/><stop offset="1" stop-color="#8a63e0"/></linearGradient>
+        </defs>
+        <!-- gridlines (log decades) -->
+        <g font-size="10" fill="#79839a" font-family="ui-monospace,monospace">
+          <line x1="68" y1="70" x2="820" y2="70" stroke="rgba(15,23,42,.08)"/><text x="4" y="74">10,000,000</text>
+          <line x1="68" y1="130" x2="820" y2="130" stroke="rgba(15,23,42,.08)"/><text x="10" y="134">1,000,000</text>
+          <line x1="68" y1="190" x2="820" y2="190" stroke="rgba(15,23,42,.08)"/><text x="22" y="194">100,000</text>
+          <line x1="68" y1="250" x2="820" y2="250" stroke="rgba(15,23,42,.08)"/><text x="30" y="254">10,000</text>
+          <text x="38" y="306">1,000</text>
+        </g>
+        <!-- baseline -->
+        <line x1="68" y1="310" x2="820" y2="310" stroke="rgba(15,23,42,.18)"/>
+        <!-- bars: x positions -->
+        <!-- 1940s 后期 ~100 (狭义) => height tiny -->
+        <g>
+          <rect x="96" y="288" width="84" height="22" rx="6" fill="url(#bar1)"/>
+          <text x="138" y="280" text-anchor="middle" fill="#171c26" font-size="13" font-family="Georgia">~10²</text>
+          <text x="138" y="330" text-anchor="middle" fill="#4a5566" font-size="11">汇编器前</text>
+          <text x="138" y="346" text-anchor="middle" fill="#79839a" font-size="10">1940s末 · 狭义几十~百</text>
+        </g>
+        <!-- 1950s 前中 数千 -->
+        <g>
+          <rect x="244" y="274" width="84" height="36" rx="6" fill="url(#bar2)"/>
+          <text x="286" y="266" text-anchor="middle" fill="#171c26" font-size="13" font-family="Georgia">数千</text>
+          <text x="286" y="330" text-anchor="middle" fill="#4a5566" font-size="11">汇编后/编译前</text>
+          <text x="286" y="346" text-anchor="middle" fill="#79839a" font-size="10">1950s前中 · 美国数千</text>
+        </g>
+        <!-- 1967 ~100,000 -->
+        <g>
+          <rect x="392" y="190" width="84" height="120" rx="6" fill="url(#bar3)"/>
+          <text x="434" y="182" text-anchor="middle" fill="#171c26" font-size="13" font-family="Georgia">~100,000</text>
+          <text x="434" y="330" text-anchor="middle" fill="#4a5566" font-size="11">编译器普及后</text>
+          <text x="434" y="346" text-anchor="middle" fill="#79839a" font-size="10">1967 · 美国程序员</text>
+        </g>
+        <!-- 1970 ~450,000 -->
+        <g>
+          <rect x="540" y="151" width="84" height="159" rx="6" fill="url(#bar4)"/>
+          <text x="582" y="143" text-anchor="middle" fill="#171c26" font-size="13" font-family="Georgia">~450,000</text>
+          <text x="582" y="330" text-anchor="middle" fill="#4a5566" font-size="11">IT 职业统计初期</text>
+          <text x="582" y="346" text-anchor="middle" fill="#79839a" font-size="10">1970 · 广义 IT 从业者</text>
+        </g>
+        <!-- 2026 ~6,000,000 -->
+        <g>
+          <rect x="688" y="83" width="84" height="227" rx="6" fill="url(#bar5)"/>
+          <text x="730" y="75" text-anchor="middle" fill="#171c26" font-size="13" font-family="Georgia">~6,000,000</text>
+          <text x="730" y="330" text-anchor="middle" fill="#4a5566" font-size="11">AI 编程时代</text>
+          <text x="730" y="346" text-anchor="middle" fill="#79839a" font-size="10">2026 · 美国广义 IT 从业者(估算)</text>
+        </g>
+      </svg>
+      <figcaption>美国从业人员规模演进（纵轴为对数示意，便于跨数量级对比）。1967 数据来自 AFIPS；1970 数据为美国人口普查首次单列 IT 职业，约占劳动力 0.6%，为广义 IT 从业者；2026 为美国广义 IT 从业者的量级估算（约 600 万，非官方精确统计）。</figcaption>
+    </figure>
+
+    <h3>人员组成变化</h3>
+    <p>来源明显变宽，不再只是机器专家、数学家和硬件工程师，还包括：<span class="pill a">科学家</span><span class="pill a">工程师</span><span class="pill b">统计人员</span><span class="pill b">商业数据处理人员</span><span class="pill c">会计 / 管理系统人员</span><span class="pill">系统分析员</span><span class="pill">企业内部程序员</span><span class="pill">大学受训学生</span></p>
+    <p>FORTRAN 让科学家和工程师用接近数学公式的方式写程序；COBOL、FLOW-MATIC 等商业语言让企业数据处理、工资、库存、会计、银行、保险更易使用计算机。Grace Hopper 的 A-0 及后续自动编程工作也直接影响了 COBOL 的发展。</p>
+    <blockquote>性别结构也在变化：早期人工计算员和 ENIAC 程序员中女性占重要地位；到 1970 年美国官方 IT 职业统计中，女性比例约 16%，1990 年达约 31% 的峰值，之后下降。</blockquote>
+
+    <h3>分布变化</h3>
+    <p>程序员从少数实验室扩散到大组织：<strong>政府、军方、大学、航空航天、制造业、银行、保险、人口普查、科研机构、计算机厂商、大型企业数据处理中心</strong>。1950 年代末全球约 8,000 套系统；到 1965 年左右全球计算机数量估计已达约 <strong>26,000 台</strong>，几年后约 <strong>50,000 台</strong>。机器增加，意味着程序员、操作员、系统分析员和维护人员同步增加。但 1970 年代以前，计算机仍主要属于大型机构；个人电脑时代要到 1970s 中后期、1980s 才真正展开。</p>
+    <div class="takeaway">编译器没有「减少程序员需求」，反而<b>扩大了软件需求</b>，让更多行业开始需要程序员。</div>
+  </div>
+</section>
+
+<!-- 10. CORE IMPACT -->
+<section id="impact">
+  <div class="wrap">
+    <div class="kicker"><span class="num rose">10</span><span class="tag">Core Impact</span></div>
+    <h2>汇编器与编译器的核心影响</h2>
+    <div class="compare">
+      <div class="before">
+        <h4>🛠️ 汇编器 · 让机器码变成人能管理的符号</h4>
+        <p>之前程序员要面对二进制、数字地址、插线板、开关和纸带；之后可以使用助记符、标签、符号地址、宏、子程序库。</p>
+        <ul style="font-size:14px">
+          <li><strong>减少错误</strong> — 不用每次手工算地址和机器码</li>
+          <li><strong>提高可读性</strong> — <code>ADD / JMP / LOAD</code> 比一串数字易懂</li>
+          <li><strong>让程序可复用</strong> — 子程序、库、标准 IO 例程更实用</li>
+          <li><strong>催生「程序员」职业</strong> — 成为可训练、可分工的专业工作</li>
+        </ul>
+        <p style="font-size:13.5px;color:var(--ink-dim)">但汇编器仍接近硬件，程序员还是要理解机器结构。</p>
+      </div>
+      <div class="after">
+        <h4>🚀 编译器 · 让人用问题语言而非机器语言</h4>
+        <p>编译器把编程从「机器指令层」提升到「问题表达层」。FORTRAN 让科学家工程师用接近数学公式的方式表达计算任务，Backus 团队还证明高级语言编译出的程序可以足够高效。</p>
+        <ul style="font-size:14px">
+          <li><strong>扩大程序员来源</strong> — 数学家、工程师、科学家、商业人员都能更易学</li>
+          <li><strong>推动软件行业形成</strong> — 语言、编译器、OS、数据库、应用软件成为独立产业</li>
+          <li><strong>推动计算机教育</strong> — 大学开课，最终形成计算机科学专业</li>
+          <li><strong>改变工作重点</strong> — 从「指令怎么写」转向算法、数据结构、架构、可维护性</li>
+          <li><strong>需求暴涨</strong> — 软件能做的事变多，社会需要更多程序员</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 11. AI AGENT / VIBE CODING -->
+<section id="ai-agent">
+  <div class="wrap">
+    <div class="kicker"><span class="num">11</span><span class="tag">AI Agent · Vibe Coding</span></div>
+    <h2>AI Agent 编程：编程史上又一次抽象层跃迁？</h2>
+    <div class="takeaway">
+      <b>核心判断：</b>AI Agent 编程 / Vibe Coding 很可能是继汇编器、编译器之后，编程史上又一次重要的<b>抽象层跃迁</b>；但截至 <b>2026 年</b>，它还没有像汇编器和编译器那样成为稳定、可验证、几乎所有软件开发都依赖的基础设施。它的潜在影响力可能达到甚至超过编译器，但<b>现实影响仍处在早期验证阶段</b>。
+    </div>
+
+    <h3>先区分：Vibe Coding 和 AI Agent 编程不是一回事</h3>
+    <p>现在大家常把它们混在一起说，但最好分开看。</p>
+    <div class="grid g2">
+      <div class="card">
+        <h4>💬 Vibe Coding · 用自然语言写软件</h4>
+        <p>更偏向一种「用自然语言描述需求，让 AI 生成代码，再看运行效果反复调整」的开发方式。IBM 对 vibe coding 的解释是：它是一个较新的、定义还比较松散的术语，指通过提示 AI 工具生成代码、而非手工写代码，代表一种更<strong>「意图驱动」</strong>的软件开发方式。</p>
+      </div>
+      <div class="card">
+        <h4>🤖 AI Agent 编程 · 把任务委托给能操作工具的 AI</h4>
+        <p>它不只是补全几行代码，而是让 AI <strong>读取代码库、修改多个文件、运行命令、运行测试、修复错误，甚至生成 PR</strong>。GitHub Copilot 的 agent mode 能在 IDE 中自主判断改哪些文件、提出改动与终端命令并循环修复；Anthropic 的 Claude Code 也能读代码库、编辑文件、运行命令，通过自然语言完成构建、调试与交付。</p>
+      </div>
+    </div>
+    <blockquote>Vibe Coding 是「用自然语言写软件」的极简形态；AI Agent 编程是「把开发任务委托给能操作工具的 AI」的工程化形态。真正可能和汇编器、编译器相提并论的，不是随便让 AI 乱生成代码的 Vibe Coding，而是更成熟的 <strong>Agentic Software Development</strong>。</blockquote>
+  </div>
+</section>
+
+<!-- 12. WHY COMPARABLE + SIMILARITIES -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num alt">12</span><span class="tag">Why Comparable</span></div>
+    <h2>为什么它能和汇编器、编译器放在一起比较？</h2>
+    <p>因为三者都改变了<strong>「人和机器之间的接口」</strong>。</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>阶段</th><th>人主要写什么</th><th>工具做什么</th><th>抽象层跃迁</th></tr></thead>
+        <tbody>
+          <tr><td>机器码时代</td><td>二进制、数字地址、接线、开关</td><td>几乎没有自动翻译</td><td>人直接控制机器</td></tr>
+          <tr><td>汇编器时代</td><td>助记符、标签、符号地址</td><td>把符号指令翻译成机器码</td><td>从数字到符号</td></tr>
+          <tr><td>编译器时代</td><td>高级语言、数学公式、业务逻辑</td><td>把高级语言翻译成机器码</td><td>从机器指令到问题表达</td></tr>
+          <tr><td>AI Agent 时代</td><td>自然语言目标、约束、测试、反馈</td><td>生成 / 修改代码、运行工具、修复错误</td><td>从写代码到描述意图、审查结果</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:14px">汇编器的代表是 EDSAC 的 <strong>Initial Orders</strong>，让 EDSAC 可以用符号方式而非机器码编程，HOPL 称其为早期最重要的汇编系统之一；编译器的代表性事件是 <strong>FORTRAN</strong>（1954 创建、1957 商业发布），帮助把计算机从少数程序员的专属领域扩展给更广泛的人。AI Agent 的类比点在于：它也在<strong>降低门槛、改变程序员的工作、扩大「谁能制造软件」的范围</strong>。</p>
+
+    <h3>四个相似之处</h3>
+    <div class="grid g2">
+      <div class="card warm">
+        <h4>① 降低门槛</h4>
+        <p>汇编器降低机器码门槛，编译器降低汇编语言门槛，AI Agent 正在降低「必须熟练掌握语法、框架、工具链、API 细节」的门槛。你可以先描述目标——「帮我做一个上传 CSV 后生成图表的小工具」——AI 直接生成第一版，再通过运行错误迭代。这和 FORTRAN 当年让科学家用接近数学公式的方式编程高度相似。</p>
+      </div>
+      <div class="card warm">
+        <h4>② 扩大从业者边界</h4>
+        <p>编译器让程序员不再只限于机器专家；AI Agent 让产品经理、设计师、运营、研究人员、学生、创业者都可能用自然语言做出原型软件。这点可能比编译器更激进——编译器仍要求学习一门形式化语言，AI Agent 可以接受自然语言。</p>
+      </div>
+      <div class="card warm">
+        <h4>③ 改变核心工作</h4>
+        <p>汇编器让程序员多思考结构，编译器让程序员多思考算法与业务，AI Agent 让程序员少写重复代码、多做需求拆解、架构判断、测试设计、代码审查、安全检查与系统集成。程序员不是消失，而是从<strong>代码生产者</strong>变成<strong>任务定义者、系统设计者、代码审查者与 AI 协作者</strong>。</p>
+      </div>
+      <div class="card warm">
+        <h4>④ 生产率可能大幅提升</h4>
+        <p>早期 Copilot 研究中，使用者在一个 JavaScript HTTP server 任务上比对照组快 <strong>55.8%</strong>。这种提升的性质和编译器类似：不是让每个程序员变天才，而是把大量机械劳动自动化——尤其在明确、局部、样板化的任务上。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 13. REALITY CHECK + KEY DIFFERENCE + CAREER -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num warm">13</span><span class="tag">Reality Check</span></div>
+    <h2>现实证据是混合的，区别也是本质的</h2>
+
+    <h3>为什么现在还不能说它「已具备同等影响力」？</h3>
+    <p>因为汇编器和编译器是<strong>确定性基础设施</strong>，而当前 AI Agent 还是<strong>概率型协作者</strong>。编译器的输入是严格定义的程序语言，同一源码通常稳定产生可预期结果；AI Agent 的输入是自然语言、代码库上下文、历史对话、工具调用结果与模型状态，可能理解错需求、遗漏边界条件、生成「看起来正确但有隐藏问题」的代码。</p>
+    <div class="stats">
+      <div class="stat"><div class="v a">84%</div><div class="l">受访者正在使用或计划使用 AI 工具（SO 2025）</div></div>
+      <div class="stat"><div class="v a">50.6%</div><div class="l">专业开发者每天使用 AI 工具</div></div>
+      <div class="stat"><div class="v c">~3%</div><div class="l">表示「高度信任」AI 输出准确性</div></div>
+      <div class="stat"><div class="v d">+55.8%</div><div class="l">Copilot 在特定 JS 任务上的提速</div></div>
+    </div>
+    <p>它已经非常流行，但还没有达到「像编译器一样默认可信」的程度。</p>
+
+    <h3>现实证据：有提升，也有反作用</h3>
+    <div class="compare">
+      <div class="before">
+        <h4>📉 真实复杂项目中可能更慢</h4>
+        <p>METR 2025 年的随机对照实验发现：在开发者<strong>熟悉的成熟代码库</strong>中，允许使用 AI 工具时反而平均<strong>慢了 19%</strong>。</p>
+        <p>DORA 的生成式 AI 报告也警告：AI 采用率增加 25%，与交付吞吐量下降 <strong>1.5%</strong>、交付稳定性下降 <strong>7.2%</strong> 相关——代码生成更快，却可能导致变更批次变大、审查更慢、系统更不稳定。</p>
+      </div>
+      <div class="after">
+        <h4>📈 局部任务确实更快</h4>
+        <p>在特定、明确、样板化任务中，AI 编程工具确实带来明显速度提升（如 Copilot 的 55.8%）。</p>
+        <p>更准确的说法是：<strong>AI Agent 提高了「写出代码」的速度，但不一定等比例提高「交付可靠软件」的速度。</strong>这和编译器早期类似——FORTRAN 刚出现时也被怀疑生成代码不够高效，后来靠优化技术、标准化与工具链成熟证明了自己。AI Agent 现在正处在这个「需要证明自己」的阶段。</p>
+      </div>
+    </div>
+
+    <h3>最大区别：编译器翻译代码，AI Agent 参与决策</h3>
+    <div class="grid g2">
+      <div class="card">
+        <h4>🔁 汇编器 / 编译器 = 翻译</h4>
+        <p>汇编器把<strong>符号指令 → 机器码</strong>；编译器把<strong>高级语言 → 机器码 / 中间表示 / 字节码</strong>。它们解决的是「如何把人写的形式语言变成机器能执行的程序」。</p>
+      </div>
+      <div class="card warm">
+        <h4>🧠 AI Agent = 生成 + 修改 + 推理 + 操作工具</h4>
+        <p>它接受<strong>模糊目标 + 自然语言 + 代码库上下文 + 测试反馈 + 工具输出</strong>，然后设计方案、查找文件、修改代码、运行命令、修复错误、写测试、生成 PR——这不是单纯翻译，而是<strong>参与软件工程决策</strong>。</p>
+      </div>
+    </div>
+    <blockquote>所以 AI Agent 的影响可能更大，但风险也更大：编译器很少「误解你的商业目标」，AI Agent 会；编译器不会主动引入不合适的库，AI Agent 可能会；编译器不会假装理解需求，AI Agent 可能给出看起来合理但其实偏题的实现。</blockquote>
+
+    <h3>对职业结构的影响：角色升级，而非「程序员消失」</h3>
+    <div class="compare">
+      <div class="before">
+        <h4>⬇️ 可能变少的工作</h4>
+        <p>样板代码、CRUD 页面、简单脚本、测试模板、文档初稿、API 调用示例、代码迁移初稿等低复杂度、重复性编码。</p>
+      </div>
+      <div class="after">
+        <h4>⬆️ 变得更重要的工作</h4>
+        <p>需求澄清、架构设计、边界条件分析、安全审查、测试设计、性能验证、可维护性、AI 输出审查、上下文管理、工程规范制定。</p>
+      </div>
+    </div>
+    <p>GitLab 2026 年的调查显示：<strong>80%</strong> 的组织认为自己采用 AI 工具的速度快于治理政策建设速度，<strong>92%</strong> 报告在 AI 生成代码治理方面遇到挑战。未来团队的瓶颈可能从「谁来写代码」转向<strong>「谁来审查、验证、治理和承担责任」</strong>。</p>
+  </div>
+</section>
+
+<!-- 14. VERDICT -->
+<section>
+  <div class="wrap">
+    <div class="kicker"><span class="num rose">14</span><span class="tag">Verdict</span></div>
+    <h2>影响可能更大的地方，与几个硬伤</h2>
+
+    <h3>相比汇编器、编译器，影响可能更大的三个方面</h3>
+    <div class="grid g3">
+      <div class="card">
+        <h4>👥 影响人群更大</h4>
+        <p>汇编器主要影响专业程序员，编译器影响程序员、科学家、工程师，AI Agent 可能影响<strong>所有需要把想法变成软件的人</strong>——学生、设计师、创业者、研究人员、运营、财务、教师、个人创作者。它改变的是「非程序员能不能做软件」。</p>
+      </div>
+      <div class="card">
+        <h4>📦 软件数量更大</h4>
+        <p>编译器让专业人士写软件更快，AI Agent 可能让大量原本不会写软件的人也能做小工具、小应用、自动化脚本，带来软件数量暴增——但其中很多在安全、隐私、可维护性方面存在风险。</p>
+      </div>
+      <div class="card">
+        <h4>🔧 开发流程更深</h4>
+        <p>编译器主要位于「源代码 → 可执行程序」一步；AI Agent 可能进入需求、设计、编码、测试、重构、部署、监控、修复整个流程。Claude Code 即覆盖读代码库、运行命令、处理 issue、写代码、跑测试、提交 PR 的完整能力。</p>
+      </div>
+    </div>
+
+    <h3>几个编译器没有的硬伤</h3>
+    <ul>
+      <li><strong>不确定性</strong> — 编译器输出可重复、可追踪、可调试；AI Agent 输出受提示词、上下文、模型版本、工具权限、历史对话影响，很难完全复现。对企业工程、金融、医疗、基础设施、开源都很关键。</li>
+      <li><strong>责任归属更复杂</strong> — 编译器出错可定位为编译器 / 源代码 / 平台 bug；AI 生成代码出错则可能源于提示写错、模型幻觉、测试不足、审查没发现、来源无法追踪。GitLab 调查也显示很多组织难以区分 AI 与人类写的代码。</li>
+      <li><strong>成本结构不同</strong> — 汇编器、编译器一旦安装边际成本极低；AI Agent 依赖云端模型、token、订阅、上下文窗口与算力，企业还要管调用成本、数据泄露风险与供应商锁定。</li>
+      <li><strong>容易制造「理解错觉」</strong> — 编译器不会让你误以为理解了算法，Vibe Coding 可能会。对初学者尤其危险，专业开发更推荐「AI-assisted coding」而非「盲信式 vibe coding」。</li>
+    </ul>
+
+    <h3>判断：像「编译器级革命的早期」</h3>
+    <div class="timeline" style="margin-top:8px">
+      <div class="tl-item"><span class="tl-dot b"></span><div class="tl-year">现在已成立</div><p>AI Agent 编程已是一次<strong>重大的编程界面变化</strong>，从「写代码」转向「描述目标、管理上下文、审查结果」，可以和汇编器、编译器放在同一条历史线上讨论。</p></div>
+      <div class="tl-item"><span class="tl-dot c"></span><div class="tl-year">现在还不成立</div><p>还不能说它已拥有和编译器同等的<strong>确定性历史地位</strong>：真实工程生产率证据混合，复杂任务可靠性不足，审查、治理、安全、可维护性尚未解决。SO 2025 中仅 <strong>3.9%</strong> 认为 AI 处理复杂任务「非常好」，评价「不好 / 非常差」的比例明显更高。</p></div>
+      <div class="tl-item"><span class="tl-dot"></span><div class="tl-year">未来可能成立</div><p>若 AI Agent 能在复杂代码库中稳定完成任务，并具备<strong>可验证、可审计、可控成本、可追责</strong>的工程体系，其影响力很可能达到甚至超过编译器级别——因为编译器主要改变了程序员，AI Agent 可能同时改变程序员、非程序员、公司组织方式、教育方式与软件生产成本。</p></div>
+    </div>
+
+    <div class="takeaway">
+      <b>一句话概括：</b>汇编器把编程从「机器数字」提升到「符号指令」；编译器把编程从「机器指令」提升到「高级语言」；<b>AI Agent 编程正在把编程从「写代码」提升到「表达意图、验证结果、管理软件系统」</b>。它有资格和汇编器、编译器相提并论，但截至现在更像编译器革命早期：潜力巨大、采用迅速，仍需可靠性、治理、标准化与长期实践来证明自己。
+    </div>
+  </div>
+</section>
+
+<!-- SUMMARY -->
+<section id="summary">
+  <div class="wrap">
+    <div class="kicker"><span class="num">∑</span><span class="tag">Summary</span></div>
+    <h2>总结</h2>
+    <div class="grid g2">
+      <div class="card"><h4>🛠️ 汇编器</h4><p><strong>让编程从「写机器数字」进入「写符号指令」时代。</strong>程序更可读、更可调试、更可复用，也让「程序员」开始成为独立职业。</p></div>
+      <div class="card warm"><h4>🚀 编译器</h4><p><strong>让编程从「控制机器」进入「表达问题」时代。</strong>把编程从少数机器专家扩展到科学家、工程师、企业人员乃至普通学生，推动了软件行业、计算机教育与现代 IT 职业体系。</p></div>
+    </div>
+
+    <h3>用人数变化概括</h3>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>阶段</th><th>时间</th><th>狭义程序员 / 计算从业者规模</th></tr></thead>
+        <tbody>
+          <tr><td>汇编器前</td><td><span class="yr">1940s 后期</span></td><td>狭义全球几十到一百多人；广义人工计算员美国至少数百到上千</td></tr>
+          <tr><td>汇编器后、编译器普及前</td><td><span class="yr">1950s 前中期</span></td><td>美国计算相关岗位数千；全球数千到低万级</td></tr>
+          <tr><td>编译器普及后</td><td><span class="yr">1960s</span></td><td>美国程序员到 1967 年约 10 万</td></tr>
+          <tr><td>现代 IT 职业统计初期</td><td><span class="yr">1970</span></td><td>美国广义 IT 从业者约 45 万</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <details>
+      <summary>参考资料来源（点击展开）</summary>
+      <div class="src">
+        [1] Deutsches Museum — Computers · deutsches-museum.de<br>
+        [2] CHM Revolution — ENIAC · computerhistory.org<br>
+        [3] HOPL — EDSAC Initial Orders · hopl.info<br>
+        [4] ETHW — A-0 Compiler &amp; Automatic Programming, 1951–1952 · ethw.org<br>
+        [5] IBM — Fortran · ibm.com/history/fortran<br>
+        [6] CHM Timeline 1946 — ENIAC · computerhistory.org<br>
+        [7] Smithsonian American Women's History Museum — Human Computer Project<br>
+        [8] Whipple Museum — The EDSAC and Computing in Cambridge<br>
+        [9] Smithsonian Magazine — The Gendered History of Human Computers<br>
+        [10] HNF — Computers in science and technology, 1950–1970<br>
+        [11] Backus — Programming in America in the 1950s (Software Preservation, CHM)<br>
+        [12] U.S. Census — Occupations in Information Technology (2016)<br>
+        <br>
+        说明：1940—1960 年代无统一「程序员人数」统计，本页所有从业人员数量为基于机器数量、机构规模与职业报告的区间估计。
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="brand" style="margin-bottom:10px"><span class="dot"></span><div>Compute History Lab</div></div>
+    <p style="margin:.3em 0">汇编器与编译器 · 编程领域影响研究简报</p>
+    <p style="color:var(--ink-dim);font-size:12px">本页为历史科普整理，人数为区间估计而非官方统计。生成于 2026。</p>
+  </div>
+</footer>
+
+<a href="#" class="totop" id="totop" aria-label="回到顶部">↑</a>
+
+<script>
+  // back-to-top visibility
+  var btn=document.getElementById('totop');
+  window.addEventListener('scroll',function(){
+    if(window.scrollY>600){btn.classList.add('show')}else{btn.classList.remove('show')}
+  },{passive:true});
+  // reveal on scroll
+  if('IntersectionObserver' in window){
+    var io=new IntersectionObserver(function(es){
+      es.forEach(function(e){ if(e.isIntersecting){ e.target.style.opacity=1; e.target.style.transform='none'; io.unobserve(e.target);} });
+    },{threshold:.08});
+    document.querySelectorAll('section .card, section figure, section .stat, section .timeline, section .table-wrap').forEach(function(el){
+      el.style.opacity=0; el.style.transform='translateY(14px)'; el.style.transition='opacity .6s ease, transform .6s ease';
+      io.observe(el);
+    });
+  }
+</script>
+</body>
+</html>
