@@ -230,15 +230,6 @@
     .toc-rule { height: 1px; margin: 12px 4px; background: var(--line); }
 
     .document { min-width: 0; }
-    .reading-note {
-      margin: 0 0 22px;
-      padding: 14px 16px;
-      border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
-      border-radius: 14px;
-      background: var(--accent-soft);
-      color: var(--accent-strong);
-      font-size: .86rem;
-    }
     .bilingual-section {
       margin: 8px 0 26px;
       padding: 4px 0 16px;
@@ -353,20 +344,6 @@
     .figure-caption p { margin: 7px 0 0; font-size: .88rem; line-height: 1.7; }
     .figure-caption .zh-copy { color: var(--accent-strong); }
 
-    .facsimile {
-      margin-top: 42px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: var(--paper-raised);
-    }
-    .facsimile > summary {
-      padding: 18px 22px;
-      color: var(--accent-strong);
-      font-weight: 750;
-      cursor: pointer;
-      list-style-position: inside;
-    }
-    .facsimile-note { margin: 0; padding: 0 22px 20px; color: var(--muted); font-size: .82rem; }
     .page-document { padding: 0 clamp(8px, 2vw, 20px) 20px; }
     .section-marker {
       display: flex;
@@ -576,8 +553,8 @@
   <main class="shell" id="top">
     <section class="hero" aria-labelledby="title">
       <p class="eyebrow">Foundation Agents · Section 1.2</p>
-      <h1 id="title">人脑与 AI 智能体的平行比较</h1>
-      <p class="subtitle">A Parallel Comparison between Human Brain and AI Agents</p>
+      <h1 id="title">A Parallel Comparison between Human Brain and AI Agents</h1>
+      <p class="subtitle" lang="zh-CN">人脑与 AI 智能体的平行比较</p>
       <p class="source">
         引用自 Bang Liu 等：<cite>Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems</cite>，arXiv:2504.01990v2，2025-08-02。采用英文在前、中文在后的逐段对照排版。
       </p>
@@ -605,13 +582,7 @@
       </nav>
 
       <article class="document" id="document" aria-label="英文在前、中文在后的逐段双语正文">
-        <p class="reading-note">阅读顺序：每张卡片先显示英文原文，再显示对应中文译文。原版 23 页分页视图保留在文末，便于核对版面、表格和引用。</p>
         <div id="bilingualContent"></div>
-        <details class="facsimile" id="facsimile">
-          <summary>查看原版 23 页分页视图</summary>
-          <p class="facsimile-note">分页视图保持原 PDF 版式。点击任意页面可以放大、翻页和缩放。</p>
-          <div class="page-document" id="pageDocument"></div>
-        </details>
         <noscript>请启用 JavaScript 以加载逐段双语正文，或直接下载上方 PDF。</noscript>
       </article>
     </div>
@@ -858,8 +829,6 @@
           pageDocument.appendChild(figure);
         }
       };
-      facsimile.addEventListener('toggle', () => { if (facsimile.open) buildPages(); });
-
       document.getElementById('closeViewer').addEventListener('click', () => viewer.close());
       document.getElementById('prevPage').addEventListener('click', () => changeViewerPage(-1));
       document.getElementById('nextPage').addEventListener('click', () => changeViewerPage(1));
