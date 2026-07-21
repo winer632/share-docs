@@ -1,0 +1,641 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f1ea">
+  <meta name="description" content="《Advances and Challenges in Foundation Agents》第 1.2 节：人脑与 AI 智能体的平行比较，中英双语响应式阅读版。">
+  <link rel="canonical" href="https://winer632.github.io/share-docs/foundation-agents-section-1-2/">
+  <meta property="og:type" content="article">
+  <meta property="og:title" content="人脑与 AI 智能体的平行比较｜中英双语">
+  <meta property="og:description" content="Foundation Agents 综述第 1.2 节英文原文与完整中文译文，共 23 页。">
+  <meta property="og:url" content="https://winer632.github.io/share-docs/foundation-agents-section-1-2/">
+  <meta property="og:image" content="https://winer632.github.io/share-docs/foundation-agents-section-1-2/assets/pages/page-01.jpg">
+  <title>人脑与 AI 智能体的平行比较｜中英双语</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f1ea;
+      --paper: #fffdf8;
+      --paper-raised: #ffffff;
+      --ink: #172635;
+      --muted: #63717b;
+      --line: rgba(23, 50, 77, .15);
+      --accent: #226d91;
+      --accent-strong: #164b68;
+      --accent-soft: #e3f1f6;
+      --shadow: 0 18px 50px rgba(37, 44, 51, .12);
+      --header-h: 62px;
+      --page-gap: clamp(18px, 4vw, 42px);
+    }
+
+    :root[data-theme="dark"] {
+      color-scheme: dark;
+      --bg: #101820;
+      --paper: #17232d;
+      --paper-raised: #1d2b36;
+      --ink: #eff5f8;
+      --muted: #a9bac5;
+      --line: rgba(223, 238, 246, .15);
+      --accent: #72c7eb;
+      --accent-strong: #b9e6f8;
+      --accent-soft: #203d4b;
+      --shadow: 0 20px 55px rgba(0, 0, 0, .34);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      scroll-padding-top: calc(var(--header-h) + 18px);
+    }
+
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 10% 0%, rgba(35, 106, 141, .11), transparent 28rem),
+        var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+    a { color: inherit; }
+
+    .skip-link {
+      position: fixed;
+      z-index: 100;
+      top: 8px;
+      left: 8px;
+      padding: 8px 12px;
+      border-radius: 8px;
+      background: var(--ink);
+      color: var(--paper);
+      transform: translateY(-150%);
+    }
+    .skip-link:focus { transform: translateY(0); }
+
+    .topbar {
+      position: sticky;
+      z-index: 30;
+      top: 0;
+      height: var(--header-h);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 0 max(16px, env(safe-area-inset-left)) 0 max(16px, env(safe-area-inset-right));
+      border-bottom: 1px solid var(--line);
+      background: color-mix(in srgb, var(--bg) 86%, transparent);
+      -webkit-backdrop-filter: blur(18px) saturate(140%);
+      backdrop-filter: blur(18px) saturate(140%);
+    }
+
+    .brand {
+      min-width: 0;
+      margin-right: auto;
+      text-decoration: none;
+    }
+    .brand strong, .brand span { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .brand strong { font-size: .94rem; letter-spacing: .01em; }
+    .brand span { color: var(--muted); font-size: .72rem; }
+
+    .progress {
+      flex: 0 0 auto;
+      min-width: 70px;
+      color: var(--muted);
+      font-size: .8rem;
+      font-variant-numeric: tabular-nums;
+      text-align: center;
+    }
+
+    .icon-btn, .pill-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 42px;
+      min-height: 42px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper-raised);
+      color: var(--ink);
+      cursor: pointer;
+      font: inherit;
+      text-decoration: none;
+      transition: border-color .2s, transform .2s, background .2s;
+    }
+    .icon-btn:hover, .pill-btn:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .icon-btn:focus-visible, .pill-btn:focus-visible, .toc a:focus-visible {
+      outline: 3px solid color-mix(in srgb, var(--accent) 38%, transparent);
+      outline-offset: 2px;
+    }
+    .pill-btn { gap: 8px; padding: 0 16px; font-size: .82rem; font-weight: 650; }
+    .icon-btn svg, .pill-btn svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .mobile-only { display: none; }
+
+    .shell {
+      width: min(1280px, 100%);
+      margin: 0 auto;
+      padding: clamp(18px, 4vw, 44px) clamp(14px, 3vw, 34px) 90px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-bottom: clamp(28px, 5vw, 58px);
+      padding: clamp(28px, 6vw, 72px);
+      border: 1px solid var(--line);
+      border-radius: clamp(22px, 4vw, 38px);
+      background: linear-gradient(145deg, var(--paper-raised), var(--accent-soft));
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "1.2";
+      position: absolute;
+      right: clamp(18px, 4vw, 48px);
+      bottom: -46px;
+      color: color-mix(in srgb, var(--accent) 11%, transparent);
+      font: 800 clamp(8rem, 20vw, 15rem)/1 Georgia, serif;
+      pointer-events: none;
+    }
+    .eyebrow {
+      margin: 0 0 14px;
+      color: var(--accent);
+      font-size: .78rem;
+      font-weight: 750;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      max-width: 18ch;
+      margin: 0;
+      font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+      font-size: clamp(2.15rem, 6.2vw, 4.9rem);
+      line-height: 1.08;
+      letter-spacing: -.035em;
+    }
+    .subtitle {
+      max-width: 62ch;
+      margin: 20px 0 0;
+      color: var(--accent-strong);
+      font-size: clamp(1rem, 2.2vw, 1.3rem);
+    }
+    .source {
+      position: relative;
+      z-index: 1;
+      max-width: 76ch;
+      margin: 30px 0 0;
+      padding-top: 22px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .88rem;
+    }
+    .source cite { color: var(--ink); font-style: italic; }
+    .hero-actions { position: relative; z-index: 1; display: flex; flex-wrap: wrap; gap: 10px; margin-top: 24px; }
+    .hero-actions .primary { border-color: var(--accent); background: var(--accent); color: #fff; }
+
+    .reader-layout {
+      display: grid;
+      grid-template-columns: minmax(180px, 235px) minmax(0, 880px);
+      align-items: start;
+      justify-content: center;
+      gap: clamp(24px, 4vw, 48px);
+    }
+
+    .toc {
+      position: sticky;
+      top: calc(var(--header-h) + 24px);
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--paper) 92%, transparent);
+      box-shadow: 0 10px 30px rgba(29, 45, 56, .07);
+    }
+    .toc h2 { margin: 0 0 10px; font-size: .77rem; letter-spacing: .11em; text-transform: uppercase; }
+    .toc a {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 4px 0;
+      padding: 9px 10px;
+      border-radius: 10px;
+      color: var(--muted);
+      font-size: .82rem;
+      text-decoration: none;
+    }
+    .toc a:hover, .toc a.active { background: var(--accent-soft); color: var(--accent-strong); }
+    .toc small { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .toc-rule { height: 1px; margin: 12px 4px; background: var(--line); }
+
+    .document { min-width: 0; }
+    .section-marker {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin: 8px 0 18px;
+      color: var(--accent-strong);
+      font-size: .78rem;
+      font-weight: 760;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+    }
+    .section-marker::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+    .page-card {
+      position: relative;
+      margin: 0 auto var(--page-gap);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      box-shadow: var(--shadow);
+      scroll-margin-top: calc(var(--header-h) + 20px);
+    }
+    .page-card img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border-radius: 7px;
+      cursor: zoom-in;
+      user-select: none;
+    }
+    .page-label {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border: 1px solid rgba(255, 255, 255, .7);
+      border-radius: 999px;
+      background: rgba(18, 35, 47, .72);
+      color: white;
+      font-size: .7rem;
+      font-variant-numeric: tabular-nums;
+      opacity: 0;
+      transform: translateY(-4px);
+      transition: opacity .2s, transform .2s;
+      pointer-events: none;
+    }
+    .page-card:hover .page-label, .page-card:focus-within .page-label { opacity: 1; transform: none; }
+
+    .loading {
+      min-height: 58vh;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: .85rem;
+      background: linear-gradient(110deg, #f7f7f7 22%, #efefef 36%, #f7f7f7 50%);
+      background-size: 220% 100%;
+      animation: shimmer 1.4s infinite linear;
+    }
+    @keyframes shimmer { to { background-position-x: -220%; } }
+
+    dialog {
+      width: 100vw;
+      max-width: none;
+      height: 100dvh;
+      max-height: none;
+      margin: 0;
+      padding: 0;
+      border: 0;
+      background: rgba(7, 13, 18, .94);
+      color: white;
+    }
+    dialog::backdrop { background: rgba(7, 13, 18, .94); }
+    .viewer-bar {
+      position: fixed;
+      z-index: 3;
+      top: 0;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: max(10px, env(safe-area-inset-top)) 14px 10px;
+      background: linear-gradient(rgba(7, 13, 18, .95), rgba(7, 13, 18, 0));
+    }
+    .viewer-bar .icon-btn { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.1); color: white; }
+    .viewer-count { min-width: 74px; text-align: center; font-size: .82rem; font-variant-numeric: tabular-nums; }
+    .viewer-close { margin-left: 8px; }
+    .viewer-stage {
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      overscroll-behavior: contain;
+      display: grid;
+      place-items: start center;
+      padding: 72px 12px 36px;
+      touch-action: pan-x pan-y pinch-zoom;
+    }
+    .viewer-stage img {
+      width: min(100%, 900px);
+      max-width: none;
+      height: auto;
+      transform-origin: top center;
+      transition: width .15s ease-out;
+      box-shadow: 0 20px 80px rgba(0,0,0,.55);
+    }
+
+    .mobile-nav {
+      position: fixed;
+      z-index: 22;
+      right: max(12px, env(safe-area-inset-right));
+      bottom: max(14px, env(safe-area-inset-bottom));
+      left: max(12px, env(safe-area-inset-left));
+      display: none;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: color-mix(in srgb, var(--paper-raised) 91%, transparent);
+      box-shadow: 0 14px 36px rgba(11, 26, 36, .18);
+      -webkit-backdrop-filter: blur(18px);
+      backdrop-filter: blur(18px);
+    }
+    .mobile-nav a { min-height: 40px; border-radius: 12px; color: var(--muted); font-size: .78rem; text-decoration: none; display: grid; place-items: center; }
+    .mobile-nav a.active { background: var(--accent-soft); color: var(--accent-strong); font-weight: 700; }
+
+    footer {
+      max-width: 880px;
+      margin: 55px auto 0;
+      padding-top: 24px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .78rem;
+      text-align: center;
+    }
+
+    @media (max-width: 820px) {
+      :root { --header-h: 56px; }
+      .topbar { gap: 8px; }
+      .brand span, .desktop-only { display: none; }
+      .mobile-only { display: inline-flex; }
+      .reader-layout { display: block; }
+      .toc { display: none; }
+      .mobile-nav { display: grid; }
+      .shell { padding-inline: 10px; padding-bottom: 110px; }
+      .hero { margin-inline: 4px; padding: 28px 22px 34px; border-radius: 24px; }
+      .hero::after { right: 10px; bottom: -26px; font-size: 8rem; }
+      .source { font-size: .8rem; }
+      .page-card { border-radius: 5px; }
+      .page-card img { border-radius: 4px; }
+      .page-label { opacity: 1; transform: none; top: 8px; right: 8px; }
+      footer { margin-inline: 12px; }
+    }
+
+    @media (max-width: 430px) {
+      .progress { min-width: 58px; font-size: .74rem; }
+      .topbar .icon-btn { min-width: 38px; min-height: 38px; }
+      .brand strong { max-width: 34vw; font-size: .82rem; }
+      h1 { font-size: 2.35rem; }
+      .subtitle { font-size: .98rem; }
+      .hero-actions .pill-btn { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+
+    @media print {
+      .topbar, .hero, .toc, .mobile-nav, .page-label, footer { display: none !important; }
+      body, .shell { background: white; padding: 0; }
+      .reader-layout { display: block; }
+      .page-card { break-after: page; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
+      .page-card img { border-radius: 0; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#document">跳到正文</a>
+
+  <header class="topbar" aria-label="阅读器工具栏">
+    <a class="brand" href="#top" aria-label="返回文档顶部">
+      <strong>人脑与 AI 智能体</strong>
+      <span>中英双语摘录</span>
+    </a>
+    <span class="progress" id="progress" aria-live="polite">第 1 / 23 页</span>
+    <button class="icon-btn" id="themeToggle" type="button" aria-label="切换深色模式" title="切换深色模式">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 14.9A8.5 8.5 0 0 1 9.1 3.7 8.5 8.5 0 1 0 20.3 14.9Z"/></svg>
+    </button>
+    <a class="pill-btn desktop-only" href="section_1_2_human_brain_ai_agents_bilingual.pdf" download>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+      下载 PDF
+    </a>
+    <a class="icon-btn mobile-only" href="section_1_2_human_brain_ai_agents_bilingual.pdf" download aria-label="下载 PDF" title="下载 PDF">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 20h14"/></svg>
+    </a>
+  </header>
+
+  <main class="shell" id="top">
+    <section class="hero" aria-labelledby="title">
+      <p class="eyebrow">Foundation Agents · Section 1.2</p>
+      <h1 id="title">人脑与 AI 智能体的平行比较</h1>
+      <p class="subtitle">A Parallel Comparison between Human Brain and AI Agents</p>
+      <p class="source">
+        引用自 Bang Liu 等：<cite>Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems</cite>，arXiv:2504.01990v2，2025-08-02。英文原文与完整中文译文，共 23 页。
+      </p>
+      <div class="hero-actions">
+        <a class="pill-btn primary" href="#english">开始阅读</a>
+        <a class="pill-btn" href="#chinese">跳到中文译文</a>
+        <a class="pill-btn" href="section_1_2_human_brain_ai_agents_bilingual.pdf" download>下载原 PDF</a>
+      </div>
+    </section>
+
+    <div class="reader-layout">
+      <nav class="toc" aria-label="文档目录">
+        <h2>阅读目录</h2>
+        <a href="#front" data-range="1-2"><span>封面与说明</span><small>1-2</small></a>
+        <a href="#english" data-range="3-14"><span>英文原文</span><small>3-14</small></a>
+        <a href="#chinese" data-range="15-23"><span>中文译文</span><small>15-23</small></a>
+        <div class="toc-rule"></div>
+        <a href="#page-06"><span>表 1.1</span><small>6</small></a>
+        <a href="#page-07"><span>图 1.1</span><small>7</small></a>
+        <a href="#page-23"><span>引用提示</span><small>23</small></a>
+      </nav>
+
+      <article class="document" id="document" aria-label="双语 PDF 页面">
+        <noscript>请启用 JavaScript 以加载响应式文档页面，或直接下载上方 PDF。</noscript>
+      </article>
+    </div>
+
+    <footer>
+      本页面为阅读友好的响应式呈现。英文原文、中文译文、图表和引用编号均来自配套双语 PDF；如译文与原文存在歧义，以英文原文为准。
+    </footer>
+  </main>
+
+  <nav class="mobile-nav" aria-label="移动端快速导航">
+    <a href="#front" data-range="1-2">说明</a>
+    <a href="#english" data-range="3-14">英文</a>
+    <a href="#chinese" data-range="15-23">中文</a>
+  </nav>
+
+  <dialog id="viewer" aria-label="页面放大查看器">
+    <div class="viewer-bar">
+      <button class="icon-btn" type="button" id="prevPage" aria-label="上一页">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <button class="icon-btn" type="button" id="zoomOut" aria-label="缩小">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg>
+      </button>
+      <span class="viewer-count" id="viewerCount">1 / 23</span>
+      <button class="icon-btn" type="button" id="zoomIn" aria-label="放大">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button class="icon-btn" type="button" id="nextPage" aria-label="下一页">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+      <button class="icon-btn viewer-close" type="button" id="closeViewer" aria-label="关闭查看器">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+      </button>
+    </div>
+    <div class="viewer-stage" id="viewerStage">
+      <img id="viewerImage" alt="放大的文档页面">
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      const total = 23;
+      const documentEl = document.getElementById('document');
+      const progress = document.getElementById('progress');
+      const viewer = document.getElementById('viewer');
+      const viewerImage = document.getElementById('viewerImage');
+      const viewerCount = document.getElementById('viewerCount');
+      const viewerStage = document.getElementById('viewerStage');
+      let currentPage = 1;
+      let viewerPage = 1;
+      let zoom = 1;
+
+      const sectionFor = (page) => page <= 2 ? 'front' : page <= 14 ? 'english' : 'chinese';
+      const sectionTitle = { front: '封面与编排说明', english: 'English Original Excerpt · 英文原文', chinese: '中文译文 · Chinese Translation' };
+
+      for (let page = 1; page <= total; page += 1) {
+        const section = sectionFor(page);
+        if (page === 1 || page === 3 || page === 15) {
+          const marker = document.createElement('div');
+          marker.className = 'section-marker';
+          marker.id = section;
+          marker.textContent = sectionTitle[section];
+          documentEl.appendChild(marker);
+        }
+
+        const figure = document.createElement('figure');
+        figure.className = 'page-card';
+        figure.id = `page-${String(page).padStart(2, '0')}`;
+        figure.dataset.page = page;
+
+        const placeholder = document.createElement('div');
+        placeholder.className = 'loading';
+        placeholder.textContent = `正在加载第 ${page} 页…`;
+
+        const img = document.createElement('img');
+        img.loading = page <= 2 ? 'eager' : 'lazy';
+        img.decoding = 'async';
+        img.alt = `双语文档第 ${page} 页`;
+        img.tabIndex = 0;
+        img.setAttribute('role', 'button');
+        img.setAttribute('aria-label', `放大查看双语文档第 ${page} 页`);
+        img.src = `assets/pages/page-${String(page).padStart(2, '0')}.jpg`;
+        if (page === 1) img.fetchPriority = 'high';
+        img.addEventListener('load', () => placeholder.remove(), { once: true });
+        img.addEventListener('error', () => { placeholder.textContent = `第 ${page} 页加载失败，请刷新重试。`; });
+        img.addEventListener('click', () => openViewer(page));
+        img.addEventListener('keydown', (event) => {
+          if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            openViewer(page);
+          }
+        });
+
+        const label = document.createElement('span');
+        label.className = 'page-label';
+        label.textContent = `${page} / ${total}`;
+
+        figure.append(placeholder, img, label);
+        documentEl.appendChild(figure);
+      }
+
+      const pages = [...document.querySelectorAll('.page-card')];
+      const navLinks = [...document.querySelectorAll('[data-range]')];
+
+      const setCurrentPage = (page) => {
+        currentPage = page;
+        progress.textContent = `第 ${page} / ${total} 页`;
+        navLinks.forEach((link) => {
+          const [start, end] = link.dataset.range.split('-').map(Number);
+          const active = page >= start && page <= end;
+          link.classList.toggle('active', active);
+          if (active) link.setAttribute('aria-current', 'location');
+          else link.removeAttribute('aria-current');
+        });
+      };
+
+      const pageObserver = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) setCurrentPage(Number(visible[0].target.dataset.page));
+      }, { rootMargin: '-16% 0px -48% 0px', threshold: [0.15, 0.35, 0.65] });
+      pages.forEach((page) => pageObserver.observe(page));
+
+      const storedTheme = localStorage.getItem('doc-theme');
+      const preferredDark = matchMedia('(prefers-color-scheme: dark)').matches;
+      const applyTheme = (theme) => {
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#101820' : '#f4f1ea';
+        document.getElementById('themeToggle').setAttribute('aria-label', theme === 'dark' ? '切换浅色模式' : '切换深色模式');
+      };
+      applyTheme(storedTheme || (preferredDark ? 'dark' : 'light'));
+      document.getElementById('themeToggle').addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        localStorage.setItem('doc-theme', theme);
+        applyTheme(theme);
+      });
+
+      const sourceFor = (page) => `assets/pages/page-${String(page).padStart(2, '0')}.jpg`;
+      const updateViewer = () => {
+        viewerImage.src = sourceFor(viewerPage);
+        viewerImage.alt = `放大的双语文档第 ${viewerPage} 页`;
+        viewerCount.textContent = `${viewerPage} / ${total}`;
+        viewerImage.style.width = `${Math.round(Math.min(3, zoom) * 100)}%`;
+        viewerStage.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      };
+      const openViewer = (page) => {
+        viewerPage = page;
+        zoom = 1;
+        updateViewer();
+        viewer.showModal();
+      };
+      const changeViewerPage = (delta) => {
+        viewerPage = Math.min(total, Math.max(1, viewerPage + delta));
+        zoom = 1;
+        updateViewer();
+      };
+      const changeZoom = (delta) => {
+        zoom = Math.min(3, Math.max(.75, +(zoom + delta).toFixed(2)));
+        viewerImage.style.width = `${Math.round(zoom * 100)}%`;
+      };
+
+      document.getElementById('closeViewer').addEventListener('click', () => viewer.close());
+      document.getElementById('prevPage').addEventListener('click', () => changeViewerPage(-1));
+      document.getElementById('nextPage').addEventListener('click', () => changeViewerPage(1));
+      document.getElementById('zoomIn').addEventListener('click', () => changeZoom(.25));
+      document.getElementById('zoomOut').addEventListener('click', () => changeZoom(-.25));
+      viewer.addEventListener('click', (event) => { if (event.target === viewer) viewer.close(); });
+      viewer.addEventListener('close', () => document.querySelector(`#page-${String(viewerPage).padStart(2, '0')} img`)?.focus());
+      document.addEventListener('keydown', (event) => {
+        if (!viewer.open) return;
+        if (event.key === 'ArrowLeft') changeViewerPage(-1);
+        if (event.key === 'ArrowRight') changeViewerPage(1);
+        if (event.key === '+' || event.key === '=') changeZoom(.25);
+        if (event.key === '-') changeZoom(-.25);
+      });
+    })();
+  </script>
+</body>
+</html>
