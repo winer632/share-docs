@@ -230,6 +230,144 @@
     .toc-rule { height: 1px; margin: 12px 4px; background: var(--line); }
 
     .document { min-width: 0; }
+    .reading-note {
+      margin: 0 0 22px;
+      padding: 14px 16px;
+      border: 1px solid color-mix(in srgb, var(--accent) 28%, var(--line));
+      border-radius: 14px;
+      background: var(--accent-soft);
+      color: var(--accent-strong);
+      font-size: .86rem;
+    }
+    .bilingual-section {
+      margin: 8px 0 26px;
+      padding: 4px 0 16px;
+      border-bottom: 1px solid var(--line);
+      scroll-margin-top: calc(var(--header-h) + 20px);
+    }
+    .bilingual-section .section-number {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--accent);
+      font-size: .76rem;
+      font-weight: 800;
+      letter-spacing: .12em;
+    }
+    .bilingual-section h2, .bilingual-section h3 {
+      margin: 0;
+      font-family: Georgia, "Noto Serif SC", "Songti SC", serif;
+      color: var(--ink);
+      line-height: 1.2;
+    }
+    .bilingual-section h2 { font-size: clamp(1.7rem, 4vw, 2.55rem); }
+    .bilingual-section h3 { font-size: clamp(1.3rem, 3vw, 1.75rem); }
+    .bilingual-section .zh-heading {
+      display: block;
+      margin-top: 7px;
+      color: var(--accent-strong);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", sans-serif;
+      font-size: .72em;
+      font-weight: 650;
+      letter-spacing: 0;
+    }
+
+    .pair-card {
+      position: relative;
+      overflow: hidden;
+      margin: 0 0 18px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper-raised);
+      box-shadow: 0 9px 28px rgba(31, 51, 64, .07);
+      scroll-margin-top: calc(var(--header-h) + 20px);
+    }
+    .pair-card::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      left: 0;
+      width: 4px;
+      background: linear-gradient(var(--accent), color-mix(in srgb, var(--accent) 20%, transparent));
+    }
+    .language-block { padding: clamp(17px, 3vw, 25px) clamp(18px, 3.6vw, 30px); }
+    .language-block + .language-block {
+      border-top: 1px solid var(--line);
+      background: color-mix(in srgb, var(--accent-soft) 45%, var(--paper-raised));
+    }
+    .lang-head {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+      margin-bottom: 9px;
+    }
+    .lang-tag {
+      flex: 0 0 auto;
+      min-width: 32px;
+      color: var(--accent);
+      font-size: .66rem;
+      font-weight: 850;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+    }
+    .language-block h4 { margin: 0; color: var(--ink); font-size: 1rem; line-height: 1.35; }
+    .language-block p { margin: 0; color: var(--ink); font-size: clamp(.94rem, 1.55vw, 1.03rem); line-height: 1.82; }
+    .language-block.en p { font-family: Georgia, "Times New Roman", serif; line-height: 1.72; }
+    .language-block.zh p { line-height: 1.9; }
+    .pair-index {
+      position: absolute;
+      top: 12px;
+      right: 14px;
+      color: var(--muted);
+      font-size: .66rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .comparison-table, .figure-card {
+      margin: 0 0 26px;
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      background: var(--paper-raised);
+      box-shadow: 0 10px 32px rgba(31, 51, 64, .08);
+    }
+    .comparison-table { padding: clamp(18px, 3.5vw, 30px); }
+    .content-title { margin: 0 0 5px; color: var(--accent-strong); font-size: 1.2rem; }
+    .content-subtitle { margin: 0 0 18px; color: var(--muted); font-size: .82rem; }
+    .comparison-row {
+      display: grid;
+      grid-template-columns: minmax(120px, .72fr) minmax(0, 1.5fr) minmax(0, 1.5fr);
+      border-top: 1px solid var(--line);
+    }
+    .comparison-row:first-of-type { border-top: 0; }
+    .comparison-cell { padding: 16px; }
+    .comparison-cell + .comparison-cell { border-left: 1px solid var(--line); }
+    .dimension { color: var(--accent-strong); font-weight: 800; }
+    .cell-label { display: block; margin-bottom: 7px; color: var(--muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+    .comparison-cell p { margin: 0 0 7px; font-size: .86rem; line-height: 1.62; }
+    .comparison-cell p:last-child { margin-bottom: 0; }
+    .comparison-cell .zh-copy { color: var(--accent-strong); }
+
+    .figure-card { overflow: hidden; }
+    .figure-card img { display: block; width: 100%; height: auto; background: white; }
+    .figure-caption { padding: 18px 22px 22px; }
+    .figure-caption p { margin: 7px 0 0; font-size: .88rem; line-height: 1.7; }
+    .figure-caption .zh-copy { color: var(--accent-strong); }
+
+    .facsimile {
+      margin-top: 42px;
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      background: var(--paper-raised);
+    }
+    .facsimile > summary {
+      padding: 18px 22px;
+      color: var(--accent-strong);
+      font-weight: 750;
+      cursor: pointer;
+      list-style-position: inside;
+    }
+    .facsimile-note { margin: 0; padding: 0 22px 20px; color: var(--muted); font-size: .82rem; }
+    .page-document { padding: 0 clamp(8px, 2vw, 20px) 20px; }
     .section-marker {
       display: flex;
       align-items: center;
@@ -385,6 +523,10 @@
       .page-card { border-radius: 5px; }
       .page-card img { border-radius: 4px; }
       .page-label { opacity: 1; transform: none; top: 8px; right: 8px; }
+      .pair-card { border-radius: 14px; }
+      .language-block { padding: 18px 18px 19px 20px; }
+      .comparison-row { grid-template-columns: 1fr; }
+      .comparison-cell + .comparison-cell { border-top: 1px solid var(--line); border-left: 0; }
       footer { margin-inline: 12px; }
     }
 
@@ -403,11 +545,10 @@
     }
 
     @media print {
-      .topbar, .hero, .toc, .mobile-nav, .page-label, footer { display: none !important; }
+      .topbar, .hero, .toc, .mobile-nav, .page-label, .facsimile, footer { display: none !important; }
       body, .shell { background: white; padding: 0; }
       .reader-layout { display: block; }
-      .page-card { break-after: page; margin: 0; border: 0; border-radius: 0; box-shadow: none; }
-      .page-card img { border-radius: 0; }
+      .pair-card { break-inside: avoid; box-shadow: none; }
     }
   </style>
 </head>
@@ -419,7 +560,7 @@
       <strong>人脑与 AI 智能体</strong>
       <span>中英双语摘录</span>
     </a>
-    <span class="progress" id="progress" aria-live="polite">第 1 / 23 页</span>
+    <span class="progress" id="progress" aria-live="polite">逐段对照</span>
     <button class="icon-btn" id="themeToggle" type="button" aria-label="切换深色模式" title="切换深色模式">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.3 14.9A8.5 8.5 0 0 1 9.1 3.7 8.5 8.5 0 1 0 20.3 14.9Z"/></svg>
     </button>
@@ -438,11 +579,11 @@
       <h1 id="title">人脑与 AI 智能体的平行比较</h1>
       <p class="subtitle">A Parallel Comparison between Human Brain and AI Agents</p>
       <p class="source">
-        引用自 Bang Liu 等：<cite>Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems</cite>，arXiv:2504.01990v2，2025-08-02。英文原文与完整中文译文，共 23 页。
+        引用自 Bang Liu 等：<cite>Advances and Challenges in Foundation Agents: From Brain-Inspired Intelligence to Evolutionary, Collaborative, and Safe Systems</cite>，arXiv:2504.01990v2，2025-08-02。采用英文在前、中文在后的逐段对照排版。
       </p>
       <div class="hero-actions">
-        <a class="pill-btn primary" href="#english">开始阅读</a>
-        <a class="pill-btn" href="#chinese">跳到中文译文</a>
+        <a class="pill-btn primary" href="#comparison">开始逐段阅读</a>
+        <a class="pill-btn" href="#brain-functions">跳到 1.2.1</a>
         <a class="pill-btn" href="section_1_2_human_brain_ai_agents_bilingual.pdf" download>下载原 PDF</a>
       </div>
     </section>
@@ -450,29 +591,40 @@
     <div class="reader-layout">
       <nav class="toc" aria-label="文档目录">
         <h2>阅读目录</h2>
-        <a href="#front" data-range="1-2"><span>封面与说明</span><small>1-2</small></a>
-        <a href="#english" data-range="3-14"><span>英文原文</span><small>3-14</small></a>
-        <a href="#chinese" data-range="15-23"><span>中文译文</span><small>15-23</small></a>
+        <a href="#comparison" data-section="comparison"><span>1.2 平行比较</span><small>EN→中</small></a>
+        <a href="#brain-functions" data-section="brain-functions"><span>1.2.1 脑功能</span><small>EN→中</small></a>
         <div class="toc-rule"></div>
-        <a href="#page-06"><span>表 1.1</span><small>6</small></a>
-        <a href="#page-07"><span>图 1.1</span><small>7</small></a>
-        <a href="#page-23"><span>引用提示</span><small>23</small></a>
+        <a href="#frontal-lobes" data-section="frontal-lobes"><span>额叶</span><small>Frontal</small></a>
+        <a href="#parietal-lobes" data-section="parietal-lobes"><span>顶叶</span><small>Parietal</small></a>
+        <a href="#occipital-lobes" data-section="occipital-lobes"><span>枕叶</span><small>Occipital</small></a>
+        <a href="#temporal-lobes" data-section="temporal-lobes"><span>颞叶</span><small>Temporal</small></a>
+        <a href="#cerebellum" data-section="cerebellum"><span>小脑</span><small>Cerebellum</small></a>
+        <a href="#brainstem" data-section="brainstem"><span>脑干</span><small>Brainstem</small></a>
+        <a href="#subcortical" data-section="subcortical"><span>皮层下系统</span><small>Subcortical</small></a>
+        <a href="#beneficial-ai" data-section="beneficial-ai"><span>构建有益 AI</span><small>Closing</small></a>
       </nav>
 
-      <article class="document" id="document" aria-label="双语 PDF 页面">
-        <noscript>请启用 JavaScript 以加载响应式文档页面，或直接下载上方 PDF。</noscript>
+      <article class="document" id="document" aria-label="英文在前、中文在后的逐段双语正文">
+        <p class="reading-note">阅读顺序：每张卡片先显示英文原文，再显示对应中文译文。原版 23 页分页视图保留在文末，便于核对版面、表格和引用。</p>
+        <div id="bilingualContent"></div>
+        <details class="facsimile" id="facsimile">
+          <summary>查看原版 23 页分页视图</summary>
+          <p class="facsimile-note">分页视图保持原 PDF 版式。点击任意页面可以放大、翻页和缩放。</p>
+          <div class="page-document" id="pageDocument"></div>
+        </details>
+        <noscript>请启用 JavaScript 以加载逐段双语正文，或直接下载上方 PDF。</noscript>
       </article>
     </div>
 
     <footer>
-      本页面为阅读友好的响应式呈现。英文原文、中文译文、图表和引用编号均来自配套双语 PDF；如译文与原文存在歧义，以英文原文为准。
+      本页面采用“英文原文在前、中文译文在后”的逐段对照方式。图表和引用编号均来自配套双语 PDF；如译文与原文存在歧义，以英文原文为准。
     </footer>
   </main>
 
   <nav class="mobile-nav" aria-label="移动端快速导航">
-    <a href="#front" data-range="1-2">说明</a>
-    <a href="#english" data-range="3-14">英文</a>
-    <a href="#chinese" data-range="15-23">中文</a>
+    <a href="#comparison" data-section="comparison">1.2</a>
+    <a href="#brain-functions" data-section="brain-functions">1.2.1</a>
+    <a href="#beneficial-ai" data-section="beneficial-ai">结语</a>
   </nav>
 
   <dialog id="viewer" aria-label="页面放大查看器">
@@ -499,89 +651,145 @@
     </div>
   </dialog>
 
+  <script src="bilingual-content.js"></script>
   <script>
     (() => {
-      const total = 23;
-      const documentEl = document.getElementById('document');
+      const totalPages = 23;
+      const contentEl = document.getElementById('bilingualContent');
+      const pageDocument = document.getElementById('pageDocument');
+      const facsimile = document.getElementById('facsimile');
       const progress = document.getElementById('progress');
       const viewer = document.getElementById('viewer');
       const viewerImage = document.getElementById('viewerImage');
       const viewerCount = document.getElementById('viewerCount');
       const viewerStage = document.getElementById('viewerStage');
-      let currentPage = 1;
       let viewerPage = 1;
       let zoom = 1;
+      let pagesBuilt = false;
+      let pairIndex = 0;
 
-      const sectionFor = (page) => page <= 2 ? 'front' : page <= 14 ? 'english' : 'chinese';
-      const sectionTitle = { front: '封面与编排说明', english: 'English Original Excerpt · 英文原文', chinese: '中文译文 · Chinese Translation' };
+      const makeText = (tag, className, text) => {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        element.textContent = text;
+        return element;
+      };
 
-      for (let page = 1; page <= total; page += 1) {
-        const section = sectionFor(page);
-        if (page === 1 || page === 3 || page === 15) {
-          const marker = document.createElement('div');
-          marker.className = 'section-marker';
-          marker.id = section;
-          marker.textContent = sectionTitle[section];
-          documentEl.appendChild(marker);
-        }
+      const renderPair = (item) => {
+        pairIndex += 1;
+        const card = document.createElement('section');
+        card.className = 'pair-card';
+        card.dataset.pair = pairIndex;
+        card.appendChild(makeText('span', 'pair-index', String(pairIndex).padStart(2, '0')));
 
-        const figure = document.createElement('figure');
-        figure.className = 'page-card';
-        figure.id = `page-${String(page).padStart(2, '0')}`;
-        figure.dataset.page = page;
+        const enBlock = document.createElement('div');
+        enBlock.className = 'language-block en';
+        const enHead = document.createElement('div');
+        enHead.className = 'lang-head';
+        enHead.appendChild(makeText('span', 'lang-tag', 'EN'));
+        if (item.enTitle) enHead.appendChild(makeText('h4', '', item.enTitle));
+        enBlock.append(enHead, makeText('p', '', item.en));
 
-        const placeholder = document.createElement('div');
-        placeholder.className = 'loading';
-        placeholder.textContent = `正在加载第 ${page} 页…`;
+        const zhBlock = document.createElement('div');
+        zhBlock.className = 'language-block zh';
+        const zhHead = document.createElement('div');
+        zhHead.className = 'lang-head';
+        zhHead.appendChild(makeText('span', 'lang-tag', '中文'));
+        if (item.zhTitle) zhHead.appendChild(makeText('h4', '', item.zhTitle));
+        zhBlock.append(zhHead, makeText('p', '', item.zh));
+        card.append(enBlock, zhBlock);
+        contentEl.appendChild(card);
+      };
 
-        const img = document.createElement('img');
-        img.loading = page <= 2 ? 'eager' : 'lazy';
-        img.decoding = 'async';
-        img.alt = `双语文档第 ${page} 页`;
-        img.tabIndex = 0;
-        img.setAttribute('role', 'button');
-        img.setAttribute('aria-label', `放大查看双语文档第 ${page} 页`);
-        img.src = `assets/pages/page-${String(page).padStart(2, '0')}.jpg`;
-        if (page === 1) img.fetchPriority = 'high';
-        img.addEventListener('load', () => placeholder.remove(), { once: true });
-        img.addEventListener('error', () => { placeholder.textContent = `第 ${page} 页加载失败，请刷新重试。`; });
-        img.addEventListener('click', () => openViewer(page));
-        img.addEventListener('keydown', (event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openViewer(page);
-          }
+      const renderSection = (item) => {
+        const section = document.createElement('header');
+        section.className = 'bilingual-section';
+        section.id = item.id;
+        if (item.number) section.appendChild(makeText('span', 'section-number', item.number));
+        const heading = document.createElement(item.type === 'section' ? 'h2' : 'h3');
+        heading.append(item.en, makeText('span', 'zh-heading', item.zh));
+        section.appendChild(heading);
+        contentEl.appendChild(section);
+      };
+
+      const renderTable = () => {
+        const block = document.createElement('section');
+        block.className = 'comparison-table';
+        block.id = 'table-1-1';
+        block.append(
+          makeText('h3', 'content-title', 'Table 1.1 · Human Brain and LLM Agent'),
+          makeText('p', 'content-subtitle', '表 1.1 · 人脑与 LLM 智能体的简明高层比较')
+        );
+        window.BILINGUAL_TABLE.forEach((row) => {
+          const grid = document.createElement('div');
+          grid.className = 'comparison-row';
+          const dimension = document.createElement('div');
+          dimension.className = 'comparison-cell dimension';
+          dimension.append(makeText('span', 'cell-label', 'Dimension · 维度'), row.dimensionEn, document.createElement('br'), row.dimensionZh);
+          const human = document.createElement('div');
+          human.className = 'comparison-cell';
+          human.append(makeText('span', 'cell-label', 'Human Brain · 人脑'), makeText('p', '', row.humanEn), makeText('p', 'zh-copy', row.humanZh));
+          const ai = document.createElement('div');
+          ai.className = 'comparison-cell';
+          ai.append(makeText('span', 'cell-label', 'LLM Agent · LLM 智能体'), makeText('p', '', row.aiEn), makeText('p', 'zh-copy', row.aiZh));
+          grid.append(dimension, human, ai);
+          block.appendChild(grid);
         });
+        contentEl.appendChild(block);
+      };
 
-        const label = document.createElement('span');
-        label.className = 'page-label';
-        label.textContent = `${page} / ${total}`;
+      const renderFigure = () => {
+        const figure = document.createElement('figure');
+        figure.className = 'figure-card';
+        figure.id = 'figure-1-1';
+        const img = document.createElement('img');
+        img.src = 'assets/brain-functions.jpg';
+        img.loading = 'lazy';
+        img.decoding = 'async';
+        img.alt = 'Figure 1.1: human brain functionalities and their research levels in AI';
+        const caption = document.createElement('figcaption');
+        caption.className = 'figure-caption';
+        caption.append(
+          makeText('h3', 'content-title', 'Figure 1.1 · Different Brain Functionalities and Their State of Research in AI (2025)'),
+          makeText('p', '', 'Key human brain functions are grouped by major brain regions and marked as L1 well-developed, L2 partially developed, or L3 underexplored in current AI research. Label position does not imply that a function belongs only to the nearest region.'),
+          makeText('p', 'zh-copy', '图 1.1 · 不同脑功能及其在 AI 中的研究状态（2025）。关键脑功能按主要脑区归类，并标记为 L1 发展成熟、L2 部分发展或 L3 探索不足。标签位置并不意味着某项功能只属于邻近脑区。')
+        );
+        figure.append(img, caption);
+        contentEl.appendChild(figure);
+      };
 
-        figure.append(placeholder, img, label);
-        documentEl.appendChild(figure);
+      window.BILINGUAL_CONTENT.forEach((item) => {
+        if (item.type === 'pair') renderPair(item);
+        else if (item.type === 'section' || item.type === 'subsection') renderSection(item);
+        else if (item.type === 'table') renderTable();
+        else if (item.type === 'figure') renderFigure();
+      });
+      if (location.hash) {
+        requestAnimationFrame(() => document.querySelector(location.hash)?.scrollIntoView());
       }
 
-      const pages = [...document.querySelectorAll('.page-card')];
-      const navLinks = [...document.querySelectorAll('[data-range]')];
+      const pairs = [...document.querySelectorAll('.pair-card')];
+      const navLinks = [...document.querySelectorAll('[data-section]')];
+      progress.textContent = `对照 1 / ${pairs.length}`;
+      const pairObserver = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
+        if (visible[0]) progress.textContent = `对照 ${visible[0].target.dataset.pair} / ${pairs.length}`;
+      }, { rootMargin: '-16% 0px -52% 0px', threshold: [0.15, 0.45, 0.7] });
+      pairs.forEach((pair) => pairObserver.observe(pair));
 
-      const setCurrentPage = (page) => {
-        currentPage = page;
-        progress.textContent = `第 ${page} / ${total} 页`;
+      const sectionObserver = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting);
+        if (!visible[0]) return;
+        const activeId = visible[0].target.id;
         navLinks.forEach((link) => {
-          const [start, end] = link.dataset.range.split('-').map(Number);
-          const active = page >= start && page <= end;
+          const active = link.dataset.section === activeId;
           link.classList.toggle('active', active);
           if (active) link.setAttribute('aria-current', 'location');
           else link.removeAttribute('aria-current');
         });
-      };
-
-      const pageObserver = new IntersectionObserver((entries) => {
-        const visible = entries.filter((entry) => entry.isIntersecting)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]) setCurrentPage(Number(visible[0].target.dataset.page));
-      }, { rootMargin: '-16% 0px -48% 0px', threshold: [0.15, 0.35, 0.65] });
-      pages.forEach((page) => pageObserver.observe(page));
+      }, { rootMargin: '-12% 0px -72% 0px', threshold: 0 });
+      document.querySelectorAll('.bilingual-section').forEach((section) => sectionObserver.observe(section));
 
       const storedTheme = localStorage.getItem('doc-theme');
       const preferredDark = matchMedia('(prefers-color-scheme: dark)').matches;
@@ -601,9 +809,9 @@
       const updateViewer = () => {
         viewerImage.src = sourceFor(viewerPage);
         viewerImage.alt = `放大的双语文档第 ${viewerPage} 页`;
-        viewerCount.textContent = `${viewerPage} / ${total}`;
+        viewerCount.textContent = `${viewerPage} / ${totalPages}`;
         viewerImage.style.width = `${Math.round(Math.min(3, zoom) * 100)}%`;
-        viewerStage.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        viewerStage.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       };
       const openViewer = (page) => {
         viewerPage = page;
@@ -612,7 +820,7 @@
         viewer.showModal();
       };
       const changeViewerPage = (delta) => {
-        viewerPage = Math.min(total, Math.max(1, viewerPage + delta));
+        viewerPage = Math.min(totalPages, Math.max(1, viewerPage + delta));
         zoom = 1;
         updateViewer();
       };
@@ -620,6 +828,37 @@
         zoom = Math.min(3, Math.max(.75, +(zoom + delta).toFixed(2)));
         viewerImage.style.width = `${Math.round(zoom * 100)}%`;
       };
+
+      const buildPages = () => {
+        if (pagesBuilt) return;
+        pagesBuilt = true;
+        for (let page = 1; page <= totalPages; page += 1) {
+          const figure = document.createElement('figure');
+          figure.className = 'page-card';
+          figure.id = `page-${String(page).padStart(2, '0')}`;
+          const placeholder = makeText('div', 'loading', `正在加载第 ${page} 页…`);
+          const img = document.createElement('img');
+          img.loading = 'lazy';
+          img.decoding = 'async';
+          img.alt = `双语文档第 ${page} 页`;
+          img.tabIndex = 0;
+          img.setAttribute('role', 'button');
+          img.setAttribute('aria-label', `放大查看双语文档第 ${page} 页`);
+          img.src = sourceFor(page);
+          img.addEventListener('load', () => placeholder.remove(), { once: true });
+          img.addEventListener('error', () => { placeholder.textContent = `第 ${page} 页加载失败，请刷新重试。`; });
+          img.addEventListener('click', () => openViewer(page));
+          img.addEventListener('keydown', (event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault();
+              openViewer(page);
+            }
+          });
+          figure.append(placeholder, img, makeText('span', 'page-label', `${page} / ${totalPages}`));
+          pageDocument.appendChild(figure);
+        }
+      };
+      facsimile.addEventListener('toggle', () => { if (facsimile.open) buildPages(); });
 
       document.getElementById('closeViewer').addEventListener('click', () => viewer.close());
       document.getElementById('prevPage').addEventListener('click', () => changeViewerPage(-1));
