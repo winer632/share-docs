@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>现场 FDE 工程师工作 SOP（初版）</title>
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --text: #1f2329;
+    --text-secondary: #51565d;
+    --border: #e4e6ea;
+    --accent: #2b6de0;
+    --accent-soft: #eaf1fd;
+    --danger: #c2402f;
+    --danger-soft: #fdf0ee;
+    --warn: #9a6700;
+    --warn-soft: #fdf6e3;
+    --ok: #1a7f4b;
+    --ok-soft: #ebf7f0;
+    --code-bg: #f0f1f3;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #16181c;
+      --card: #1f2229;
+      --text: #e8eaed;
+      --text-secondary: #a3a8b0;
+      --border: #33373f;
+      --accent: #6ba0f4;
+      --accent-soft: #1d2c45;
+      --danger: #e8836f;
+      --danger-soft: #3a2320;
+      --warn: #d9a83c;
+      --warn-soft: #362d16;
+      --ok: #5fc08c;
+      --ok-soft: #16301f;
+      --code-bg: #2a2d34;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+                 "Microsoft YaHei", "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.8;
+    word-break: break-word;
+  }
+  .page {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 64px;
+  }
+  header.doc-header {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px 20px;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: 1.5rem;
+    line-height: 1.4;
+    margin: 0 0 12px;
+  }
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.8125rem;
+  }
+  .chip {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+    padding: 2px 12px;
+    white-space: nowrap;
+  }
+  .chip.status { background: var(--warn-soft); color: var(--warn); }
+  nav.toc {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 20px;
+    font-size: 0.9375rem;
+  }
+  nav.toc strong { display: block; margin-bottom: 8px; }
+  nav.toc ol { margin: 0; padding-left: 1.4em; }
+  nav.toc a { color: var(--accent); text-decoration: none; }
+  nav.toc a:active { opacity: .7; }
+  section.card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+  }
+  h2 {
+    font-size: 1.1875rem;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  h2 .no {
+    color: var(--accent);
+    margin-right: 8px;
+  }
+  h3 {
+    font-size: 1.0325rem;
+    margin: 18px 0 8px;
+  }
+  p { margin: 0 0 12px; }
+  ul, ol { margin: 0 0 12px; padding-left: 1.5em; }
+  li { margin-bottom: 6px; }
+  li:last-child { margin-bottom: 0; }
+  .roles {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  @media (max-width: 640px) {
+    .roles { grid-template-columns: 1fr; }
+  }
+  .role {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .role h3 {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .role .tag {
+    font-size: 0.75rem;
+    border-radius: 6px;
+    padding: 1px 8px;
+    font-weight: normal;
+  }
+  .role.fde .tag { background: var(--ok-soft); color: var(--ok); }
+  .role.rd .tag { background: var(--accent-soft); color: var(--accent); }
+  .role ul { margin: 0; padding-left: 1.3em; font-size: 0.9375rem; }
+  .callout {
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin: 12px 0;
+    font-size: 0.9375rem;
+  }
+  .callout .callout-title {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+  }
+  .callout.danger { background: var(--danger-soft); color: var(--text); }
+  .callout.danger .callout-title { color: var(--danger); }
+  .callout.warn { background: var(--warn-soft); color: var(--text); }
+  .callout.warn .callout-title { color: var(--warn); }
+  .callout.info { background: var(--accent-soft); color: var(--text); }
+  .callout.info .callout-title { color: var(--accent); }
+  .callout p:last-child, .callout ul:last-child { margin-bottom: 0; }
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 12px 0;
+  }
+  .flow .step {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.9375rem;
+    background: var(--bg);
+  }
+  .flow .step b { color: var(--accent); }
+  .flow .arrow {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    padding: 2px 0;
+  }
+  .callout.ok { background: var(--ok-soft); }
+  .callout.ok .callout-title { color: var(--ok); }
+  .formula {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin: 14px 0;
+    font-weight: 600;
+  }
+  .formula .term {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 8px;
+    padding: 4px 12px;
+    font-size: 0.9375rem;
+    white-space: nowrap;
+  }
+  .formula .term.result { background: var(--ok-soft); color: var(--ok); }
+  .formula .op { color: var(--text-secondary); }
+  .table-wrap { overflow-x: auto; margin: 12px 0; }
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: 480px;
+    font-size: 0.9rem;
+  }
+  th, td {
+    border: 1px solid var(--border);
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--bg); white-space: nowrap; }
+  code {
+    background: var(--code-bg);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 0.875em;
+    font-family: "SF Mono", Menlo, Consolas, monospace;
+  }
+  .muted { color: var(--text-secondary); font-size: 0.875rem; }
+  footer {
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<header class="doc-header">
+  <h1>现场 FDE 工程师工作 SOP</h1>
+  <div class="meta">
+    <span class="chip">版本 v0.1 初版</span>
+    <span class="chip">2026-07-13</span>
+    <span class="chip">起草：王欣鑫</span>
+    <span class="chip">评审：王晋元（Albert）</span>
+    <span class="chip status">状态：待评审修订</span>
+  </div>
+</header>
+
+<nav class="toc">
+  <strong>目录</strong>
+  <ol>
+    <li><a href="#s1">背景与目标</a></li>
+    <li><a href="#s2">总体协作模式</a></li>
+    <li><a href="#s3">角色与职责分工</a></li>
+    <li><a href="#s4">仓库与分支策略</a></li>
+    <li><a href="#s5">以 case 列表为核心的工作流程</a></li>
+    <li><a href="#s6">问题分层处理规则</a></li>
+    <li><a href="#s7">磨合期预期与误判防范</a></li>
+    <li><a href="#s8">代码演进方向</a></li>
+    <li><a href="#s9">开放议题</a></li>
+    <li><a href="#s10">文档维护方式</a></li>
+  </ol>
+</nav>
+
+<section class="card" id="s1">
+  <h2><span class="no">1</span>背景与目标</h2>
+  <p>随着交付项目增多，现场 FDE（Forward Deployed Engineer）与后场研发团队需要一套明确的协作 SOP，以厘清职责边界、统一工作流程、保障交付质量。本 SOP 以本次 CSTCB 项目的实际合作模式为基础形成初版，后续随项目实践持续修订。</p>
+  <p>本 SOP 的目标：</p>
+  <ul>
+    <li>明确前场（FDE）与后场（研发）的职责边界与代码修改权限；</li>
+    <li>建立以 case 列表为核心的统一工作与验收机制；</li>
+    <li>规范项目仓库、SensePedia 主仓库的分支与特性回流流程；</li>
+    <li>为疑难问题定位、误判防范提供标准处理路径。</li>
+  </ul>
+</section>
+
+<section class="card" id="s2">
+  <h2><span class="no">2</span>总体协作模式</h2>
+  <p>核心原则：<strong>研发团队负责基础设施和标品，FDE 专注于业务层</strong>（当前阶段业务层主要指 MCP Server 与 skills）。</p>
+  <ul>
+    <li>FDE 在客户现场接收需求，快速开发和调试 MCP Server 与 skills，并直接与客户确认效果；</li>
+    <li>研发负责 SensePedia 标品机制能力建设（离线 skill 支持、MCP Server 调用机制、Agent 响应速度等），并对基础架构类问题提供标准修复流程与远程支持；</li>
+    <li>项目中沉淀的通用特性，经评审后回流 SensePedia 标品主分支，形成"项目反哺标品"的循环。</li>
+  </ul>
+  <p class="muted">说明：模式起步阶段职责界限不会一次性完全清晰，边界的逐步明确本身就是本 SOP 的建设方向之一。</p>
+</section>
+
+<section class="card" id="s3">
+  <h2><span class="no">3</span>角色与职责分工</h2>
+  <div class="callout info">
+    <span class="callout-title">FDE 角色定位</span>
+    <p>FDE 当前定位不是纯前场技术角色，而是<strong>售前 + 前场技术</strong>的复合角色（分别对应 3.1、3.2 两节），通常一名 FDE 同时负责 1–2 个项目。该负荷约束是第 9 节支援机制议题的前提。</p>
+  </div>
+
+  <h3>3.1 前场技术角色：前后场分工</h3>
+  <div class="roles">
+    <div class="role fde">
+      <h3>现场 FDE <span class="tag">前场</span></h3>
+      <ul>
+        <li>接收客户需求，快速开发和调试 MCP Server 与 skills；</li>
+        <li>负责 prompt 层调整、测试，并与客户确认效果；</li>
+        <li>维护项目 case 列表（唯一需求 / 问题入口）；</li>
+        <li>支持胶水层服务（基于 Pedia 基础能力封装客户特殊定制型服务，例如定时发送分析报告）；</li>
+        <li>非基础架构类代码修改 + 提供测试 case；</li>
+        <li>疑难问题的现场验证定位与二次确认。</li>
+      </ul>
+    </div>
+    <div class="role rd">
+      <h3>研发团队 <span class="tag">后场</span></h3>
+      <ul>
+        <li>SensePedia 机制开发：离线 skill 支持、MCP Server 调用机制、Agent 响应速度等；</li>
+        <li>基础架构类代码的标准修复流程与重构；</li>
+        <li>FDE 代码修改的复核；重构后以研发代码为准；</li>
+        <li>疑难问题快速远程响应、内部复现定位；</li>
+        <li>项目初期为 FDE 提供 prompt 调优远程支持；</li>
+        <li>与产品经理共同评审特性回流标品主分支。</li>
+      </ul>
+    </div>
+  </div>
+  <h3>3.2 售前角色：对内传递客户需求</h3>
+  <p>FDE 作为售前角色的核心职责是<strong>对内传递客户需求</strong>，产出物为「售前需求」，作为后续产品需求的输入。</p>
+  <div class="callout warn">
+    <span class="callout-title">售前需求的编写边界</span>
+    <p>售前需求<strong>只描述用户需求，不带产品方案或技术方案设计</strong>：</p>
+    <ul>
+      <li><strong>应包含</strong>：客户是谁、业务场景、要解决的问题与痛点、期望达到的效果、优先级；</li>
+      <li><strong>不应包含</strong>：产品功能方案、技术实现方案、架构或接口设计——这些在需求转化阶段由产品与研发侧补齐。</li>
+    </ul>
+  </div>
+  <p>需求转化关系：</p>
+  <div class="formula">
+    <span class="term result">产品需求</span>
+    <span class="op">=</span>
+    <span class="term">售前需求</span>
+    <span class="op">+</span>
+    <span class="term">现有产品知识</span>
+    <span class="op">+</span>
+    <span class="term">新增产品功能方案设计</span>
+  </div>
+  <ul>
+    <li><strong>售前需求</strong>：由 FDE 提供，只描述用户需求，是客户诉求的忠实记录；</li>
+    <li><strong>现有产品知识</strong>：结合标品已有能力，识别哪些需求现有功能已可满足；</li>
+    <li><strong>新增产品功能方案设计</strong>：对现有能力无法覆盖的部分，由产品与研发侧设计新增功能方案。</li>
+  </ul>
+  <p class="muted">与第 5 节的关系：项目交付过程中的效果问题与需求变化，仍统一进入 case 列表；售前需求主要承载新项目、新功能方向的客户诉求传递。</p>
+</section>
+
+<section class="card" id="s4">
+  <h2><span class="no">4</span>仓库与分支策略</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>仓库</th><th>内容</th><th>策略</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>项目专属仓库</td>
+          <td>FDE 开发的 MCP Server、skills（业务层交付物）</td>
+          <td>每个项目建立专门的 GitLab 仓库，由 FDE 主导维护</td>
+        </tr>
+        <tr>
+          <td>SensePedia 标品仓库</td>
+          <td>标品机制与基础设施代码</td>
+          <td>独立 GitLab 仓库，<strong>每个项目拉独立分支</strong>开发，由研发主导维护</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <h3>特性回流流程</h3>
+  <div class="flow">
+    <div class="step"><b>项目开发</b>：项目特性在 SensePedia 项目分支 + 项目专属仓库中实现并交付</div>
+    <div class="arrow">↓</div>
+    <div class="step"><b>积累评审</b>：若干项目完成后，产品经理与研发共同评审各项目特性</div>
+    <div class="arrow">↓</div>
+    <div class="step"><b>回流主分支</b>：确定有通用价值的特性 merge 到 SensePedia 主分支，成为标品能力</div>
+  </div>
+  <div class="callout warn">
+    <span class="callout-title">特殊分支模式的约束</span>
+    <p>短期内在标品不具备可插拔条件时，"项目特殊分支"是最快速的交付方案，但<strong>该模式不能持续过多项目</strong>，否则代码仓库会非常混乱。中长期必须向第 8 节的可插拔模块化方向演进。</p>
+  </div>
+</section>
+
+<section class="card" id="s5">
+  <h2><span class="no">5</span>以 case 列表为核心的工作流程</h2>
+  <p>case 列表是前后场共同的工作核心和唯一事实来源：</p>
+  <ol>
+    <li><strong>统一入口</strong>：所有效果问题或客户需求变化，统一首先更新到 case 列表，由 FDE 负责维护；</li>
+    <li><strong>转化为验收标准</strong>：case 列表最终转化为项目验收标准，前后场均以此为工作核心；</li>
+    <li><strong>驱动排查与验证</strong>：问题定位、修复验证、客户确认均围绕对应 case 进行，避免口头传递导致的信息漂移。</li>
+  </ol>
+</section>
+
+<section class="card" id="s6">
+  <h2><span class="no">6</span>问题分层处理规则</h2>
+
+  <h3>6.1 prompt 层问题</h3>
+  <ul>
+    <li>可通过 prompt 调整解决的问题，由 <strong>FDE 负责调整和测试，并与客户确认效果</strong>；</li>
+    <li>项目初期产研提供远程支持，协助 FDE 熟悉 prompt 在当前项目中的特点。</li>
+  </ul>
+
+  <h3>6.2 代码类问题（分两大类）</h3>
+  <div class="callout danger">
+    <span class="callout-title">第一类：基础架构类 —— FDE 禁止修改</span>
+    <p>以下范围的代码问题必须走产研标准修复流程：</p>
+    <ul>
+      <li>核心调度算法</li>
+      <li>Agent 状态机</li>
+      <li>中间件 / 数据库连接</li>
+      <li>模型封装</li>
+      <li>RAG 检索</li>
+      <li>核心交互框架</li>
+    </ul>
+  </div>
+  <div class="callout ok" style="background: var(--ok-soft);">
+    <span class="callout-title" style="color: var(--ok);">第二类：其他代码问题 / 功能调整 —— FDE 可修改</span>
+    <ul>
+      <li>由 FDE 修改并<strong>提供测试 case</strong>，产研复核；</li>
+      <li>如果产研对调整进行重构，则<strong>以产研重构代码为准</strong>，FDE 测试现场效果；</li>
+      <li>重构后现场再出现问题，按照新问题流程处理（重新进入 case 列表）。</li>
+    </ul>
+  </div>
+
+  <h3>6.3 疑难问题定位</h3>
+  <div class="flow">
+    <div class="step"><b>快速响应</b>：产研对疑难问题的原因分析提供快速远程响应</div>
+    <div class="arrow">↓</div>
+    <div class="step"><b>路径 A（具备现场验证条件）</b>：优先指导 FDE 现场验证定位</div>
+    <div class="arrow">或</div>
+    <div class="step"><b>路径 B（不具备现场条件）</b>：产研与测试内部复现定位，确定问题点后由 FDE 现场二次确认</div>
+  </div>
+</section>
+
+<section class="card" id="s7">
+  <h2><span class="no">7</span>磨合期预期与误判防范</h2>
+  <p>模式起步阶段的合理预期：<strong>初期研发侧任务会偏重</strong>，因为会有不少前场误判的问题落到后端排查。从长期看，这属于产品与协作模式成长的必经过程。</p>
+  <div class="callout info">
+    <span class="callout-title">典型误判案例（供排查参考）</span>
+    <p>调试模板 skill 时，监控 prompt 发现输出总是提到"应使用 memory 进行参考"，整个调用流程与 skill 要求几乎完全不一致，现象上极易被判断为基座问题。实际原因是：MCP Server 更新重启，恰好撞上平台定时检活机制触发，平台判定 MCP 已挂；而 skill 又要求必须使用该 MCP，LLM 认为此路不通，转而查找 memory 参考。几分钟后检活再次触发即自行恢复。</p>
+    <p><strong>启示</strong>：skill 效果异常时，先确认 MCP Server / 检活等基础设施状态与时间线，再定位 skill 与 prompt 层，避免被表面现象误导。</p>
+  </div>
+</section>
+
+<section class="card" id="s8">
+  <h2><span class="no">8</span>代码演进方向：可插拔模块化与标准配置化</h2>
+  <ul>
+    <li>标品代码长远应当按照<strong>可插拔模块化 + 标准配置化</strong>的模式演进，使 FDE 可参与调整的代码范围逐渐增加并趋于标准；</li>
+    <li>短期不具备条件时以特殊分支方式过渡（受第 4 节约束限制）；</li>
+    <li>落地方案由研发侧调研后补充到本文档（见第 9 节开放议题）。</li>
+  </ul>
+</section>
+
+<section class="card" id="s9">
+  <h2><span class="no">9</span>开放议题（待机制设计）</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>议题</th><th>背景</th><th>责任人</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>FDE 支援机制</td>
+          <td>一名 FDE 同时负责 1–2 个项目，且承担售前 + 前场技术双重角色；若胶水层服务（定制）数量较多，FDE 时间将不够用，需要在机制设计层面考虑 FDE 之间的支援方式</td>
+          <td>待定</td>
+        </tr>
+        <tr>
+          <td>可插拔模块化 / 标准配置化落地方案</td>
+          <td>作为代码演进目标（第 8 节），需调研具体技术方案后补充</td>
+          <td>王欣鑫</td>
+        </tr>
+        <tr>
+          <td>胶水层服务的职责边界</td>
+          <td>目前已识别 FDE 可支持 Alert 与 Report 两类胶水层服务，具体交付边界与工作量评估方式待细化</td>
+          <td>待定</td>
+        </tr>
+        <tr>
+          <td>多次需求出现相同定制需求的应对</td>
+          <td>有两种应对方案，不一定必须要固定使用哪种
+            <ul>
+              <li>开发脚手架或框架，作为 vibe coding 的输入</li>
+              <li>规划成为 Pedia 的常规功能</li>
+            </ul>
+          </td>
+          <td>待定</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card" id="s10">
+  <h2><span class="no">10</span>文档维护方式</h2>
+  <ul>
+    <li>本文档存放于项目 GitLab 仓库，作为 FDE 工作 SOP 的唯一权威版本；</li>
+    <li>修订通过 GitLab 提交进行，重大变更（职责边界、禁改清单、流程调整）需前后场双方确认；</li>
+    <li>随项目实践发现的边界模糊点，先记入第 9 节开放议题，讨论定稿后正式并入相应章节。</li>
+  </ul>
+</section>
+
+<footer>现场 FDE 工程师工作 SOP · v0.1 初版 · 2026-07-13</footer>
+
+</div>
+</body>
+</html>
