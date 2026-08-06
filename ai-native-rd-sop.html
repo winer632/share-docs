@@ -460,6 +460,59 @@
     人的核心能力从「经验丰富」「编码快」转向把问题定义清楚、把约束表达清楚、把结果验证清楚。<br>
     系统迭代进入高通量时代，快速开发商业可用的大规模稳定系统的瓶颈转移到了唯一稀缺的资源：<span class="emphasis-danger">人类的时间和注意力</span>。</p>
 
+    <h3>编码 Agent 的价值与边界</h3>
+
+    <p>编码 Agent 的主要价值，不只是「编码更快」，而是能降低需求澄清、知识传递、设计草拟和编码的成本。它能放大研发效率，但放大效果取决于驾驭 Agent 的人在系统设计、技术掌握、业务 know how 的知识沉淀、需求稳定性、上下文可获得性、QA体系和团队使用方式。</p>
+
+    <div class="grid two">
+      <div class="card">
+        <h4><span class="ico">🗣️</span>需求确认大幅提效</h4>
+        <p>可用快速原型、可运行 demo 或交互稿对齐需求，减少抽象讨论带来的偏差。对外展示时必须标注 demo 的验证范围，避免把探索性原型误认为可交付产品。</p>
+      </div>
+      <div class="card">
+        <h4><span class="ico">📥</span>规模化获取显式上下文</h4>
+        <p>Agent 能从代码、文档、提交记录和测试里快速提取上下文，降低交接损耗。但它不会天然理解隐式业务知识;关键约定必须沉淀为文档、类型、测试或运行证据。</p>
+      </div>
+      <div class="card">
+        <h4><span class="ico">📐</span>存量梳理 + 风险分层覆盖</h4>
+        <p>Agent 适合梳理存量代码、补齐 spec、厘清模块职责。覆盖要求按风险分层:核心链路、权限、资金、数据安全、复杂状态机必须重点覆盖;低风险改动可轻量化。</p>
+      </div>
+      <div class="card">
+        <h4><span class="ico">⚡</span>突破部分协作瓶颈</h4>
+        <p>在需求相对清晰、模块边界明确、验证体系健全的项目里，Agent 可以减少「加人带来的沟通成本」。不承诺固定倍数;每个项目应以交付周期、缺陷率和返工率来评估收益。</p>
+      </div>
+    </div>
+
+    <h3>对组织协作的影响</h3>
+    <div class="grid two">
+      <div class="card">
+        <h4><span class="ico">🎯</span>重心转向价值确认</h4>
+        <p>实现成本下降后，瓶颈更容易前移到「做对的事」。团队需要把更多精力放在业务价值、用户路径、风险边界和验收口径上。</p>
+      </div>
+      <div class="card">
+        <h4><span class="ico">🔗</span>减少低价值同步</h4>
+        <p>能由文档、代码、测试和 Agent 自动汇总解决的问题，不再依赖反复开会传话。高风险决策、资源冲突和跨团队承诺仍需明确责任人。</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- 1 -->
+  <section id="design">
+    <div class="sec-head">
+      <div class="badge">1</div>
+      <div>
+        <h2>框架与模块设计</h2>
+        <p class="sec-sub">先对齐意图与边界，再让 AI 填充实现;接口与契约是 AI 协作的「公共语言」。</p>
+      </div>
+    </div>
+
+    <ul>
+      <li><strong>需求澄清(Brainstorm)</strong>:动手前先和 AI 过一轮——目标、用户、约束、非目标、失败模式、可选方案与取舍。让 AI 主动反问、列出不确定点，而不是直接给方案。</li>
+      <li><strong>设计文档作为需求与决策事实源</strong>:由人给出初始推动的想法，再由 AI 起草设计文档(目标 / 模块边界 / 接口 / 数据流 / 风险)，人 review 后定稿。需求、取舍和边界以设计文档为准;代码、测试和线上行为是实现事实源，变更时必须同步更新。</li>
+      <li><strong>多方案并行评审</strong>:对关键设计让 AI 产出 2–3 个独立方案(如「最小可用优先 / 风险优先 / 扩展性优先」)，再由人择优并嫁接各自亮点。</li>
+    </ul>
+
     <div class="directory-overview" aria-label="agent-platform 项目目录结构与文件数量">
       <div class="directory-title"><strong>设计文档所在目录分布</strong><span>agent-platform 仓库快照</span></div>
       <div class="tree-row"><span class="tree-name emphasis">agent-platform/</span><span class="tree-count">944</span></div>
@@ -519,78 +572,11 @@
       </ul>
     </div>
 
-    <h3>编码 Agent 的价值与边界</h3>
-
-    <p>编码 Agent 的主要价值，不只是「编码更快」，而是能降低需求澄清、知识传递、设计草拟和编码的成本。它能放大研发效率，但放大效果取决于驾驭 Agent 的人在系统设计、技术掌握、业务 know how 的知识沉淀、需求稳定性、上下文可获得性、QA体系和团队使用方式。</p>
-
-    <div class="grid two">
-      <div class="card">
-        <h4><span class="ico">🗣️</span>需求确认大幅提效</h4>
-        <p>可用快速原型、可运行 demo 或交互稿对齐需求，减少抽象讨论带来的偏差。对外展示时必须标注 demo 的验证范围，避免把探索性原型误认为可交付产品。</p>
-      </div>
-      <div class="card">
-        <h4><span class="ico">📥</span>规模化获取显式上下文</h4>
-        <p>Agent 能从代码、文档、提交记录和测试里快速提取上下文，降低交接损耗。但它不会天然理解隐式业务知识;关键约定必须沉淀为文档、类型、测试或运行证据。</p>
-      </div>
-      <div class="card">
-        <h4><span class="ico">📐</span>存量梳理 + 风险分层覆盖</h4>
-        <p>Agent 适合梳理存量代码、补齐 spec、厘清模块职责。覆盖要求按风险分层:核心链路、权限、资金、数据安全、复杂状态机必须重点覆盖;低风险改动可轻量化。</p>
-      </div>
-      <div class="card">
-        <h4><span class="ico">⚡</span>突破部分协作瓶颈</h4>
-        <p>在需求相对清晰、模块边界明确、验证体系健全的项目里，Agent 可以减少「加人带来的沟通成本」。不承诺固定倍数;每个项目应以交付周期、缺陷率和返工率来评估收益。</p>
-      </div>
-    </div>
-
-    <h3>对组织协作的影响</h3>
-    <div class="grid two">
-      <div class="card">
-        <h4><span class="ico">🎯</span>重心转向价值确认</h4>
-        <p>实现成本下降后，瓶颈更容易前移到「做对的事」。团队需要把更多精力放在业务价值、用户路径、风险边界和验收口径上。</p>
-      </div>
-      <div class="card">
-        <h4><span class="ico">🔗</span>减少低价值同步</h4>
-        <p>能由文档、代码、测试和 Agent 自动汇总解决的问题，不再依赖反复开会传话。高风险决策、资源冲突和跨团队承诺仍需明确责任人。</p>
-      </div>
-    </div>
-
-  </section>
-
-  <!-- 1 -->
-  <section id="design">
-    <div class="sec-head">
-      <div class="badge">1</div>
-      <div>
-        <h2>框架与模块设计</h2>
-        <p class="sec-sub">先对齐意图与边界，再让 AI 填充实现;接口与契约是 AI 协作的「公共语言」。</p>
-      </div>
-    </div>
-
-    <h3>1.1 设计先于编码:用 AI 做发散，用人做收敛</h3>
-    <ul>
-      <li><strong>需求澄清(Brainstorm)</strong>:动手前先和 AI 过一轮——目标、用户、约束、非目标、失败模式、可选方案与取舍。让 AI 主动反问、列出不确定点，而不是直接给方案。</li>
-      <li><strong>设计文档作为需求与决策事实源</strong>:由人给出初始推动的想法，再由 AI 起草设计文档(目标 / 模块边界 / 接口 / 数据流 / 风险)，人 review 后定稿。需求、取舍和边界以设计文档为准;代码、测试和线上行为是实现事实源，变更时必须同步更新。</li>
-      <li><strong>多方案并行评审</strong>:对关键设计让 AI 产出 2–3 个独立方案(如「最小可用优先 / 风险优先 / 扩展性优先」)，再由人择优并嫁接各自亮点。</li>
-    </ul>
-
     <div class="callout principle">
       <div class="t">🔁 实操经验:设计文档先反复交叉评审到收敛，再动手</div>
       正式开发前先写<strong>设计文档</strong>，然后让 <strong>Claude Code 和 Codex 分别多轮 review</strong>，把发现的问题逐条修订，<strong>直到两个 Coding Agent 都认为设计文档不再有任何问题为止</strong>。人也必须参与这一轮:把自己的关注点、以及觉得不对或有风险的地方明确告诉 Agent，让它<strong>按你的思路去 review 或修改</strong>，而不是被动接受 AI 的判断。设计阶段多花的时间，远低于在错误架构上返工的成本。
     </div>
 
-    <h3>1.2 设计分层门槛</h3>
-    <div class="table-scroll">
-      <table>
-        <thead><tr><th>任务类型</th><th>最低设计要求</th><th>必须评审</th></tr></thead>
-        <tbody>
-          <tr><td>低风险小改</td><td>一句话目标 + 验收标准 + 影响文件</td><td>代码 owner 或责任人自查 + 异构 AI 交叉评审</td></tr>
-          <tr><td>普通功能</td><td>目标 / 非目标 / 接口 / 数据流 / 测试计划</td><td>模块 owner review + 异构 AI 交叉评审</td></tr>
-          <tr><td>高风险改动</td><td>方案对比 / 兼容性 / 回滚方案 / 权限与数据影响 / 发布计划</td><td>模块 owner + 相关方 + 异构 AI 交叉评审</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <h3>1.3 模块设计原则(对 AI 协作友好)</h3>
     <div class="grid two">
       <div class="card"><h4>接口先行</h4><p>先定义清晰的接口/契约/类型，AI 在明确契约下实现质量显著更高，也便于替换实现。</p></div>
       <div class="card"><h4>边界清晰、低耦合</h4><p>模块可独立理解、独立测试。清晰的边界 = 可拆成多个并行子任务交给多 Agent。</p></div>
