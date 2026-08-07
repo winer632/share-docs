@@ -574,7 +574,7 @@
 
     <div class="callout principle">
       <div class="t">🔁 实操经验:设计文档先反复交叉评审到收敛，再动手</div>
-      正式开发前先写<strong>设计文档</strong>，然后让 <strong>Claude Code 和 Codex 分别多轮 review</strong>，把发现的问题逐条修订，<strong>直到两个 Coding Agent 都认为设计文档不再有任何问题为止</strong>。人也必须参与这一轮:把自己的关注点、以及觉得不对或有风险的地方明确告诉 Agent，让它<strong>按你的思路去 review 或修改</strong>，而不是被动接受 AI 的判断。设计阶段多花的时间，远低于在错误架构上返工的成本。
+      正式开发前先写<strong>设计文档</strong>，然后让 <strong>多个 Coding Agent 分别多轮 review</strong>，把发现的问题逐条修订，<strong>直到两个 Coding Agent 都认为设计文档不再有任何问题为止</strong>。人也必须参与这一轮:把自己的关注点、以及觉得不对或有风险的地方明确告诉 Agent，让它<strong>按你的思路去 review 或修改</strong>，而不是被动接受 AI 的判断。设计阶段多花的时间，远低于在错误架构上返工的成本。
     </div>
 
     <div class="grid two">
@@ -586,7 +586,7 @@
 
     <div class="callout tip">
       <div class="t">💡 实践提示</div>
-      把项目级约定沉淀进 <code>CLAUDE.md</code> / <code>AGENTS.md</code>(技术栈、目录结构、需要遵守的开发规范、开发测试服务器的 ip/port 以及密钥、构建与测试命令)。这是给所有 AI 协作的「项目宪法」，一次写好长期复用。
+      把项目级约定沉淀进 <code>AGENTS.md</code>(技术栈、目录结构、需要遵守的开发规范、开发测试服务器的 ip/port 以及密钥、构建与测试命令)。这是给所有 AI 协作的「项目宪法」，一次写好长期复用。
     </div>
 
     <div class="callout dont">
@@ -664,13 +664,13 @@
     <h3>3.2 交叉评审:换一个 AI 来挑刺(强烈推荐)</h3>
     <div class="callout principle">
       <div class="t">🔀 异构交叉评审</div>
-      实践发现:<strong>AI 很难 review 出自己写的设计/方案的问题</strong>——它会复用产出时的同一套假设，对自己的盲点免疫。换一个 AI(如 Claude Code 写、Codex 评，或反之)，常能暴露实现方忽略的正确性、边界或安全问题。让一方实现、另一方专门「挑刺」，是低成本、高收益的质量手段。
+      实践发现:<strong>AI 很难 review 出自己写的设计/方案的问题</strong>——它会复用产出时的同一套假设，对自己的盲点免疫。换一个 AI，常能暴露实现方忽略的正确性、边界或安全问题。让一方实现、另一方专门「挑刺」，是低成本、高收益的质量手段。
     </div>
     <div class="table-scroll">
       <table>
         <thead><tr><th>角色</th><th>分工</th><th>要点</th></tr></thead>
         <tbody>
-          <tr><td>实现方<br>(如 Claude Code)</td><td>设计 + 编码 + 自测</td><td>产出方案与代码，先完成自查</td></tr>
+          <tr><td>实现方</td><td>设计 + 编码 + 自测</td><td>产出方案与代码，先完成自查</td></tr>
           <tr><td>评审方<br>(如 Codex)</td><td>对抗式 review</td><td>以「假设实现方错了」为前提找漏洞，重点盯 P0:正确性、边界、安全、架构缺陷</td></tr>
           <tr><td>人</td><td>裁决收口</td><td>核实交叉评审暴露的问题是否成立，决定采纳/反驳</td></tr>
         </tbody>
@@ -797,14 +797,14 @@
 
     <h3>6.1 工具链沉淀</h3>
     <div class="grid two">
-      <div class="card"><h4><span class="ico">📜</span>项目宪法</h4><p><code>CLAUDE.md</code>/<code>AGENTS.md</code>:技术栈、结构、命名、禁忌、构建与测试命令、安全边界——所有 AI 协作的统一前提。</p></div>
+      <div class="card"><h4><span class="ico">📜</span>项目宪法</h4><p><code>AGENTS.md</code>:技术栈、结构、命名、禁忌、构建与测试命令、安全边界——所有 AI 协作的统一前提。</p></div>
       <div class="card"><h4><span class="ico">🧠</span>跨会话记忆</h4><p>把踩过的坑、团队约定、长期上下文沉淀为可复用记忆。</p></div>
       <div class="card"><h4><span class="ico">🛠️</span>技能/SOP 化</h4><p>把高频流程(评审、调试、发布前检查)固化成可调用的标准流程，降低发挥波动。</p></div>
       <div class="card"><h4><span class="ico">⛓️</span>多 Agent 编排</h4><p>独立任务并行(fan-out)、关键结论对抗式核验、再汇总收口;复杂工作拆成可验证子任务，并隔离分支/工作区。</p></div>
     </div>
     <div class="callout do">
       <div class="t">✅ 实操经验:让好经验跨项目复用</div>
-      把你认为<strong>通用的编程规范和需要持久记忆的信息</strong>集中写进一个独立文件(例如 <code>/Users/user1/Desktop/keynotes.md</code>)，再在每个项目的 <code>CLAUDE.md</code> / <code>AGENTS.md</code> 里加一句引用，比如:『<strong>请阅读并在执行任务过程中遵守 <code>/Users/user1/Desktop/keynotes.md</code></strong>』。这样同一套经验和约定就能自动应用到所有项目，不必在每个仓库里重复维护；更新一处，处处生效。
+      把你认为<strong>通用的编程规范和需要持久记忆的信息</strong>集中写进一个独立文件(例如 <code>/Users/user1/Desktop/keynotes.md</code>)，再在每个项目的 <code>AGENTS.md</code> 里加一句引用，比如:『<strong>请阅读并在执行任务过程中遵守 <code>/Users/user1/Desktop/keynotes.md</code></strong>』。这样同一套经验和约定就能自动应用到所有项目，不必在每个仓库里重复维护；更新一处，处处生效。
     </div>
     <div class="callout tip">
       <div class="t">💡 团队层面</div>
