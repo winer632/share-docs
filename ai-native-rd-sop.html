@@ -215,7 +215,7 @@
   .flow .step .v{font-size:14px;margin-top:3px;}
 
   /* Lifecycle flow diagram */
-  .lifecycle-flow{margin:18px 0 24px;}
+  .lifecycle-flow{margin:18px 0 24px;container-type:inline-size;}
   .lf-track{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;}
   .lf-group{min-width:0;display:flex;flex-direction:column;border-radius:15px;padding:12px 13px 14px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,30,55,.04);}
   .lf-upstream{flex:1 1 260px;background:linear-gradient(180deg,rgba(20,30,55,.05),rgba(20,30,55,.015));border-color:var(--line-strong);}
@@ -245,6 +245,16 @@
   .lf-legend i{width:12px;height:12px;border-radius:4px;flex:0 0 auto;}
   .lf-legend .sw-up{background:rgba(20,30,55,.10);border:1px solid var(--line-strong);}
   .lf-legend .sw-focus{background:linear-gradient(135deg,var(--brand),var(--brand-2));border:1px solid rgba(79,111,224,.40);}
+  /* Stack once the figure itself is too narrow for one row (the content column
+     shrinks with the sidebar, so its width does not track the viewport). */
+  @container (max-width:839px){
+    .lf-track{flex-direction:column;}
+    .lf-upstream .lf-stages,.lf-focus .lf-stages{grid-template-columns:minmax(0,1fr);}
+    .lf-arrow{justify-self:center;}
+    .lf-arrow::before{content:"↓";}
+    .lf-join{align-self:center;font-size:18px;}
+    .lf-join::before{content:"↓";}
+  }
   @media(max-width:700px){
     .lf-track{flex-direction:column;}
     .lf-upstream .lf-stages,.lf-focus .lf-stages{grid-template-columns:minmax(0,1fr);}
@@ -291,7 +301,8 @@
   .directory-overview .dir-tree .emphasis{color:#fff;font-weight:700;}
   @media(max-width:540px){.directory-overview{padding:14px;font-size:11.5px;}.directory-overview .tree-row{gap:8px;}.directory-overview .tree-note{display:none;}}
   .repo-dashboard{margin:18px 0 10px;}
-  .metric-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:14px 0 20px;}
+  .metric-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1.2fr .82fr;gap:10px;margin:14px 0 20px;}
+  @media(max-width:1209px){.metric-grid{grid-template-columns:repeat(3,minmax(0,1fr));}}
   .metric-card{background:linear-gradient(180deg,var(--card),var(--bg-soft));border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:0 1px 2px rgba(20,30,55,.04);}
   .metric-card .metric-ico{font-size:20px;display:block;margin-bottom:7px;}
   .metric-card .metric-label{display:block;color:var(--muted);font-size:12.5px;line-height:1.35;}
@@ -446,8 +457,9 @@
       <div class="metric-grid">
         <div class="metric-card"><span class="metric-ico">📝</span><span class="metric-label">Markdown 设计文档</span><strong>1，035</strong><small>Git 已追踪的 .md 文件</small></div>
         <div class="metric-card"><span class="metric-ico">🌐</span><span class="metric-label">HTML 设计文档</span><strong>167</strong><small>Git 已追踪的 .html / .htm 文件</small></div>
-        <div class="metric-card"><span class="metric-ico">🔖</span><span class="metric-label">hk_customs 提交数</span><strong>5，032</strong><small>本地与 origin 分支一致</small></div>
+        <div class="metric-card"><span class="metric-ico">🔖</span><span class="metric-label">hk_customs commit数</span><strong>5，032</strong><small>本地与 origin 分支一致</small></div>
         <div class="metric-card"><span class="metric-ico">💻</span><span class="metric-label">工程代码行</span><strong>1，206，643</strong><small>不含空行、注释与文档文本</small></div>
+        <div class="metric-card"><span class="metric-ico">🐞</span><span class="metric-label">BUG数</span><strong>216</strong><small>累计记录的缺陷数量</small></div>
       </div>
 
       <div class="dash-grid">
