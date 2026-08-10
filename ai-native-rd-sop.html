@@ -280,6 +280,27 @@
     box-shadow:0 8px 24px rgba(20,30,55,.22);opacity:0;pointer-events:none;transition:opacity .25s;
   }
   .backtop.show{opacity:1;pointer-events:auto;}
+  .fsbtn{
+    position:fixed;right:16px;bottom:72px;z-index:30;
+    width:46px;height:46px;border-radius:50%;
+    background:var(--card);color:var(--brand);
+    border:1px solid var(--line-strong);display:grid;place-items:center;
+    font-size:17px;line-height:1;cursor:pointer;
+    box-shadow:0 8px 24px rgba(20,30,55,.14);
+    transition:transform .2s,box-shadow .2s,color .2s;
+  }
+  .fsbtn:hover{transform:translateY(-1px);box-shadow:0 10px 26px rgba(20,30,55,.20);color:var(--brand-2);}
+
+  /* Fullscreen / presentation mode: widen the reading column and scale up
+     the base type so the extra screen real estate is actually used. */
+  :root:fullscreen{background:var(--bg);overflow-y:auto;}
+  :root.fs-mode{--maxw:1180px;}
+  :root.fs-mode body{font-size:17.5px;}
+  :root.fs-mode aside.sidebar{padding-top:34px;}
+  :root.fs-mode nav.toc a{font-size:14px;}
+  :root.fs-mode header.hero{padding:40px 0 24px;}
+  :root.fs-mode .fsbtn{color:var(--brand-2);border-color:rgba(124,91,255,.45);}
+
   .pill-note{font-size:12.5px;color:var(--muted);border:1px dashed var(--line-strong);border-radius:10px;padding:10px 12px;margin:14px 0;background:rgba(20,30,55,.02);}
 
   /* Repository metrics dashboard */
@@ -872,6 +893,7 @@
   </main>
 </div>
 
+<button class="fsbtn" id="fsbtn" aria-label="全屏阅读" aria-pressed="false" title="全屏阅读（快捷键 F，Esc 退出）">⛶</button>
 <button class="backtop" id="backtop" aria-label="回到顶部">↑</button>
 
 <script>
@@ -895,6 +917,43 @@
   },{passive:true});
   bt.addEventListener('click',function(){window.scrollTo({top:0,behavior:'smooth'});});
   updateToc();
+
+  /* Fullscreen reading mode. Falls back to widening the layout in place when
+     the Fullscreen API is unavailable or refused (e.g. iOS Safari). */
+  var fsBtn=document.getElementById('fsbtn');
+  var root=document.documentElement;
+  var wideOnly=false;
+  function fsActive(){return !!(document.fullscreenElement||document.webkitFullscreenElement);}
+  function syncFs(){
+    var on=fsActive()||wideOnly;
+    root.classList.toggle('fs-mode',on);
+    fsBtn.textContent=on?'✕':'⛶';
+    fsBtn.setAttribute('aria-pressed',on?'true':'false');
+    fsBtn.setAttribute('aria-label',on?'退出全屏':'全屏阅读');
+    fsBtn.setAttribute('title',on?'退出全屏（快捷键 F 或 Esc）':'全屏阅读（快捷键 F，Esc 退出）');
+  }
+  function toggleFs(){
+    if(fsActive()){
+      (document.exitFullscreen||document.webkitExitFullscreen).call(document);
+      return;
+    }
+    if(wideOnly){wideOnly=false;syncFs();return;}
+    var req=root.requestFullscreen||root.webkitRequestFullscreen;
+    if(!req){wideOnly=true;syncFs();return;}
+    var p=req.call(root);
+    if(p&&p.catch){p.catch(function(){wideOnly=true;syncFs();});}
+  }
+  fsBtn.addEventListener('click',toggleFs);
+  ['fullscreenchange','webkitfullscreenchange'].forEach(function(evt){
+    document.addEventListener(evt,function(){
+      if(!fsActive()){wideOnly=false;}
+      syncFs();
+    });
+  });
+  document.addEventListener('keydown',function(e){
+    if(e.metaKey||e.ctrlKey||e.altKey)return;
+    if(e.key==='f'||e.key==='F'){e.preventDefault();toggleFs();}
+  });
 </script>
 </body>
 </html>
