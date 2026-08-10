@@ -214,6 +214,46 @@
   .flow .step .k{font-size:12px;color:var(--brand);font-weight:700;letter-spacing:.05em;}
   .flow .step .v{font-size:14px;margin-top:3px;}
 
+  /* Lifecycle flow diagram */
+  .lifecycle-flow{margin:18px 0 24px;}
+  .lf-track{display:flex;flex-wrap:wrap;align-items:stretch;gap:10px;}
+  .lf-group{min-width:0;display:flex;flex-direction:column;border-radius:15px;padding:12px 13px 14px;border:1px solid var(--line);background:var(--card);box-shadow:0 1px 2px rgba(20,30,55,.04);}
+  .lf-upstream{flex:1 1 260px;background:linear-gradient(180deg,rgba(20,30,55,.05),rgba(20,30,55,.015));border-color:var(--line-strong);}
+  .lf-focus{flex:3 1 520px;background:linear-gradient(180deg,rgba(79,111,224,.11),rgba(124,91,255,.045));border-color:rgba(79,111,224,.40);box-shadow:0 6px 20px rgba(79,111,224,.13);}
+  .lf-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:11px;}
+  .lf-tag{font-size:12px;font-weight:700;letter-spacing:.03em;padding:4px 11px;border-radius:999px;white-space:nowrap;}
+  .lf-upstream .lf-tag{color:var(--muted);background:rgba(20,30,55,.06);border:1px solid var(--line-strong);}
+  .lf-focus .lf-tag{color:#fff;background:linear-gradient(135deg,var(--brand),var(--brand-2));border:1px solid transparent;}
+  .lf-note{font-size:12px;color:var(--muted);}
+  .lf-stages{flex:1;display:grid;align-items:stretch;gap:6px;}
+  .lf-upstream .lf-stages{grid-template-columns:1fr auto 1fr;}
+  .lf-focus .lf-stages{grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;}
+  .lf-stage{min-width:0;display:flex;flex-direction:column;gap:2px;padding:10px;border-radius:11px;background:var(--card);border:1px solid var(--line);}
+  .lf-focus .lf-stage{border-color:rgba(79,111,224,.30);box-shadow:0 1px 3px rgba(79,111,224,.12);}
+  .lf-stage .lf-ico{font-size:16px;line-height:1.2;}
+  .lf-stage .lf-name{font-size:14px;font-weight:600;color:var(--text);white-space:nowrap;}
+  .lf-upstream .lf-stage .lf-name{color:var(--muted);}
+  .lf-focus .lf-stage .lf-name{color:#3a4a9e;}
+  .lf-stage .lf-sub{font-size:11.5px;line-height:1.4;color:var(--dim);}
+  .lf-arrow{align-self:center;color:var(--dim);font-size:13px;line-height:1;}
+  .lf-arrow::before{content:"→";}
+  .lf-focus .lf-arrow{color:var(--brand);}
+  .lf-join{flex:0 0 auto;align-self:center;color:var(--brand);font-size:20px;font-weight:700;line-height:1;}
+  .lf-join::before{content:"→";}
+  .lf-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin:12px 0 0;font-size:12.5px;color:var(--muted);}
+  .lf-legend span{display:inline-flex;align-items:center;gap:7px;}
+  .lf-legend i{width:12px;height:12px;border-radius:4px;flex:0 0 auto;}
+  .lf-legend .sw-up{background:rgba(20,30,55,.10);border:1px solid var(--line-strong);}
+  .lf-legend .sw-focus{background:linear-gradient(135deg,var(--brand),var(--brand-2));border:1px solid rgba(79,111,224,.40);}
+  @media(max-width:700px){
+    .lf-track{flex-direction:column;}
+    .lf-upstream .lf-stages,.lf-focus .lf-stages{grid-template-columns:minmax(0,1fr);}
+    .lf-arrow{justify-self:center;}
+    .lf-arrow::before{content:"↓";}
+    .lf-join{align-self:center;font-size:18px;}
+    .lf-join::before{content:"↓";}
+  }
+
   /* Maturity */
   .levels{display:grid;gap:10px;margin:14px 0;}
   .lvl{display:flex;gap:12px;align-items:flex-start;padding:13px;border:1px solid var(--line);border-radius:12px;background:var(--card);box-shadow:0 1px 2px rgba(20,30,55,.04);}
@@ -333,6 +373,68 @@
     </div>
 
     <p>一个项目分为售前需求收集，产品需求生成，系统架构设计，开发，测试，部署等环节。如何做一个AI Native的项目呢？我们的理解是在各个环节都通过AI工具的加持来重构流程提升效率。从今年3月初开始，我们团队启动了一项实验：用AI Native方式构建一款可商业化交付的Agent平台产品，并交付给我们亚太区域的商业伙伴，以Agentic方式重构他们的业务流。这个产品就是SensePedia Octo，已经在多个项目中使用。本文会介绍产研环节我们从零开始打造一款全新产品的过程中，所能学到的经验教训。</p>
+    <figure class="lifecycle-flow" aria-label="项目全流程环节示意图">
+      <div class="lf-track">
+        <div class="lf-group lf-upstream">
+          <div class="lf-head">
+            <span class="lf-tag">需求侧环节</span>
+            <span class="lf-note">本文不展开</span>
+          </div>
+          <div class="lf-stages">
+            <div class="lf-stage">
+              <span class="lf-ico">🧭</span>
+              <span class="lf-name">售前需求收集</span>
+              <span class="lf-sub">客户场景与痛点</span>
+            </div>
+            <span class="lf-arrow" aria-hidden="true"></span>
+            <div class="lf-stage">
+              <span class="lf-ico">📝</span>
+              <span class="lf-name">产品需求生成</span>
+              <span class="lf-sub">PRD与功能定义</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="lf-join" aria-hidden="true"></div>
+
+        <div class="lf-group lf-focus">
+          <div class="lf-head">
+            <span class="lf-tag">产研环节 · 本文重点</span>
+            <span class="lf-note">从零到一打造产品的主战场</span>
+          </div>
+          <div class="lf-stages">
+            <div class="lf-stage">
+              <span class="lf-ico">🏗️</span>
+              <span class="lf-name">系统架构设计</span>
+              <span class="lf-sub">框架与模块设计</span>
+            </div>
+            <span class="lf-arrow" aria-hidden="true"></span>
+            <div class="lf-stage">
+              <span class="lf-ico">💻</span>
+              <span class="lf-name">开发</span>
+              <span class="lf-sub">Coding与Code Review</span>
+            </div>
+            <span class="lf-arrow" aria-hidden="true"></span>
+            <div class="lf-stage">
+              <span class="lf-ico">🧪</span>
+              <span class="lf-name">测试</span>
+              <span class="lf-sub">Test与Verification</span>
+            </div>
+            <span class="lf-arrow" aria-hidden="true"></span>
+            <div class="lf-stage">
+              <span class="lf-ico">🚀</span>
+              <span class="lf-name">部署</span>
+              <span class="lf-sub">交付与上线</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <figcaption class="lf-legend">
+        <span><i class="sw-up"></i>需求侧环节：售前需求收集、产品需求生成</span>
+        <span><i class="sw-focus"></i>产研环节：系统架构设计、开发、测试、部署</span>
+      </figcaption>
+    </figure>
+
     <h3>SensePedia Octo各项数据统计</h3>
 
     <figure class="project-activity">
