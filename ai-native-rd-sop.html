@@ -339,32 +339,19 @@
   .bar-track{height:11px;background:rgba(79,111,224,.08);border-radius:999px;overflow:hidden;}
   .bar-fill{display:block;height:100%;min-width:2px;background:linear-gradient(90deg,var(--brand),var(--brand-2));border-radius:999px;}
   .bar-value{font-variant-numeric:tabular-nums;color:var(--text);font-weight:600;}
-  .hour-dashboard{grid-column:1/-1;overflow-x:auto;padding-bottom:4px;}
-  .hour-chart{display:grid;grid-template-columns:repeat(24,minmax(20px,1fr));gap:6px;min-width:648px;height:188px;padding:12px 4px 0;border-bottom:1px solid var(--line);align-items:end;}
-  .hour-item{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px;min-width:0;}
-  .hour-value{font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums;line-height:1;}
-  .hour-bar{width:100%;min-height:2px;border-radius:5px 5px 0 0;background:linear-gradient(180deg,var(--brand-2),var(--brand));}
-  .hour-label{font-size:9px;color:var(--dim);line-height:1;}
   .month-chart{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;height:178px;padding:8px 8px 0;border-bottom:1px solid var(--line);align-items:end;}
   .month-item{height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:5px;min-width:0;}
   .month-value{font-size:12px;color:var(--text);font-weight:600;font-variant-numeric:tabular-nums;line-height:1;}
   .month-bar{width:min(48px,78%);min-height:2px;border-radius:6px 6px 0 0;background:linear-gradient(180deg,var(--accent),#61cbb8);}
   .month-label{font-size:11px;color:var(--muted);white-space:nowrap;}
-  .language-chart{columns:2;column-gap:24px;}
-  .language-chart .bar-row{break-inside:avoid;margin-bottom:7px;}
-  .language-chart .bar-row{grid-template-columns:94px minmax(0,1fr) 62px;}
   .people-chart .bar-row{grid-template-columns:82px minmax(0,1fr) 48px;}
   .stats-source{font-size:12px;color:var(--muted);margin:18px 0 0;padding:10px 12px;border-left:3px solid var(--brand);background:rgba(79,111,224,.05);border-radius:0 10px 10px 0;}
   @media(max-width:700px){
     .metric-grid{grid-template-columns:1fr 1fr;}
     .dash-grid{grid-template-columns:1fr;gap:24px;}
-    .language-chart{columns:1;}
   }
   @media(max-width:430px){
     .metric-card strong{font-size:22px;}
-    .hour-chart{gap:6px;height:170px;}
-    .hour-value{font-size:8px;}
-    .hour-label{font-size:8px;}
   }
 </style>
 </head>
@@ -484,51 +471,18 @@
       </div>
 
       <div class="dash-grid">
-        <div class="dash-block hour-dashboard">
-          <h4>⏰ 按小时的提交分布</h4>
-          <p class="dash-note">0–23 点，按 Git committer 本地时间统计</p>
-          <div class="hour-chart" role="img" aria-label="hk_customs 分支每小时提交次数，17 点最高，为 355 次">
-            <div class="hour-item"><span class="hour-value">161</span><span class="hour-bar" style="height:45.4%"></span><span class="hour-label">00</span></div>
-            <div class="hour-item"><span class="hour-value">139</span><span class="hour-bar" style="height:39.2%"></span><span class="hour-label">01</span></div>
-            <div class="hour-item"><span class="hour-value">97</span><span class="hour-bar" style="height:27.3%"></span><span class="hour-label">02</span></div>
-            <div class="hour-item"><span class="hour-value">87</span><span class="hour-bar" style="height:24.5%"></span><span class="hour-label">03</span></div>
-            <div class="hour-item"><span class="hour-value">58</span><span class="hour-bar" style="height:16.3%"></span><span class="hour-label">04</span></div>
-            <div class="hour-item"><span class="hour-value">38</span><span class="hour-bar" style="height:10.7%"></span><span class="hour-label">05</span></div>
-            <div class="hour-item"><span class="hour-value">32</span><span class="hour-bar" style="height:9.0%"></span><span class="hour-label">06</span></div>
-            <div class="hour-item"><span class="hour-value">84</span><span class="hour-bar" style="height:23.7%"></span><span class="hour-label">07</span></div>
-            <div class="hour-item"><span class="hour-value">53</span><span class="hour-bar" style="height:14.9%"></span><span class="hour-label">08</span></div>
-            <div class="hour-item"><span class="hour-value">93</span><span class="hour-bar" style="height:26.2%"></span><span class="hour-label">09</span></div>
-            <div class="hour-item"><span class="hour-value">233</span><span class="hour-bar" style="height:65.6%"></span><span class="hour-label">10</span></div>
-            <div class="hour-item"><span class="hour-value">340</span><span class="hour-bar" style="height:95.8%"></span><span class="hour-label">11</span></div>
-            <div class="hour-item"><span class="hour-value">335</span><span class="hour-bar" style="height:94.4%"></span><span class="hour-label">12</span></div>
-            <div class="hour-item"><span class="hour-value">218</span><span class="hour-bar" style="height:61.4%"></span><span class="hour-label">13</span></div>
-            <div class="hour-item"><span class="hour-value">235</span><span class="hour-bar" style="height:66.2%"></span><span class="hour-label">14</span></div>
-            <div class="hour-item"><span class="hour-value">347</span><span class="hour-bar" style="height:97.7%"></span><span class="hour-label">15</span></div>
-            <div class="hour-item"><span class="hour-value">335</span><span class="hour-bar" style="height:94.4%"></span><span class="hour-label">16</span></div>
-            <div class="hour-item"><span class="hour-value">355</span><span class="hour-bar" style="height:100%"></span><span class="hour-label">17</span></div>
-            <div class="hour-item"><span class="hour-value">311</span><span class="hour-bar" style="height:87.6%"></span><span class="hour-label">18</span></div>
-            <div class="hour-item"><span class="hour-value">282</span><span class="hour-bar" style="height:79.4%"></span><span class="hour-label">19</span></div>
-            <div class="hour-item"><span class="hour-value">307</span><span class="hour-bar" style="height:86.5%"></span><span class="hour-label">20</span></div>
-            <div class="hour-item"><span class="hour-value">333</span><span class="hour-bar" style="height:93.8%"></span><span class="hour-label">21</span></div>
-            <div class="hour-item"><span class="hour-value">317</span><span class="hour-bar" style="height:89.3%"></span><span class="hour-label">22</span></div>
-            <div class="hour-item"><span class="hour-value">242</span><span class="hour-bar" style="height:68.2%"></span><span class="hour-label">23</span></div>
-          </div>
-        </div>
         <div class="dash-block">
           <h4>📅 按月份的提交分布</h4>
-          <p class="dash-note">2026-03 至 2026-08，按 Git committer 日期统计；2026-08 仅到快照日为止，尚未走完整月</p>
+          <p class="dash-note">2026-03 至 2026-08，按 Git committer 日期统计；<strong>＊2026-08 仅统计到快照日 8 月 7 日，并非完整月</strong></p>
           <div class="month-chart" role="img" aria-label="hk_customs 分支每月提交次数，2026 年 6 月最高，为 1258 次">
             <div class="month-item"><span class="month-value">437</span><span class="month-bar" style="height:34.7%"></span><span class="month-label">2026-03</span></div>
             <div class="month-item"><span class="month-value">674</span><span class="month-bar" style="height:53.6%"></span><span class="month-label">2026-04</span></div>
             <div class="month-item"><span class="month-value">1，256</span><span class="month-bar" style="height:99.8%"></span><span class="month-label">2026-05</span></div>
             <div class="month-item"><span class="month-value">1，258</span><span class="month-bar" style="height:100%"></span><span class="month-label">2026-06</span></div>
             <div class="month-item"><span class="month-value">1，006</span><span class="month-bar" style="height:80.0%"></span><span class="month-label">2026-07</span></div>
-            <div class="month-item"><span class="month-value">401</span><span class="month-bar" style="height:31.9%"></span><span class="month-label">2026-08</span></div>
+            <div class="month-item"><span class="month-value">401</span><span class="month-bar" style="height:31.9%"></span><span class="month-label">2026-08＊</span></div>
           </div>
         </div>
-      </div>
-
-      <div class="dash-grid">
         <div class="dash-block people-chart">
           <h4>👥 按作者的提交分布</h4>
           <p class="dash-note">按 author name 聚合；同名不同邮箱已合并</p>
@@ -538,38 +492,6 @@
             <div class="bar-row"><span class="bar-label">曹吴昊</span><span class="bar-track"><span class="bar-fill" style="width:.3%"></span></span><span class="bar-value">15</span></div>
             <div class="bar-row"><span class="bar-label">spwangxp</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">1</span></div>
           </div>
-        </div>
-        <div class="dash-block">
-          <h4>📚 设计文档分布</h4>
-          <p class="dash-note">设计文档按 Git 已追踪文件的扩展名统计</p>
-          <div class="bar-chart" role="img" aria-label="Markdown 设计文档 1035 个，HTML 设计文档 167 个">
-            <div class="bar-row"><span class="bar-label">Markdown</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">1，035</span></div>
-            <div class="bar-row"><span class="bar-label">HTML</span><span class="bar-track"><span class="bar-fill" style="width:16.1%"></span></span><span class="bar-value">167</span></div>
-          </div>
-        </div>
-      </div>
-
-      <div class="dash-block">
-        <h4>🧱 按语言的代码行数</h4>
-        <p class="dash-note">cloc 2.10，统计 Git 已追踪文件；工程代码共 1，206，643 行，已排除 Markdown、HTML 与 Text 文档内容</p>
-        <div class="language-chart" role="img" aria-label="项目各语言代码行数，Python 814561 行最多">
-          <div class="bar-row"><span class="bar-label">Python</span><span class="bar-track"><span class="bar-fill" style="width:100%"></span></span><span class="bar-value">814，561</span></div>
-          <div class="bar-row"><span class="bar-label">JSON</span><span class="bar-track"><span class="bar-fill" style="width:16.3%"></span></span><span class="bar-value">132，884</span></div>
-          <div class="bar-row"><span class="bar-label">Vue</span><span class="bar-track"><span class="bar-fill" style="width:9.5%"></span></span><span class="bar-value">77，111</span></div>
-          <div class="bar-row"><span class="bar-label">JavaScript</span><span class="bar-track"><span class="bar-fill" style="width:8.0%"></span></span><span class="bar-value">65，380</span></div>
-          <div class="bar-row"><span class="bar-label">Bourne Shell</span><span class="bar-track"><span class="bar-fill" style="width:5.6%"></span></span><span class="bar-value">45，350</span></div>
-          <div class="bar-row"><span class="bar-label">YAML</span><span class="bar-track"><span class="bar-fill" style="width:5.3%"></span></span><span class="bar-value">42，962</span></div>
-          <div class="bar-row"><span class="bar-label">TypeScript</span><span class="bar-track"><span class="bar-fill" style="width:1.7%"></span></span><span class="bar-value">13，671</span></div>
-          <div class="bar-row"><span class="bar-label">CSV</span><span class="bar-track"><span class="bar-fill" style="width:1.2%"></span></span><span class="bar-value">10，001</span></div>
-          <div class="bar-row"><span class="bar-label">SCSS</span><span class="bar-track"><span class="bar-fill" style="width:.3%"></span></span><span class="bar-value">2，374</span></div>
-          <div class="bar-row"><span class="bar-label">Text</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">1，101</span></div>
-          <div class="bar-row"><span class="bar-label">Diff</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">803</span></div>
-          <div class="bar-row"><span class="bar-label">SQL</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">627</span></div>
-          <div class="bar-row"><span class="bar-label">Dockerfile</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">513</span></div>
-          <div class="bar-row"><span class="bar-label">TOML</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">353</span></div>
-          <div class="bar-row"><span class="bar-label">INI</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">32</span></div>
-          <div class="bar-row"><span class="bar-label">Mako</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">17</span></div>
-          <div class="bar-row"><span class="bar-label">SVG</span><span class="bar-track"><span class="bar-fill" style="width:.1%"></span></span><span class="bar-value">4</span></div>
         </div>
       </div>
 
